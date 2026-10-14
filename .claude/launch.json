@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "springlakes-website",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8742", "--directory", "/Users/cullenpacas/Projects/springlakes-website"],
+      "port": 8742
+    }
+  ]
+}
