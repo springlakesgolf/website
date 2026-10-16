@@ -36,6 +36,7 @@ Canada's largest 54-hole private club: three distinct 18-hole courses (North, Ea
 - Mark: the navy flying heron. The stacked SPRING LAKES / GOLF CLUB / heron lockup is the norm. The 10 Years badge is retired.
 - The club name is set in engraved caps (Cinzel), never in a cursive or script font. Headlines are Cormorant and body text is Montserrat.
 - Character (Cullen, 2026-10-16): established and quiet. Old-club confidence, restrained and editorial; the land does the talking.
+- Direction (Cullen, 2026-10-16): the classic private club look. He likes the current site; refine it rather than replace it. No dropdown menus, and no text fading in on scroll (a quiet entrance on photos is fine).
 
 ## Evidence on Hand
 - Current site imagery in `assets/img/` (drone and course shots, clubhouse, gallery).

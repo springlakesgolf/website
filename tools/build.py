@@ -56,6 +56,25 @@ def this_week(mails):
       '<a href="tel:9056403633" style="color:var(--gold)">905-640-3633</a> or stop in to pick it up.</p></div>'
       '<ul id="lost-box" class="lf-list reveal d2" aria-live="polite"><li class="lf-empty">Checking the list</li></ul></div></section>')
 
+NAV_CSS = """
+/* top menu without a dropdown, and the golf pages' tab row */
+.nav-links{gap:30px}
+.subnav{background:#fff;border-bottom:1px solid var(--line);position:relative;z-index:5}
+.subnav .container{display:flex;gap:36px;overflow-x:auto;scrollbar-width:none}
+.subnav .container::-webkit-scrollbar{display:none}
+.subnav a{flex:none;padding:18px 0 16px;font-size:.92rem;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.subnav a:hover{color:var(--navy)}
+.subnav a[aria-current="page"]{color:var(--navy);font-weight:600;border-bottom-color:var(--gold)}
+@media(max-width:700px){.subnav .container{gap:24px}.subnav a{font-size:.88rem;padding:15px 0 13px}}
+/* text no longer fades in on scroll; photos and the home page opening keep a quiet entrance */
+.reveal{opacity:1;transform:none;transition:none}
+@media(prefers-reduced-motion:no-preference){
+.figure-wrap.reveal,.course-card.reveal,.pro-card.reveal,.gallery.reveal{opacity:0;transform:translateY(14px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.hero-mark.reveal,.hero-title.reveal,.hero-place.reveal,.hero-cta.reveal{opacity:0;transform:translateY(18px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.figure-wrap.reveal.in,.course-card.reveal.in,.pro-card.reveal.in,.gallery.reveal.in,.hero-mark.reveal.in,.hero-title.reveal.in,.hero-place.reveal.in,.hero-cta.reveal.in{opacity:1;transform:none}
+.reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}}
+"""
+
 WEEK_CSS = """
 .week-band{background:var(--navy);color:#fff}
 .week-band h2{color:#fff;font-size:clamp(2rem,4vw,2.8rem);margin-bottom:1.6rem}
@@ -96,6 +115,25 @@ WEEK_CSS = """
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
 """
 
+# no dropdown in the top menu: Golf is one link, and the four golf pages share a
+# tab row under the page header; the logo is the way home
+GOLF_PAGES = [("golf", "Courses"), ("golf-academy", "Golf Academy"), ("golf-camps", "Golf Camps"), ("course-gallery", "Course Gallery")]
+
+def flat_nav(s, slug, prefix):
+    golf = slug in dict(GOLF_PAGES)
+    cur = ' aria-current="page"'
+    s, n = re.subn(r'<li class="has-sub"><a href="([^"]*golf/)"[^>]*>Golf <svg.*?</svg></a><ul class="submenu">.*?</ul></li>',
+                   lambda m: f'<li><a href="{m.group(1)}"{cur if golf else ""}>Golf</a></li>', s, count=1, flags=re.S)
+    assert n == 1, (slug, "golf menu")
+    s, n = re.subn(r'<li><a href="[^"]*"( aria-current="page")?>Home</a></li>', "", s, count=1)
+    assert n == 1, (slug, "home link")
+    if golf:
+        tabs = "".join(f'<a href="{prefix}{g}/"{cur if g == slug else ""}>{label}</a>' for g, label in GOLF_PAGES)
+        i = s.find('class="page-hero"'); j = s.find("</section>", i) + len("</section>")
+        assert i > 0 and j > i, (slug, "page hero")
+        s = s[:j] + f'<nav class="subnav" aria-label="Golf pages"><div class="container">{tabs}</div></nav>' + s[j:]
+    return s
+
 def rel(prefix, m):
     page, frag = m.group(1), m.group(2) or ""
     if page not in SLUG: return m.group(0)
@@ -124,6 +162,7 @@ def build():
         s = s.replace("</body>", tail + "</body>", 1)
         s = re.sub(r' data-to="[^"]*"', "", s)
         s = edit(f, s)
+        s = flat_nav(s, slug, prefix)
         for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num"):
             assert bad not in s, (f, bad)
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"
@@ -145,7 +184,7 @@ def build():
     js.write_text(t)
     # June CSS: the mobile .btn padding squeezed the menu icon to 4px wide
     css = OUT/"assets/css/style.css"
-    css.write_text(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n" + WEEK_CSS)
+    css.write_text(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n" + WEEK_CSS + NAV_CSS)
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
     if exec_url:
         (OUT/"assets/js/content.js").write_text((OUT/"tools/members/content.js").read_text().replace("__EXEC_URL__", exec_url))
