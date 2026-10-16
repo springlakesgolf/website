@@ -333,6 +333,25 @@ section{padding:clamp(60px,8vw,108px) 0}
 .lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
 
+
+/* button style A: square, sentence case, no lift on hover */
+.btn{font-size:.95rem;letter-spacing:0;text-transform:none;border-radius:0;border-width:1px;transition:background .2s,color .2s,border-color .2s}
+.btn:hover{transform:none}
+.btn-gold:hover{background:#a3881f;transform:none}
+.btn-navy:hover{transform:none}
+.btn-ghost{background:transparent;color:#fff;border-color:#fff}
+.btn-ghost:hover{background:#fff;color:var(--navy);border-color:#fff}
+.btn-ghost-navy{border-color:var(--navy)}
+.nav-cta .btn{font-size:.9rem;padding:11px 20px}
+/* top menu in normal capitals, and the white dropdown panel */
+.nav-links>li>a{font-size:.9rem;letter-spacing:0;text-transform:none}
+.submenu{left:-22px;margin:0;min-width:250px;padding:10px 0;background:#fff;border:0;border-radius:0;box-shadow:0 14px 34px rgba(20,26,48,.18),0 2px 6px rgba(20,26,48,.08);transform:none;transition:opacity .15s,visibility .15s}
+.has-sub:hover .submenu,.has-sub:focus-within .submenu{transform:none}
+.submenu li a{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:11px 22px;color:var(--navy);font-size:.92rem;font-weight:500;letter-spacing:0;text-transform:none}
+.submenu li a:hover,.submenu li a:focus-visible,.submenu li a[aria-current]{background:var(--cream);color:var(--navy)}
+.submenu .sub-arrow{color:var(--gold);opacity:0;transform:translateX(-4px);transition:opacity .15s,transform .15s}
+.submenu li a:hover .sub-arrow,.submenu li a:focus-visible .sub-arrow{opacity:1;transform:none}
+.submenu li a:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 /* text no longer fades in on scroll; photos and the home page opening keep a quiet entrance */
 .reveal{opacity:1;transform:none;transition:none}
 @media(prefers-reduced-motion:no-preference){

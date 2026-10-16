@@ -57,6 +57,25 @@ def this_week(mails):
       '<ul id="lost-box" class="lf-list reveal d2" aria-live="polite"><li class="lf-empty">Checking the list</li></ul></div></section>')
 
 NAV_CSS = """
+
+/* button style A: square, sentence case, no lift on hover */
+.btn{font-size:.95rem;letter-spacing:0;text-transform:none;border-radius:0;border-width:1px;transition:background .2s,color .2s,border-color .2s}
+.btn:hover{transform:none}
+.btn-gold:hover{background:#a3881f;transform:none}
+.btn-navy:hover{transform:none}
+.btn-ghost{background:transparent;color:#fff;border-color:#fff}
+.btn-ghost:hover{background:#fff;color:var(--navy);border-color:#fff}
+.btn-ghost-navy{border-color:var(--navy)}
+.nav-cta .btn{font-size:.9rem;padding:11px 20px}
+/* top menu in normal capitals, and the white dropdown panel */
+.nav-links>li>a{font-size:.9rem;letter-spacing:0;text-transform:none}
+.submenu{left:-22px;margin:0;min-width:250px;padding:10px 0;background:#fff;border:0;border-radius:0;box-shadow:0 14px 34px rgba(20,26,48,.18),0 2px 6px rgba(20,26,48,.08);transform:none;transition:opacity .15s,visibility .15s}
+.has-sub:hover .submenu,.has-sub:focus-within .submenu{transform:none}
+.submenu li a{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:11px 22px;color:var(--navy);font-size:.92rem;font-weight:500;letter-spacing:0;text-transform:none}
+.submenu li a:hover,.submenu li a:focus-visible,.submenu li a[aria-current]{background:var(--cream);color:var(--navy)}
+.submenu .sub-arrow{color:var(--gold);opacity:0;transform:translateX(-4px);transition:opacity .15s,transform .15s}
+.submenu li a:hover .sub-arrow,.submenu li a:focus-visible .sub-arrow{opacity:1;transform:none}
+.submenu li a:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 /* text no longer fades in on scroll; photos and the home page opening keep a quiet entrance */
 .reveal{opacity:1;transform:none;transition:none}
 @media(prefers-reduced-motion:no-preference){
@@ -124,6 +143,26 @@ def flat_nav(s, slug, prefix):
         s = s[:j] + f'<nav class="subnav" aria-label="Golf pages"><div class="container">{tabs}</div></nav>' + s[j:]
     return s
 
+# button style A (Cullen, 2026-10-16): sentence case labels, square, no lift
+BTN_LABELS = {
+    "Book a Tee Time": "Book a tee time", "Send Inquiry": "Send inquiry", "Explore Membership": "Explore membership",
+    "Open the League Hub": "Open the league hub", "Membership Inquiry": "Membership inquiry", "Make an Inquiry": "Make an inquiry",
+    "Contact the Pro Shop": "Contact the pro shop", "Explore All Three Courses": "Explore all three courses",
+    "Send Renewal Request": "Send renewal request", "Send Message": "Send message", "Get on the List": "Get on the list",
+    "Renew Membership": "Renew membership", "Explore Dining": "Explore dining", "About Membership": "About membership",
+    "Discover the Courses": "Discover the courses",
+}
+ARROW = ('<svg class="sub-arrow" width="14" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" '
+         'stroke-width="1.5" aria-hidden="true"><path d="M0 5h14M10 1l4 4-4 4"/></svg>')
+
+def restyle(s):
+    s = re.sub(r'(<(?:a|button)[^>]*class="[^"]*\bbtn\b[^"]*"[^>]*>)([^<]+)(<)',
+               lambda m: m.group(1) + BTN_LABELS.get(m.group(2), m.group(2)) + m.group(3), s)
+    # white dropdown: a small arrow slides in beside the hovered link
+    s = re.sub(r'(<ul class="submenu">.*?</ul>)', lambda m: re.sub(r'(<a [^>]*>)([^<]+)(</a>)',
+               lambda a: a.group(1) + a.group(2) + ARROW + a.group(3), m.group(1)), s, count=1, flags=re.S)
+    return s
+
 def rel(prefix, m):
     page, frag = m.group(1), m.group(2) or ""
     if page not in SLUG: return m.group(0)
@@ -152,6 +191,7 @@ def build():
         s = s.replace("</body>", tail + "</body>", 1)
         s = re.sub(r' data-to="[^"]*"', "", s)
         s = edit(f, s)
+        s = restyle(s)
         for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num"):
             assert bad not in s, (f, bad)
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"
