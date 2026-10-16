@@ -105,7 +105,7 @@ def rel(prefix, m):
 def build():
     if OUT.joinpath("index.html").exists():
         for p in OUT.iterdir():
-            if p.name not in {".git", ".github", ".gitignore", "README.md", "tools", ".claude"}:
+            if p.name not in {".git", ".github", ".gitignore", ".impeccable", "README.md", "PRODUCT.md", "DESIGN.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
     shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", *PRIVATE_DOCS))
     global MAILS
