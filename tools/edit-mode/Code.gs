@@ -9,6 +9,7 @@ var STATUS = ['New', 'In progress', 'Done', 'Question', 'Not doing'];
 
 function setup() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
+  ss.setSpreadsheetTimeZone('America/Toronto');
   var sh = ss.getSheetByName('Edits') || ss.getSheets()[0].setName('Edits');
   sh.getRange(1, 1, 1, HEAD.length).setValues([HEAD]).setFontWeight('bold')
     .setBackground('#323C60').setFontColor('#ffffff');
