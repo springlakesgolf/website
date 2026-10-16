@@ -294,3 +294,26 @@ section{padding:clamp(60px,8vw,108px) 0}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none;transition:none}.btn:hover,.course-card:hover,.tier-card:hover,.course-card:hover .course-art img{transform:none}}
 
 .btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}
+
+.week-band{background:var(--navy);color:#fff}
+.week-band h2{color:#fff;font-size:clamp(2rem,4vw,2.8rem);margin-bottom:1.6rem}
+.week-band h3{color:#fff;font-size:1.45rem;margin:0 0 1rem}
+.week-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:40px;align-items:start}
+.wx-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.wx-day{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:14px 6px;text-align:center}
+.wx-name{font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft)}
+.wx-ico{width:34px;height:34px;margin:10px auto;color:#fff;display:block}
+.wx-temp b{font-size:1.15rem;font-weight:600;margin-right:6px}.wx-temp span{color:rgba(255,255,255,.62);font-size:.92rem}
+.wx-text{font-size:.72rem;line-height:1.35;color:rgba(255,255,255,.78);margin-top:6px}.wx-text em{font-style:normal;color:var(--gold-soft)}
+.wx-src{font-size:.74rem;color:rgba(255,255,255,.55);margin:12px 0 0}
+.wx-off{color:rgba(255,255,255,.75);font-size:.92rem}.wx-off a{color:var(--gold-soft);text-decoration:underline}
+.mc-list{list-style:none;margin:0;padding:0;border-top:1px solid rgba(255,255,255,.14)}
+.mc-list li{border-bottom:1px solid rgba(255,255,255,.14)}
+.mc-list a{display:flex;gap:16px;padding:13px 0;align-items:baseline}
+.mc-list a:hover .mc-title{color:var(--gold-soft)}
+.mc-date{flex:0 0 52px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-soft)}
+.mc-title{font-size:.95rem;line-height:1.45;transition:color .2s}
+.mc-all{display:inline-block;margin-top:16px;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-soft);border-bottom:1px solid currentColor}
+@media(max-width:900px){.week-grid{grid-template-columns:1fr;gap:32px}
+.wx-days{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(96px,1fr);overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.wx-day{scroll-snap-align:start}}
