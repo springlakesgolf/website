@@ -79,6 +79,11 @@ def this_week(mails):
       '<ul id="lost-box" class="lf-list reveal d2" aria-live="polite"><li class="lf-empty">Checking the list</li></ul></div></section>')
 
 NAV_CSS = """
+/* golf camps: sign-up card beside the 2027 flyer */
+.camp-card{background:#fff;border:1px solid var(--line);padding:30px;max-width:560px}
+.camp-card h2{font-size:2rem;margin-bottom:6px}.camp-card p{color:var(--muted)}
+.camp-btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.camp-pdf{display:inline-block;margin-top:14px;color:var(--navy);font-weight:600;border-bottom:1px solid var(--gold);padding-bottom:2px;font-size:.92rem}
 
 /* button style A: square, sentence case, no lift on hover */
 .btn{font-size:.95rem;letter-spacing:0;text-transform:none;border-radius:0;border-width:1px;transition:background .2s,color .2s,border-color .2s}
@@ -228,7 +233,10 @@ def build():
         for p in OUT.iterdir():
             if p.name not in {".git", ".github", ".gitignore", ".impeccable", ".superpowers", "README.md", "PRODUCT.md", "DESIGN.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
-    shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", *PRIVATE_DOCS))
+    shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", "camp-2026.webp", *PRIVATE_DOCS))
+    # 2027 camp flyer (Braeden, 2026-10-16): image on the camps page plus the printable PDF
+    shutil.copy(OUT/"tools/camps/camp-2027-flyer.jpg", OUT/"assets/img/camp-2027-flyer.jpg")
+    shutil.copy(OUT/"tools/camps/2027-Camp-Flyer.pdf", OUT/"assets/docs/2027-Camp-Flyer.pdf")
     global MAILS
     MAILS = club_emails.write()
     exec_url = edit_exec()
@@ -302,7 +310,7 @@ def edit(f, s):
                    r'<img src="\1" alt="Aerial view over Spring Lakes">', s)
         assert "<video" not in s, f
         s = cut(s, '<section class="cta-band">', "<footer", "", f)
-        s = sub(s, "2026 weeks are now sold out.", "2027 dates are coming soon.", f)
+        s = sub(s, "2026 weeks are now sold out.", "Four camp weeks for summer 2027.", f)
         # 2027 forms: categories differ by tier, so no blanket "unlimited golf" claim
         s = sub(s, "Unlimited golf across three courses, a clubhouse built for the whole family, and a calendar that fills the season, with no hidden minimums.",
                 "Three championship courses, a clubhouse built for the whole family, and a calendar that fills the season, with no clubhouse minimums.", f)
@@ -336,7 +344,16 @@ def edit(f, s):
         s = s.replace("Join the Waitlist", "Get on the List")
         s = sub(s, "<h1>Spring Lakes Camps 2026</h1>", "<h1>Spring Lakes Junior Camps</h1>", f)
         s = re.sub(r'<meta name="description" content="[^"]*">',
-                   '<meta name="description" content="Junior golf camps at Spring Lakes, taught by PGA of Canada professionals. 2027 dates are coming soon.">', s, count=1)
+                   '<meta name="description" content="Junior golf camps at Spring Lakes for ages 6 to 14, taught by PGA of Canada professionals. Four camp weeks in summer 2027.">', s, count=1)
+        # option A (Cullen, 2026-10-16): the 2027 flyer in place of the old poster, with a sign-up card
+        s = sub(s, '<div class="figure-frame" style="aspect-ratio:3/4;max-width:430px"><img src="../assets/img/camp-2026.webp" alt="Spring Lakes Camp 2026 poster">',
+                '<div class="figure-frame" style="aspect-ratio:4/5;max-width:460px"><img src="../assets/img/camp-2027-flyer.jpg" alt="Spring Lakes Summer Camp 2027 flyer: ages 6 to 14, 9 am to 4 pm, four weeks in July and August">', f)
+        s, n = re.subn(r'<div class="gate reveal".*?Call 905-640-3633</a></div></div>',
+                       '<div class="camp-card reveal"><h2>Summer camp 2027</h2><p>Four weeks for golfers aged 6 to 14, taught by our PGA of Canada professionals. '
+                       'Spots are first come, first served.</p><div class="camp-btns"><a class="btn btn-gold" href="../contact-us/">Inquire about camp</a>'
+                       '<a class="btn btn-ghost-navy" href="tel:9056403633">Call 905-640-3633</a></div>'
+                       '<a class="camp-pdf" href="../assets/docs/2027-Camp-Flyer.pdf" target="_blank" rel="noopener">Download the flyer (PDF)</a></div>', s, count=1, flags=re.S)
+        assert n == 1, (f, "camp gate")
     if f == "contact.html":
         s = sub(s, '<h3 style="font-size:1.5rem;margin:34px 0 6px">Staff Directory</h3>',
                 '<div id="hours-wrap" class="hours-public" hidden><h3 style="font-size:1.5rem;margin:0 0 6px">Hours</h3>'

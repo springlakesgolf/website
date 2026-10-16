@@ -365,6 +365,11 @@ section{padding:clamp(60px,8vw,108px) 0}
 .rv-day:focus-visible,.rv-time:focus-visible,.rv-party button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media(max-width:600px){.rv-panel{padding:20px}.rv-times{grid-template-columns:repeat(3,1fr)}}
 
+/* golf camps: sign-up card beside the 2027 flyer */
+.camp-card{background:#fff;border:1px solid var(--line);padding:30px;max-width:560px}
+.camp-card h2{font-size:2rem;margin-bottom:6px}.camp-card p{color:var(--muted)}
+.camp-btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.camp-pdf{display:inline-block;margin-top:14px;color:var(--navy);font-weight:600;border-bottom:1px solid var(--gold);padding-bottom:2px;font-size:.92rem}
 
 /* button style A: square, sentence case, no lift on hover */
 .btn{font-size:.95rem;letter-spacing:0;text-transform:none;border-radius:0;border-width:1px;transition:background .2s,color .2s,border-color .2s}
