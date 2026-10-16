@@ -31,6 +31,28 @@ def edit_exec():
     cfg = EDIT_DIR/"config.json"
     return json.loads(cfg.read_text()).get("exec") if cfg.exists() else None
 
+# "Reserve a table" panel on the Dining page: Apps Script URL from
+# tools/dining/config.json, or SLG_DINING_EXEC to point a test build at a mock.
+# With neither set, the panel is not built or injected.
+DINING_DIR = OUT/"tools/dining"
+
+def dining_exec():
+    # A mock build passes SLG_DINING_EXEC. config.json is what ships, so it can never
+    # point at a local or plain http address.
+    if os.environ.get("SLG_DINING_EXEC"): return os.environ["SLG_DINING_EXEC"]
+    cfg = DINING_DIR/"config.json"
+    url = json.loads(cfg.read_text()).get("exec") if cfg.exists() else None
+    if url and (url.lower().startswith("http:") or "localhost" in url.lower()):
+        raise SystemExit("tools/dining/config.json exec must be the live https address, not http or localhost "
+                         "(use SLG_DINING_EXEC for a mock build)")
+    return url
+
+def nodash(name):
+    t = (DINING_DIR/name).read_text()
+    for bad in ("—", "–"):
+        assert bad not in t, (name, bad)
+    return t
+
 # members page "This Week" band: 7-day ECCC forecast and the latest club
 # Mailchimp campaigns, both rendered by tools/members/weather.js; the emails come
 # from assets/data/club-emails.json, refreshed hourly by a GitHub Action
@@ -123,6 +145,38 @@ WEEK_CSS = """
 .lf-date{flex:0 0 60px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
+/* restaurant reservations, panel A */
+.rv{margin:1.6rem 0}
+/* the page grid item must be allowed to shrink, or the day strip widens the whole page on a phone */
+.split>:has(>.rv){min-width:0}
+.rv-panel{background:var(--cream);padding:28px;margin-top:16px}
+.rv-head h3{font-size:1.7rem;margin-bottom:2px}.rv-sub{color:var(--muted);font-size:.92rem;margin:0}
+.rv-lbl{display:block;font-size:.8rem;font-weight:600;color:var(--navy);margin:16px 0 8px}
+.rv-days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.rv-day{flex:none;width:68px;border:1px solid var(--line);background:#fff;text-align:center;padding:10px 0;cursor:pointer;font:inherit}
+.rv-day small{display:block;font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.08em}
+.rv-day b{display:block;font-family:var(--serif);font-size:1.6rem;color:var(--navy);line-height:1.1}
+.rv-day.on{background:var(--navy);border-color:var(--navy)}.rv-day.on small,.rv-day.on b{color:#fff}
+.rv-day.closed{opacity:.5;border-style:dashed}
+.rv-party{display:flex;align-items:center;border:1px solid var(--line);width:max-content;background:#fff}
+.rv-party button{width:44px;height:44px;border:0;background:#fff;font-size:1.2rem;color:var(--navy);cursor:pointer}
+.rv-party span{min-width:110px;text-align:center;font-weight:600;color:var(--navy)}
+.rv-times{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.rv-time{border:1px solid var(--line);background:#fff;color:var(--navy);font:500 .9rem var(--sans);padding:11px 8px;cursor:pointer}
+.rv-time.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.rv-time.off{color:#b9bccb;text-decoration:line-through;cursor:default}
+.rv-next{margin-top:22px}
+.rv-form{display:grid;gap:2px;max-width:520px}
+.rv-form input{width:100%;border:1px solid var(--line);padding:12px 14px;font:inherit;color:var(--ink);background:#fff}
+.rv-pick{font-family:var(--serif);font-size:1.35rem;font-weight:600;color:var(--navy);margin:12px 0 0}
+.rv-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.rv-msg{margin:14px 0 0;font-size:.95rem;color:var(--navy)}.rv-msg.bad{color:#a3261d}
+.rv-link{color:var(--navy);font-weight:600;border-bottom:1px solid var(--gold)}
+.rv-note{color:var(--muted);font-size:.92rem}
+.rv-done{font-family:var(--serif);font-size:1.5rem;font-weight:600;color:var(--navy);margin:14px 0 4px}
+.rv-loading{color:var(--muted);font-size:.9rem}
+.rv-day:focus-visible,.rv-time:focus-visible,.rv-party button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(max-width:600px){.rv-panel{padding:20px}.rv-times{grid-template-columns:repeat(3,1fr)}}
 """
 
 # unused since 2026-10-16: Cullen kept the Golf dropdown; flat_nav() stays for reference
@@ -172,7 +226,7 @@ def rel(prefix, m):
 def build():
     if OUT.joinpath("index.html").exists():
         for p in OUT.iterdir():
-            if p.name not in {".git", ".github", ".gitignore", ".impeccable", "README.md", "PRODUCT.md", "DESIGN.md", "tools", ".claude"}:
+            if p.name not in {".git", ".github", ".gitignore", ".impeccable", ".superpowers", "README.md", "PRODUCT.md", "DESIGN.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
     shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", *PRIVATE_DOCS))
     global MAILS
@@ -180,6 +234,11 @@ def build():
     exec_url = edit_exec()
     if exec_url:
         (OUT/"assets/js/edit-mode.js").write_text((EDIT_DIR/"edit-mode.js").read_text().replace("__EXEC_URL__", exec_url))
+    dining = dining_exec()
+    if dining:
+        (OUT/"assets/js/dining-rules.js").write_text(nodash("rules.js"))
+        (OUT/"assets/js/dining-api.js").write_text((DINING_DIR/"api.js").read_text().replace("__DINING_EXEC__", dining))
+        (OUT/"assets/js/dining.js").write_text(nodash("panel.js"))
     for f, slug in SLUG.items():
         prefix = "../" if slug else ""
         s = (SRC/f).read_text()
@@ -197,6 +256,13 @@ def build():
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(s)
+    if dining:
+        # after the page loop: food-beverage/ is created there
+        (OUT/"food-beverage/cancel").mkdir(parents=True, exist_ok=True)
+        (OUT/"food-beverage/cancel/index.html").write_text(nodash("cancel.html"))
+        (OUT/"dining-staff").mkdir(exist_ok=True)
+        (OUT/"dining-staff/index.html").write_text(nodash("staff.html"))
+        (OUT/"assets/js/dining-staff.js").write_text(nodash("staff.js"))
     # the live /tournaments/ page is leftover template copy; send it to events
     (OUT/"tournaments").mkdir(exist_ok=True)
     (OUT/"tournaments/index.html").write_text(
@@ -258,6 +324,11 @@ def edit(f, s):
           '<option value="">Choose one</option><option>2027 season</option><option>2028 or later</option></select></div>'
           '<div class="field"><label for="if-r">Referred by a member? (optional)</label><input name="referral" id="if-r" type="text"></div>'
           '<div class="field"><label for="if-m">Message</label>', f)
+    if f == "dining.html" and dining_exec():
+        s = sub(s, '<div class="hours">', '<div id="reserve" class="rv"><p class="rv-note">To reserve a table, call the clubhouse at 905-640-3633.</p></div><div class="hours">', f)
+        s = s.replace("</body>", '<script src="../assets/js/dining-rules.js" defer></script>'
+                      '<script src="../assets/js/dining-api.js" defer></script>'
+                      '<script src="../assets/js/dining.js" defer></script></body>', 1)
     if f == "golf-camps.html":
         s = sub(s, "All 2026 camp weeks are sold out", "2027 camp dates are coming soon", f)
         s = re.sub(r"Thank you\. Every week of our 2026 junior camps has been filled\. To join the waitlist or to hear first when 2027 dates open,",

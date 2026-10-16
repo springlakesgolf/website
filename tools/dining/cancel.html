@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Cancel your reservation | Spring Lakes Golf Club</title>
+<link rel="stylesheet" href="../../assets/css/style.css">
+<style>.cx{max-width:560px;margin:0 auto;padding:120px 24px 80px;text-align:center}.cx h1{font-size:2.4rem;margin-bottom:12px}
+.cx p{color:var(--muted)}.cx .btn{margin-top:22px}.cx img{height:56px;margin:0 auto 24px}.cx [hidden]{display:none}</style></head>
+<body><main class="cx"><img src="../../assets/img/heron-gold.png" alt="Spring Lakes Golf Club">
+<h1>Cancel your reservation</h1><p id="cx-text" aria-live="polite">Checking your reservation.</p>
+<button class="btn btn-gold" id="cx-go" type="button" hidden>Cancel reservation</button>
+<p><a href="../" style="color:var(--navy);border-bottom:1px solid var(--gold)">Back to Dining</a></p></main>
+<script src="../../assets/js/dining-rules.js"></script><script src="../../assets/js/dining-api.js"></script>
+<script>
+(function () {
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  function longDate(d) {
+    var dt = new Date(d + 'T12:00:00Z');
+    return DAYS[dt.getUTCDay()] + ', ' + MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
+  }
+  var t = new URLSearchParams(location.search).get('t'), text = document.getElementById('cx-text'), go = document.getElementById('cx-go');
+  if (!t) { text.textContent = 'This link is missing its reservation code. Please call the clubhouse at 905-640-3633.'; return; }
+  text.textContent = 'Tap below to cancel. The table will be released for other members.'; go.hidden = false;
+  go.addEventListener('click', function () {
+    go.disabled = true; go.textContent = 'Cancelling';
+    DiningAPI.post({action: 'cancel', token: t}).then(function (r) {
+      if (r && r.ok && r.booking) {
+        go.hidden = true;
+        var b = r.booking;
+        text.textContent = 'Your reservation for ' + b.guests + (Number(b.guests) === 1 ? ' guest' : ' guests') + ' on ' + longDate(b.date) + ' at ' + DiningRules.label(b.time) + ' is cancelled.';
+      } else if (r && r.error === 'token') {
+        go.hidden = true;
+        text.textContent = 'This reservation was already cancelled or could not be found. Please call the clubhouse at 905-640-3633 if you need help.';
+      } else {
+        throw new Error('retry');
+      }
+    }).catch(function () { go.disabled = false; go.textContent = 'Cancel reservation'; text.textContent = "That didn't go through. Please try again."; });
+  });
+})();
+</script></body></html>

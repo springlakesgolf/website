@@ -8,6 +8,8 @@ From the review on 2026-10-16 (CullenAI/Knowledge/Website-Review-2026-10-16.md, 
 - [ ] Add the member documents to /members/: the 2027 forms, the calendar, the restaurant menu and the wine list.
 - [ ] Wire the forms. Memberships goes to the existing Apps Script inquiry endpoint (Membership Inquiries sheet). Events, dining, contact and renewal go to the same script with a `form` field. Add a hidden honeypot field to each, then send one test submission per form and check it lands.
 
+- [ ] Reservations: Laura's answers in Settings, the real Members list loaded, Email mode Live, confirmations from the club dining address, 2027 calendar events loaded, the PIN lockout reviewed, and /dining-staff/ saved to the restaurant iPad home screen. See tools/dining/README.md.
+
 ## In the build
 - [ ] Remove PREVIEW_HEAD's `noindex,nofollow` meta and the "Staff preview" pill.
 - [ ] Replace `robots.txt` (`Disallow: /`) with an allow plus a sitemap line, served from the domain root.

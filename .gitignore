@@ -2,3 +2,6 @@ tools/*.json
 tools/edit-mode/mock_rows.json
 tools/edit-mode/edit-key.txt
 tools/design-options/
+.superpowers/
+tools/dining/dist/
+tools/dining/config.local.json

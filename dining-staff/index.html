@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reservations"><link rel="apple-touch-icon" href="../assets/img/heron-gold.png">
+<title>Reservations | Spring Lakes</title><link rel="stylesheet" href="../assets/css/style.css">
+<style>
+body{background:#fff;font-size:16px;line-height:1.4}
+button{font-family:var(--sans)}
+.top{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:12px 18px;padding-top:max(12px,env(safe-area-inset-top));background:var(--navy);color:#fff}
+.top .d{font-family:var(--serif);font-size:1.7rem;font-weight:600;line-height:1.1;margin:0 auto 0 4px;color:#fff}
+.top button{min-height:46px;min-width:46px;font:600 .92rem var(--sans);border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;padding:0 16px;cursor:pointer;border-radius:0}
+.top .gold{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.top .count{font-size:.9rem;color:rgba(255,255,255,.8)}.top .count b{color:#fff;font-size:1.1rem}
+.stale{background:#fff4d6;color:#6b5512;padding:8px 18px;font-size:.9rem}
+.event{background:var(--cream);padding:10px 18px;color:var(--navy);font-weight:600}
+.book{padding:0 18px 40px}
+.book table{width:100%;border-collapse:collapse}
+.book th{text-align:left;font-size:.75rem;font-weight:600;color:var(--muted);padding:14px 10px 8px;border-bottom:2px solid var(--navy)}
+.book td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.book td.t{font-family:var(--serif);font-size:1.3rem;font-weight:600;color:var(--navy);width:92px}
+.book td.g{font-family:var(--serif);font-size:1.4rem;font-weight:600;color:var(--navy);width:64px;text-align:center}
+.book .src{font-size:.7rem;font-weight:600;color:var(--muted);border:1px solid var(--line);padding:2px 6px;margin-left:8px;white-space:nowrap}
+.book .note{color:var(--muted);font-size:.9rem}
+.book tr.Seated td,.book tr.No-show td{color:#8a8fa3}
+.book tr.Seated td.t,.book tr.Seated td.g,.book tr.No-show td.t,.book tr.No-show td.g{color:#8a8fa3}
+.acts{display:flex;gap:6px;justify-content:flex-end}
+.acts button{min-height:44px;padding:0 14px;font:600 .85rem var(--sans);border:1px solid var(--line);background:#fff;color:var(--navy);cursor:pointer;border-radius:0}
+.acts button.on{background:#e9f2ec;border-color:#bcd6c4;color:#2c6b3f}
+.acts button.ns.on{background:#f8e4e1;border-color:#e3b9b3;color:#8d2a1f}
+.blk td{background:var(--cream)}.blk .r{font-weight:600;color:var(--navy)}
+.empty{padding:40px 0;text-align:center;color:var(--muted)}.empty p{margin:0 0 16px}
+.sheet{position:fixed;inset:0;background:rgba(34,38,57,.5);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+.sheet form{background:#fff;width:100%;max-width:460px;padding:24px;display:grid;gap:10px}
+.sheet h2{font-size:1.6rem}.sheet label{display:block;font-size:.8rem;font-weight:600;color:var(--navy)}
+.sheet p{margin:0;color:var(--muted)}
+.sheet .err{color:#a3261d;font-weight:600}.sheet .err[hidden]{display:none}
+.sheet input,.sheet select{display:block;width:100%;min-height:46px;border:1px solid var(--line);padding:10px 12px;margin-top:4px;font:inherit;font-size:1rem;font-weight:400;border-radius:0;background:#fff;color:var(--ink)}
+.sheet .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sheet .btns{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.sbtn{min-height:48px;padding:0 24px;font:600 .95rem var(--sans);cursor:pointer;border-radius:0;border:1px solid var(--navy);background:#fff;color:var(--navy)}
+.sbtn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.pin{max-width:320px;margin:18vh auto;text-align:center;padding:0 20px}.pin input{font-size:1.6rem;text-align:center;letter-spacing:.3em;width:100%;min-height:56px;border:1px solid var(--line);border-radius:0;margin-bottom:6px}
+.pin h1{font-size:2rem;margin-bottom:14px}.pin p{color:#a3261d;min-height:2.8em;margin:6px 0 10px;font-size:.92rem}
+.pin .sbtn{width:100%}
+#msg{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;max-width:min(560px,calc(100% - 32px));background:var(--navy);color:#fff;border-left:4px solid var(--gold);padding:14px 18px;font-weight:600;font-size:.95rem;cursor:pointer;box-shadow:0 10px 30px rgba(20,26,48,.3)}
+#msg[hidden]{display:none}
+.acts button{white-space:nowrap}.book td.ph{white-space:nowrap}
+@media(max-width:900px){.top .d{font-size:1.45rem}.book{padding:0 12px 40px}.book td,.book th{padding-left:6px;padding-right:6px}.book td.t{width:64px}.book td.g{width:44px}.acts button{padding:0 10px}.book .src{display:inline-block;margin:4px 0 0}}
+</style></head><body><div id="app"></div><div id="msg" role="status" aria-live="polite" hidden></div>
+<script src="../assets/js/dining-rules.js"></script><script src="../assets/js/dining-api.js"></script><script src="../assets/js/dining-staff.js"></script>
+</body></html>
