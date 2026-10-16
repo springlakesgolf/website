@@ -16,3 +16,11 @@ folder "Website Edit Photos". URLs are in `config.json`; the key is in
 - Test without touching the sheet: `SLG_EDIT_EXEC=http://localhost:8744/exec python3 tools/build.py`,
   run `mock_server.py` (launch config `edit-mock`), open `http://localhost:8744/?edit=testkey`.
   Rebuild with plain `python3 tools/build.py` before pushing.
+
+## Hours and Lost & Found
+
+The same script answers `GET ?feed=content` from the "Website Content" sheet
+(`content_sheet` in `config.json`): tab **Hours** (Show to: Everyone, Members only
+or Hidden) and tab **Lost & Found** (items stay up until Status is Claimed or 90
+days pass). `tools/members/content.js` shows them on the contact page (Everyone
+rows only) and the members page. The script caches for a minute.

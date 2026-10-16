@@ -66,12 +66,19 @@
     }).catch(function(){ if (!list || !list.children.length) drop('mc-col'); });
 
   // a panel that cannot load is removed; the other takes the full width,
-  // and the band goes away if neither loads
+  // and the band goes away if nothing in it loads
   function drop(id){
-    var col = document.getElementById(id), band = document.getElementById('this-week');
-    if (!col || !band) return;
-    var grid = col.parentNode; col.remove();
-    if (!grid.querySelector('#wx-col,#mc-col')) band.remove();
-    else grid.classList.add('one');
+    var col = document.getElementById(id);
+    if (col && col.parentNode) col.parentNode.removeChild(col);
+    relayout();
   }
+  function relayout(){
+    var band = document.getElementById('this-week'); if (!band) return;
+    var side = document.getElementById('side-col');
+    if (side && !side.querySelector('#hours-wrap,#mc-col')) side.parentNode.removeChild(side);
+    var grid = band.querySelector('.week-grid');
+    if (!grid.children.length) band.parentNode.removeChild(band);
+    else grid.classList.toggle('one', grid.children.length === 1);
+  }
+  window.slgWeekDrop = relayout;
 })();

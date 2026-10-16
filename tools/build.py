@@ -40,14 +40,21 @@ import club_emails
 def this_week(mails):
     li = "".join(f'<li><a href="{html.escape(m["link"])}" target="_blank" rel="noopener"><span class="mc-date">'
                  f'{m["label"]}</span><span class="mc-title">{html.escape(m["title"])}</span></a></li>' for m in mails)
-    news = (f'<div id="mc-col" class="reveal d2"><h3>Latest club emails</h3><ul id="mc-list" class="mc-list">{li}</ul>'
+    news = (f'<div id="mc-col"><h3>Latest club emails</h3><ul id="mc-list" class="mc-list">{li}</ul>'
             f'<a class="mc-all" href="{club_emails.HOME}" target="_blank" rel="noopener">See all club emails</a></div>') if li else ""
+    side = ('<div id="side-col" class="reveal d2"><div id="hours-wrap" hidden><h3>Club hours</h3>'
+            '<div id="hours-box" class="hr-list" data-scope="members" aria-live="polite"></div></div>' + news + '</div>')
     return ('<section id="this-week" class="week-band"><div class="container"><div class="reveal">'
       '<span class="eyebrow">This Week</span><h2>Weather and club news</h2></div>'
-      f'<div class="week-grid{"" if li else " one"}"><div id="wx-col" class="reveal d1"><h3>7-day forecast</h3>'
+      '<div class="week-grid"><div id="wx-col" class="reveal d1"><h3>7-day forecast</h3>'
       '<div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"></div>'
       '<p class="wx-src">Forecast for the Markham area. Data Source: Environment and Climate Change Canada.</p></div>'
-      f'{news}</div></div></section>')
+      f'{side}</div></div></section>'
+      '<section id="lost-found" class="bg-cream"><div class="container narrow"><div class="section-head center">'
+      '<span class="eyebrow reveal">Lost &amp; Found</span><h2 class="reveal d1">Lost something at the club?</h2>'
+      '<p class="reveal d2">Clubs and other items turned in to the pro shop and clubhouse. If one is yours, call the pro shop at '
+      '<a href="tel:9056403633" style="color:var(--gold)">905-640-3633</a> or stop in to pick it up.</p></div>'
+      '<ul id="lost-box" class="lf-list reveal d2" aria-live="polite"><li class="lf-empty">Checking the list</li></ul></div></section>')
 
 WEEK_CSS = """
 .week-band{background:var(--navy);color:#fff}
@@ -71,6 +78,22 @@ WEEK_CSS = """
 @media(max-width:900px){.week-grid{grid-template-columns:1fr;gap:32px}
 .wx-days{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(96px,1fr);overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
 .wx-day{scroll-snap-align:start}}
+
+#side-col h3{margin-top:0}#hours-wrap{margin-bottom:30px}
+.hr-list{border-top:1px solid rgba(255,255,255,.14)}
+.hr-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.14);align-items:baseline}
+.hr-what{font-size:.95rem}.hr-note{font-size:.76rem;color:rgba(255,255,255,.6);margin-top:2px}
+.hr-time{font-size:.9rem;font-weight:600;color:var(--gold-soft);text-align:right;white-space:nowrap}
+.hours-public{margin-top:30px}.hours-public .hr-list{border-color:var(--line)}
+.hours-public .hr-row{border-color:var(--line)}.hours-public .hr-what{color:var(--navy);font-weight:600}
+.hours-public .hr-note{color:var(--muted)}.hours-public .hr-time{color:var(--gold)}
+.lf-list{list-style:none;margin:0 auto;padding:0;max-width:720px;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}
+.lf-item,.lf-empty{display:flex;gap:18px;align-items:baseline;padding:16px 20px;border-bottom:1px solid var(--line)}
+.lf-list li:last-child{border-bottom:0}
+.lf-empty{justify-content:center;color:var(--muted);font-size:.95rem}
+.lf-date{flex:0 0 60px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
+.lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
 """
 
 def rel(prefix, m):
@@ -124,6 +147,8 @@ def build():
     css = OUT/"assets/css/style.css"
     css.write_text(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n" + WEEK_CSS)
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
+    if exec_url:
+        (OUT/"assets/js/content.js").write_text((OUT/"tools/members/content.js").read_text().replace("__EXEC_URL__", exec_url))
     (OUT/".nojekyll").write_text("")
     (OUT/"robots.txt").write_text("User-agent: *\nDisallow: /\n")
 
@@ -171,6 +196,11 @@ def edit(f, s):
                    "Our 2026 camps were a full house. To hear first when 2027 dates and registration open,", s)
         s = s.replace("Join the Waitlist", "Get on the List")
     if f == "contact.html":
+        s = sub(s, '<h3 style="font-size:1.5rem;margin:34px 0 6px">Staff Directory</h3>',
+                '<div id="hours-wrap" class="hours-public" hidden><h3 style="font-size:1.5rem;margin:0 0 6px">Hours</h3>'
+                '<div id="hours-box" class="hr-list" data-scope="public" aria-live="polite"></div></div>'
+                '<h3 style="font-size:1.5rem;margin:34px 0 6px">Staff Directory</h3>', f)
+        s = s.replace("</body>", '<script src="../assets/js/content.js" defer></script></body>', 1)
         s = re.sub(r' ·\s*<a href="mailto:[a-z]+@springlakesgolf\.com"[^>]*>[a-z]+@springlakesgolf\.com</a>', "", s)
         assert not re.search(r'(braeden|luke|cullen|rhys|laura|ashley|kelly|chris)@', s), f
     if f == "golf.html":
@@ -184,7 +214,7 @@ def edit(f, s):
         s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">', f)
         s = sub(s, '</section><section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"',
                 '</section>' + this_week(MAILS) + '<section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
-        s = s.replace("</body>", '<script src="../assets/js/weather.js" defer></script></body>', 1)
+        s = s.replace("</body>", '<script src="../assets/js/weather.js" defer></script><script src="../assets/js/content.js" defer></script></body>', 1)
         k = s.find("Member Documents"); i = s.rfind("<section", 0, k); j = s.find("</section>", k) + len("</section>")
         assert k > 0 and i > 0, f
         s = s[:i] + s[j:]

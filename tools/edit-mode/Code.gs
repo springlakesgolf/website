@@ -30,8 +30,32 @@ function setup() {
   Logger.log('EDIT_KEY=' + props.getProperty('EDIT_KEY'));
 }
 
-function doGet() {
+// Hours and Lost & Found for the site, from the "Website Content" sheet that
+// staff edit. Cached a minute so a busy page does not hit the sheet each time.
+var CONTENT_ID = '1TecRaoIITgztIyDoQaPuJm9LuXd8E4DYtNxYQyjGWyI';
+
+function doGet(e) {
+  if (e && e.parameter && e.parameter.feed === 'content') return json(content());
   return json({ ok: true, service: 'website-edits' });
+}
+
+function content() {
+  var cache = CacheService.getScriptCache(), hit = cache.get('content');
+  if (hit) return JSON.parse(hit);
+  var ss = SpreadsheetApp.openById(CONTENT_ID), tz = ss.getSpreadsheetTimeZone();
+  var hours = ss.getSheetByName('Hours').getDataRange().getDisplayValues().slice(1)
+    .filter(function (r) { return r[1] && r[2] && (r[0] === 'Everyone' || r[0] === 'Members only'); })
+    .map(function (r) { return { members: r[0] === 'Members only', what: r[1], hours: r[2], note: r[3] }; });
+  var cutoff = Date.now() - 90 * 864e5;
+  var lost = ss.getSheetByName('Lost & Found').getDataRange().getValues().slice(1)
+    .filter(function (r) { return r[1] && r[4] !== 'Claimed' && (!(r[0] instanceof Date) || r[0].getTime() >= cutoff); })
+    .map(function (r) {
+      return { found: r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'MMM d') : String(r[0] || ''),
+               item: String(r[1]), where: String(r[2] || ''), photo: /^https:\/\//.test(r[3]) ? String(r[3]) : '' };
+    }).reverse();
+  var out = { ok: true, hours: hours, lost: lost };
+  cache.put('content', JSON.stringify(out), 60);
+  return out;
 }
 
 function doPost(e) {
