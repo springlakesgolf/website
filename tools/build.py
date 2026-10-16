@@ -89,7 +89,7 @@ WEEK_CSS = """
 .week-band{background:var(--navy);color:#fff}
 .week-band h2{color:#fff;font-size:clamp(2rem,4vw,2.8rem);margin-bottom:1.6rem}
 .week-band h3{color:#fff;font-size:1.45rem;margin:0 0 1rem}
-.week-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:40px;align-items:start}.week-grid.one{grid-template-columns:1fr}
+.week-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:40px;align-items:start}.week-grid.one{grid-template-columns:1fr}.week-grid>*{min-width:0}
 .wx-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
 .wx-day{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:14px 6px;text-align:center}
 .wx-name{font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft)}
@@ -263,6 +263,9 @@ def edit(f, s):
         s = re.sub(r"Thank you\. Every week of our 2026 junior camps has been filled\. To join the waitlist or to hear first when 2027 dates open,",
                    "Our 2026 camps were a full house. To hear first when 2027 dates and registration open,", s)
         s = s.replace("Join the Waitlist", "Get on the List")
+        s = sub(s, "<h1>Spring Lakes Camps 2026</h1>", "<h1>Spring Lakes Junior Camps</h1>", f)
+        s = re.sub(r'<meta name="description" content="[^"]*">',
+                   '<meta name="description" content="Junior golf camps at Spring Lakes, taught by PGA of Canada professionals. 2027 dates are coming soon.">', s, count=1)
     if f == "contact.html":
         s = sub(s, '<h3 style="font-size:1.5rem;margin:34px 0 6px">Staff Directory</h3>',
                 '<div id="hours-wrap" class="hours-public" hidden><h3 style="font-size:1.5rem;margin:0 0 6px">Hours</h3>'
@@ -288,7 +291,7 @@ def edit(f, s):
         s = s[:i] + s[j:]
         s = re.sub(r'<p class="note"[^>]*>Prefer a paper form\?.*?</p>', "", s, flags=re.S)
         s = re.sub(r'<select([^>]*id="[^"]*")[^>]*>(?:(?!</select>).)*?Junior Intermediate.*?</select>',
-                   lambda m: '<input type="text"' + m.group(1) + '>', s, count=1, flags=re.S)
+                   lambda m: '<input type="text"' + m.group(1) + ' name="rn-cat">', s, count=1, flags=re.S)
         assert "Junior Intermediate" not in s, f
         # match the final 2027 membership forms
         s = sub(s, "<li>Juniors are 17 and under and may only play accompanied by an adult member.</li>",
