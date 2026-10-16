@@ -102,6 +102,7 @@
   function describe(t){
     if (!t) return {section: sectionName(document.querySelector('main') || document.body), current: '(General note for the whole page)', where: ''};
     var current;
+    if (/^(SECTION|HEADER|FOOTER)$/.test(t.tagName)) return {section: sectionName(t), current: '(Whole section: ' + sectionName(t) + ')', where: cssPath(t)};
     if (t.tagName === 'IMG') current = 'Photo: ' + (t.getAttribute('alt') || '(no description)') + ' [' + (t.getAttribute('src') || '').split('/').pop() + ']';
     else if (t.tagName === 'IFRAME') current = 'Embedded: ' + (t.getAttribute('title') || t.getAttribute('src') || 'frame');
     else {
