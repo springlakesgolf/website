@@ -1,6 +1,5 @@
 """Turn the June 2026 redesign into a review build with the live site's URLs."""
-import email.utils, html, json, os, re, shutil, sys, urllib.request
-import xml.etree.ElementTree as ET
+import html, json, os, re, shutil, sys
 from pathlib import Path
 
 SRC = Path.home()/"Downloads/Marketing & Promotions/springlakes-site"
@@ -32,47 +31,29 @@ def edit_exec():
     cfg = EDIT_DIR/"config.json"
     return json.loads(cfg.read_text()).get("exec") if cfg.exists() else None
 
-# members page "This Week" band: club Mailchimp campaigns (public archive feed)
-# and a 7-day ECCC forecast loaded in the browser by tools/members/weather.js
-MC_FEED = "https://us13.campaign-archive.com/feed?u=40d74683558e83493d58aafed&id=1872afdeb6"
-MC_HOME = "https://us13.campaign-archive.com/home/?u=40d74683558e83493d58aafed&id=1872afdeb6"
+# members page "This Week" band: 7-day ECCC forecast and the latest club
+# Mailchimp campaigns, both rendered by tools/members/weather.js; the emails come
+# from assets/data/club-emails.json, refreshed hourly by a GitHub Action
+sys.path.insert(0, str(OUT/"tools/members"))
+import club_emails
 
-def club_emails(n=5):
-    """Latest campaigns, newest first. Mailchimp lists resends and test splits
-    as separate items with the same title, so keep only the newest of each."""
-    try:
-        with urllib.request.urlopen(MC_FEED, timeout=20) as r:
-            items = ET.fromstring(r.read()).findall(".//item")
-    except Exception as e:
-        print("club emails: feed unavailable,", e); return []
-    out, seen = [], set()
-    for it in items:
-        title = (it.findtext("title") or "").strip()
-        if not title or title.lower() in seen: continue
-        seen.add(title.lower())
-        when = email.utils.parsedate_to_datetime(it.findtext("pubDate"))
-        out.append((when, title, it.findtext("link")))
-    return sorted(out, reverse=True)[:n]
-
-def this_week():
-    mails = club_emails()
-    li = "".join(f'<li><a href="{html.escape(link)}" target="_blank" rel="noopener"><span class="mc-date">'
-                 f'{w.strftime("%b")} {w.day}</span><span class="mc-title">{html.escape(t)}</span></a></li>' for w, t, link in mails)
-    news = f'<ul class="mc-list">{li}</ul>' if li else '<p class="wx-off">Club emails are not loading right now.</p>'
+def this_week(mails):
+    li = "".join(f'<li><a href="{html.escape(m["link"])}" target="_blank" rel="noopener"><span class="mc-date">'
+                 f'{m["label"]}</span><span class="mc-title">{html.escape(m["title"])}</span></a></li>' for m in mails)
+    news = (f'<div id="mc-col" class="reveal d2"><h3>Latest club emails</h3><ul id="mc-list" class="mc-list">{li}</ul>'
+            f'<a class="mc-all" href="{club_emails.HOME}" target="_blank" rel="noopener">See all club emails</a></div>') if li else ""
     return ('<section id="this-week" class="week-band"><div class="container"><div class="reveal">'
       '<span class="eyebrow">This Week</span><h2>Weather and club news</h2></div>'
-      '<div class="week-grid"><div class="reveal d1"><h3>7-day forecast</h3>'
-      '<div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"><p class="wx-off">Loading the forecast</p></div>'
+      f'<div class="week-grid{"" if li else " one"}"><div id="wx-col" class="reveal d1"><h3>7-day forecast</h3>'
+      '<div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"></div>'
       '<p class="wx-src">Forecast for the Markham area. Data Source: Environment and Climate Change Canada.</p></div>'
-      f'<div class="reveal d2"><h3>Latest club emails</h3>{news}'
-      f'<a class="mc-all" href="{MC_HOME}" target="_blank" rel="noopener">See all club emails</a></div>'
-      '</div></div></section>')
+      f'{news}</div></div></section>')
 
 WEEK_CSS = """
 .week-band{background:var(--navy);color:#fff}
 .week-band h2{color:#fff;font-size:clamp(2rem,4vw,2.8rem);margin-bottom:1.6rem}
 .week-band h3{color:#fff;font-size:1.45rem;margin:0 0 1rem}
-.week-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:40px;align-items:start}
+.week-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:40px;align-items:start}.week-grid.one{grid-template-columns:1fr}
 .wx-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
 .wx-day{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:14px 6px;text-align:center}
 .wx-name{font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft)}
@@ -80,7 +61,6 @@ WEEK_CSS = """
 .wx-temp b{font-size:1.15rem;font-weight:600;margin-right:6px}.wx-temp span{color:rgba(255,255,255,.62);font-size:.92rem}
 .wx-text{font-size:.72rem;line-height:1.35;color:rgba(255,255,255,.78);margin-top:6px}.wx-text em{font-style:normal;color:var(--gold-soft)}
 .wx-src{font-size:.74rem;color:rgba(255,255,255,.55);margin:12px 0 0}
-.wx-off{color:rgba(255,255,255,.75);font-size:.92rem}.wx-off a{color:var(--gold-soft);text-decoration:underline}
 .mc-list{list-style:none;margin:0;padding:0;border-top:1px solid rgba(255,255,255,.14)}
 .mc-list li{border-bottom:1px solid rgba(255,255,255,.14)}
 .mc-list a{display:flex;gap:16px;padding:13px 0;align-items:baseline}
@@ -102,9 +82,11 @@ def rel(prefix, m):
 def build():
     if OUT.joinpath("index.html").exists():
         for p in OUT.iterdir():
-            if p.name not in {".git", ".gitignore", "README.md", "tools", ".claude"}:
+            if p.name not in {".git", ".github", ".gitignore", "README.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
     shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", *PRIVATE_DOCS))
+    global MAILS
+    MAILS = club_emails.write()
     exec_url = edit_exec()
     if exec_url:
         (OUT/"assets/js/edit-mode.js").write_text((EDIT_DIR/"edit-mode.js").read_text().replace("__EXEC_URL__", exec_url))
@@ -201,7 +183,7 @@ def edit(f, s):
                 'member password, checked on the server. Member documents (calendar, renewal forms) are added then.</p>', "members")
         s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">', f)
         s = sub(s, '</section><section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"',
-                '</section>' + this_week() + '<section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
+                '</section>' + this_week(MAILS) + '<section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
         s = s.replace("</body>", '<script src="../assets/js/weather.js" defer></script></body>', 1)
         k = s.find("Member Documents"); i = s.rfind("<section", 0, k); j = s.find("</section>", k) + len("</section>")
         assert k > 0 and i > 0, f

@@ -3,7 +3,7 @@
    The API allows cross-origin reads; commercial use is fine with attribution. */
 (function(){
   var box = document.getElementById('wx-days');
-  if (!box) return;
+  if (!document.getElementById('this-week')) return;
   var URL = 'https://api.weather.gc.ca/collections/citypageweather-realtime/items/on-85?f=json&lang=en';
   var KIND = {sun: [0, 1, 30], part: [2, 3, 4, 5, 22, 31, 32, 33, 34, 35], cloud: [10, 23, 24, 44, 45],
               rain: [6, 11, 12, 13, 28, 36], storm: [9, 19, 39, 41, 42, 46, 47, 48],
@@ -29,7 +29,7 @@
   }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
 
-  fetch(URL).then(function(r){ if (!r.ok) throw 0; return r.json(); }).then(function(d){
+  if (box) fetch(URL).then(function(r){ if (!r.ok) throw 0; return r.json(); }).then(function(d){
     var list = d.properties.forecastGroup.forecasts, days = [], byName = {};
     list.forEach(function(f){
       var name = en(f.period.value), night = / night$/i.test(name), base = name.replace(/ night$/i, '');
@@ -47,8 +47,31 @@
         + '<div class="wx-text">' + esc(x.text) + (x.pop ? ' <em>' + esc(x.pop) + '%</em>' : '') + '</div></div>';
     }).join('');
     box.setAttribute('aria-busy', 'false');
-  }).catch(function(){
-    box.innerHTML = '<p class="wx-off">The forecast is not loading right now. See <a href="https://weather.gc.ca/en/location/index.html?coords=43.977,-79.258" target="_blank" rel="noopener">weather.gc.ca</a>.</p>';
-    box.setAttribute('aria-busy', 'false');
-  });
+  }).catch(function(){ drop('wx-col'); });
+
+  // Latest club emails: the page ships with the list from the last build, then
+  // this swaps in the hourly-refreshed file so new campaigns show up right away.
+  var list = document.getElementById('mc-list');
+  var src = (document.currentScript && document.currentScript.src) || '';
+  var data = /js\/weather\.js/.test(src) ? src.replace(/js\/weather\.js.*$/, 'data/club-emails.json') : '../assets/data/club-emails.json';
+  fetch(data + '?t=' + Date.now())
+    .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+    .then(function(d){
+      if (!d.emails || !d.emails.length) throw 0;
+      if (!list) return;
+      list.innerHTML = d.emails.map(function(m){
+        return '<li><a href="' + esc(m.link) + '" target="_blank" rel="noopener"><span class="mc-date">' + esc(m.label)
+          + '</span><span class="mc-title">' + esc(m.title) + '</span></a></li>';
+      }).join('');
+    }).catch(function(){ if (!list || !list.children.length) drop('mc-col'); });
+
+  // a panel that cannot load is removed; the other takes the full width,
+  // and the band goes away if neither loads
+  function drop(id){
+    var col = document.getElementById(id), band = document.getElementById('this-week');
+    if (!col || !band) return;
+    var grid = col.parentNode; col.remove();
+    if (!grid.querySelector('#wx-col,#mc-col')) band.remove();
+    else grid.classList.add('one');
+  }
 })();
