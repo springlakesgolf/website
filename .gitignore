@@ -1,1 +1,3 @@
 tools/*.json
+tools/edit-mode/mock_rows.json
+tools/edit-mode/edit-key.txt

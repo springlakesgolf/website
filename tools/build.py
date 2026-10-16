@@ -1,5 +1,5 @@
 """Turn the June 2026 redesign into a review build with the live site's URLs."""
-import re, shutil, sys
+import json, os, re, shutil, sys
 from pathlib import Path
 
 SRC = Path.home()/"Downloads/Marketing & Promotions/springlakes-site"
@@ -22,6 +22,14 @@ PREVIEW_HEAD = ('<meta name="robots" content="noindex,nofollow">'
   'border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.25)}.preview-note{background:#f6f1e3;border-left:3px solid #B89A2D;'
   'padding:12px 16px;margin:0 0 24px;font-size:.92rem;color:#323C60}</style>')
 PREVIEW_PILL = '<div class="preview-pill" aria-hidden="true">Staff preview</div>'
+# "Suggest an edit" mode: Apps Script URL from tools/edit-mode/config.json,
+# or SLG_EDIT_EXEC to point a test build at a mock
+EDIT_DIR = OUT/"tools/edit-mode"
+
+def edit_exec():
+    if os.environ.get("SLG_EDIT_EXEC"): return os.environ["SLG_EDIT_EXEC"]
+    cfg = EDIT_DIR/"config.json"
+    return json.loads(cfg.read_text()).get("exec") if cfg.exists() else None
 
 def rel(prefix, m):
     page, frag = m.group(1), m.group(2) or ""
@@ -32,9 +40,12 @@ def rel(prefix, m):
 def build():
     if OUT.joinpath("index.html").exists():
         for p in OUT.iterdir():
-            if p.name not in {".git", "README.md", "tools", ".claude"}:
+            if p.name not in {".git", ".gitignore", "README.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
     shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", *PRIVATE_DOCS))
+    exec_url = edit_exec()
+    if exec_url:
+        (OUT/"assets/js/edit-mode.js").write_text((EDIT_DIR/"edit-mode.js").read_text().replace("__EXEC_URL__", exec_url))
     for f, slug in SLUG.items():
         prefix = "../" if slug else ""
         s = (SRC/f).read_text()
@@ -42,7 +53,8 @@ def build():
         s = s.replace('src="assets/', f'src="{prefix}assets/').replace('href="assets/', f'href="{prefix}assets/')
         s = s.replace('poster="assets/', f'poster="{prefix}assets/')
         s = s.replace("<head>", "<head>" + PREVIEW_HEAD, 1)
-        s = s.replace("</body>", PREVIEW_PILL + "</body>", 1)
+        tail = PREVIEW_PILL + (f'<script src="{prefix}assets/js/edit-mode.js" defer></script>' if exec_url else "")
+        s = s.replace("</body>", tail + "</body>", 1)
         s = re.sub(r' data-to="[^"]*"', "", s)
         s = edit(f, s)
         for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num"):
