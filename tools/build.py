@@ -162,6 +162,9 @@ def edit(f, s):
         assert "<video" not in s, f
         s = cut(s, '<section class="cta-band">', "<footer", "", f)
         s = sub(s, "2026 weeks are now sold out.", "2027 dates are coming soon.", f)
+        # 2027 forms: categories differ by tier, so no blanket "unlimited golf" claim
+        s = sub(s, "Unlimited golf across three courses, a clubhouse built for the whole family, and a calendar that fills the season, with no hidden minimums.",
+                "Three championship courses, a clubhouse built for the whole family, and a calendar that fills the season, with no clubhouse minimums.", f)
     if f == "memberships.html":
         i = s.find('<main id="main">') + len('<main id="main">')
         j = s.find('<section><div class="container narrow"><div class="section-head center"><span class="eyebrow reveal">Inquire')
@@ -207,6 +210,15 @@ def edit(f, s):
         s = re.sub(r'<select([^>]*id="[^"]*")[^>]*>(?:(?!</select>).)*?Junior Intermediate.*?</select>',
                    lambda m: '<input type="text"' + m.group(1) + '>', s, count=1, flags=re.S)
         assert "Junior Intermediate" not in s, f
+        # match the final 2027 membership forms
+        s = sub(s, "<li>Juniors are 17 and under and may only play accompanied by an adult member.</li>",
+                "<li>Junior memberships are for golfers 18 and under and must be linked to an adult membership. Junior tee times start from 11 am and juniors may not use carts, unless approved by management.</li>"
+                "<li>Junior and junior intermediate members may bring up to two guests per visit, unless approved by management.</li>", f)
+        s = sub(s, "One form for every category. Send it through and the office will confirm your renewal and arrange payment by e-transfer, cheque or another method.",
+                "One form for every category. Renewals are due by January 15, 2027, and payment by January 31, 2027. Send it through and the office will confirm your renewal and arrange payment.", f)
+        s = sub(s, "<option>E-transfer</option><option>Cheque</option><option>Call me to arrange</option><option>Other</option>",
+                "<option>E-transfer</option><option>One cheque (by January 31)</option><option>Two cheques (January 31 and March 31)</option>"
+                "<option>Credit card (service fee applies)</option><option>Call me to arrange</option>", f)
     return s
 
 if __name__ == "__main__":
