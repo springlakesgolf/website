@@ -333,15 +333,6 @@ section{padding:clamp(60px,8vw,108px) 0}
 .lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
 
-/* top menu without a dropdown, and the golf pages' tab row */
-.nav-links{gap:30px}
-.subnav{background:#fff;border-bottom:1px solid var(--line);position:relative;z-index:5}
-.subnav .container{display:flex;gap:36px;overflow-x:auto;scrollbar-width:none}
-.subnav .container::-webkit-scrollbar{display:none}
-.subnav a{flex:none;padding:18px 0 16px;font-size:.92rem;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
-.subnav a:hover{color:var(--navy)}
-.subnav a[aria-current="page"]{color:var(--navy);font-weight:600;border-bottom-color:var(--gold)}
-@media(max-width:700px){.subnav .container{gap:24px}.subnav a{font-size:.88rem;padding:15px 0 13px}}
 /* text no longer fades in on scroll; photos and the home page opening keep a quiet entrance */
 .reveal{opacity:1;transform:none;transition:none}
 @media(prefers-reduced-motion:no-preference){

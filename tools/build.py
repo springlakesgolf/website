@@ -57,15 +57,6 @@ def this_week(mails):
       '<ul id="lost-box" class="lf-list reveal d2" aria-live="polite"><li class="lf-empty">Checking the list</li></ul></div></section>')
 
 NAV_CSS = """
-/* top menu without a dropdown, and the golf pages' tab row */
-.nav-links{gap:30px}
-.subnav{background:#fff;border-bottom:1px solid var(--line);position:relative;z-index:5}
-.subnav .container{display:flex;gap:36px;overflow-x:auto;scrollbar-width:none}
-.subnav .container::-webkit-scrollbar{display:none}
-.subnav a{flex:none;padding:18px 0 16px;font-size:.92rem;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
-.subnav a:hover{color:var(--navy)}
-.subnav a[aria-current="page"]{color:var(--navy);font-weight:600;border-bottom-color:var(--gold)}
-@media(max-width:700px){.subnav .container{gap:24px}.subnav a{font-size:.88rem;padding:15px 0 13px}}
 /* text no longer fades in on scroll; photos and the home page opening keep a quiet entrance */
 .reveal{opacity:1;transform:none;transition:none}
 @media(prefers-reduced-motion:no-preference){
@@ -115,8 +106,7 @@ WEEK_CSS = """
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
 """
 
-# no dropdown in the top menu: Golf is one link, and the four golf pages share a
-# tab row under the page header; the logo is the way home
+# unused since 2026-10-16: Cullen kept the Golf dropdown; flat_nav() stays for reference
 GOLF_PAGES = [("golf", "Courses"), ("golf-academy", "Golf Academy"), ("golf-camps", "Golf Camps"), ("course-gallery", "Course Gallery")]
 
 def flat_nav(s, slug, prefix):
@@ -162,7 +152,6 @@ def build():
         s = s.replace("</body>", tail + "</body>", 1)
         s = re.sub(r' data-to="[^"]*"', "", s)
         s = edit(f, s)
-        s = flat_nav(s, slug, prefix)
         for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num"):
             assert bad not in s, (f, bad)
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"
