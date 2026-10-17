@@ -57,13 +57,26 @@
   fetch(data + '?t=' + Date.now())
     .then(function(r){ if (!r.ok) throw 0; return r.json(); })
     .then(function(d){
-      if (!d.emails || !d.emails.length) throw 0;
+      if ((!d.emails || !d.emails.length) && !d.week) throw 0;
       if (!list) return;
-      list.innerHTML = d.emails.map(function(m){
+      week(d.week);
+      list.innerHTML = (d.emails || []).map(function(m){
         return '<li><a href="' + esc(m.link) + '" target="_blank" rel="noopener"><span class="mc-date">' + esc(m.label)
           + '</span><span class="mc-title">' + esc(m.title) + '</span></a></li>';
       }).join('');
     }).catch(function(){ if (!list || !list.children.length) drop('mc-col'); });
+
+  // Braeden's current week at a glance, in its own card above the list (staff edit E9)
+  function week(w){
+    var col = document.getElementById('mc-col'); if (!col) return;
+    var card = document.getElementById('wk-feat'), h1 = document.getElementById('wk-h1'), h = document.getElementById('mc-h');
+    if (!w) { if (card) card.parentNode.removeChild(card); if (h1) h1.hidden = true; if (h) h.textContent = 'Latest club emails'; return; }
+    if (!card) { card = document.createElement('a'); card.id = 'wk-feat'; card.className = 'wk-feat'; card.target = '_blank'; card.rel = 'noopener'; h.parentNode.insertBefore(card, h); }
+    card.href = w.link;
+    card.innerHTML = '<span class="wk-k">Week at a glance</span><span class="wk-t">' + esc(w.title) + '</span><span class="wk-d">Sent '
+      + esc(w.label) + '</span><span class="wk-go">Read this week</span>';
+    if (h1) h1.hidden = false; if (h) h.textContent = 'Other club emails';
+  }
 
   // a panel that cannot load is removed; the other takes the full width,
   // and the band goes away if nothing in it loads

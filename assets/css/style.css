@@ -294,6 +294,7 @@ section{padding:clamp(60px,8vw,108px) 0}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none;transition:none}.btn:hover,.course-card:hover,.tier-card:hover,.course-card:hover .course-art img{transform:none}}
 
 .btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}
+.hp{position:absolute;left:-9999px}
 
 .week-band{background:var(--navy);color:#fff}
 .week-band h2{color:#fff;font-size:clamp(2rem,4vw,2.8rem);margin-bottom:1.6rem}
@@ -332,6 +333,13 @@ section{padding:clamp(60px,8vw,108px) 0}
 .lf-date{flex:0 0 60px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
+/* week at a glance card, option A */
+.wk-feat{display:block;border:1px solid var(--gold);padding:20px 22px;margin-bottom:28px;background:rgba(184,154,45,.08)}
+.wk-k{display:block;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft)}
+.wk-t{display:block;font-family:var(--serif);font-size:1.45rem;line-height:1.25;color:#fff;margin:6px 0;transition:color .2s}
+.wk-d{display:block;font-size:.82rem;color:rgba(255,255,255,.65)}
+.wk-go{display:inline-block;margin-top:14px;font-size:.9rem;font-weight:600;color:var(--gold-soft);border-bottom:1px solid currentColor}
+.wk-feat:hover .wk-t{color:var(--gold-soft)}#mc-h:not(:first-child){font-size:1.1rem}
 /* restaurant reservations, panel A */
 .rv{margin:1.6rem 0}
 /* the page grid item must be allowed to shrink, or the day strip widens the whole page on a phone */

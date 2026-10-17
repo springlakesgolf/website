@@ -15,6 +15,6 @@
   d.querySelectorAll('a').forEach(function(a){a.addEventListener('click',c)});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')c()})}
   document.querySelectorAll('.tee-link').forEach(function(a){a.addEventListener('click',function(ev){var w=window.open(a.href,'chronogolf','width=1024,height=880');if(w){ev.preventDefault();}});});
-  document.querySelectorAll('.inquiry-form').forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault();var n=f.querySelector('.form-note');if(n){n.style.display='block';n.textContent='Preview only. This form is not connected yet, so nothing was sent.';}})});
+  document.querySelectorAll('.inquiry-form:not([data-live])').forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault();var n=f.querySelector('.form-note');if(n){n.style.display='block';n.textContent='Preview only. This form is not connected yet, so nothing was sent.';}})});
   document.querySelectorAll('.course-card,.tier-card').forEach(function(card){var lk=card.querySelector('a[href],button');if(lk){card.classList.add('is-clickable');card.addEventListener('click',function(e){if(e.target.closest('a,button,input,select,textarea,label'))return;if(lk.getAttribute('target')===String.fromCharCode(95)+'blank'){window.open(lk.href,'_blank','noopener');}else{lk.click();}});}else{card.classList.add('is-static');}});
 })();

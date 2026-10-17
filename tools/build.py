@@ -15,6 +15,8 @@ SLUG = {  # June file -> live URL folder ('' = home)
 # member-only or pricing documents never go on a public preview
 PRIVATE_DOCS = {"2026-JI-Renewal.pdf", "2026-Junior-Renewal.pdf",
                 "2026-Member-Calendar.pdf", "2026-Renewal-Form.pdf"}
+# winter lessons are no longer offered (Braeden, 2026-10-16, E4/E5)
+RETIRED_DOCS = {"Winter-Lessons-Rhys.pdf", "Winter-Programming-Braeden.pdf"}
 
 PREVIEW_HEAD = ('<meta name="robots" content="noindex,nofollow">'
   '<style>.preview-pill{position:fixed;left:12px;bottom:12px;z-index:9999;background:#B89A2D;color:#323C60;'
@@ -53,17 +55,32 @@ def nodash(name):
         assert bad not in t, (name, bad)
     return t
 
+# Google Forms the site links to (staff edits E6 and E8), built by tools/forms/build_forms.gs.
+# Until a link is in tools/forms/config.json the page keeps its phone or inquiry fallback.
+FORMS = OUT/"tools/forms/config.json"
+
+def forms():
+    return json.loads(FORMS.read_text()) if FORMS.exists() else {}
+
+# membership inquiries post to the Apps Script that writes the "Membership Inquiries" sheet,
+# the same endpoint as springlakesgolf.github.io/membership (staff edit E7)
+INQUIRY_EXEC = "https://script.google.com/macros/s/AKfycbztt-0KQKXHHbw0jHFwxzUqiNxbCPboNhR5qOKorbzOHpJEfpjUCQMus26GyOLJExzv/exec"
+
 # members page "This Week" band: 7-day ECCC forecast and the latest club
 # Mailchimp campaigns, both rendered by tools/members/weather.js; the emails come
 # from assets/data/club-emails.json, refreshed hourly by a GitHub Action
 sys.path.insert(0, str(OUT/"tools/members"))
 import club_emails
 
-def this_week(mails):
+def this_week(mails, week):
     li = "".join(f'<li><a href="{html.escape(m["link"])}" target="_blank" rel="noopener"><span class="mc-date">'
                  f'{m["label"]}</span><span class="mc-title">{html.escape(m["title"])}</span></a></li>' for m in mails)
-    news = (f'<div id="mc-col"><h3>Latest club emails</h3><ul id="mc-list" class="mc-list">{li}</ul>'
-            f'<a class="mc-all" href="{club_emails.HOME}" target="_blank" rel="noopener">See all club emails</a></div>') if li else ""
+    # option A (Cullen, 2026-10-17): the current week at a glance in a card above the list
+    feat = (f'<a id="wk-feat" class="wk-feat" href="{html.escape(week["link"])}" target="_blank" rel="noopener"><span class="wk-k">Week at a glance</span>'
+            f'<span class="wk-t">{html.escape(week["title"])}</span><span class="wk-d">Sent {week["label"]}</span><span class="wk-go">Read this week</span></a>') if week else ""
+    news = (f'<div id="mc-col"><h3 id="wk-h1"{"" if week else " hidden"}>This week at the club</h3>{feat}'
+            f'<h3 id="mc-h">{"Other club emails" if week else "Latest club emails"}</h3><ul id="mc-list" class="mc-list">{li}</ul>'
+            f'<a class="mc-all" href="{club_emails.HOME}" target="_blank" rel="noopener">See all club emails</a></div>') if li or week else ""
     side = ('<div id="side-col" class="reveal d2"><div id="hours-wrap" hidden><h3>Club hours</h3>'
             '<div id="hours-box" class="hr-list" data-scope="members" aria-live="polite"></div></div>' + news + '</div>')
     return ('<section id="this-week" class="week-band"><div class="container"><div class="reveal">'
@@ -72,11 +89,18 @@ def this_week(mails):
       '<div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"></div>'
       '<p class="wx-src">Forecast for the Markham area. Data Source: Environment and Climate Change Canada.</p></div>'
       f'{side}</div></div></section>'
-      '<section id="lost-found" class="bg-cream"><div class="container narrow"><div class="section-head center">'
+      + lost_found())
+
+def lost_found():
+    # members report what they lost; reception sees the reports, and no items are listed here (staff edit E8)
+    url = forms().get("lost")
+    btn = (f'<div class="reveal d3" style="margin-top:1.4rem"><a class="btn btn-gold" href="{html.escape(url)}" target="_blank" rel="noopener">'
+           'Report a lost item</a></div>') if url else ""
+    how = "Tell us what you lost and where you last had it" if url else "Call the pro shop at 905-640-3633 and tell us what you lost and where"
+    return ('<section id="lost-found" class="bg-cream"><div class="container narrow"><div class="section-head center" style="margin-bottom:0">'
       '<span class="eyebrow reveal">Lost &amp; Found</span><h2 class="reveal d1">Lost something at the club?</h2>'
-      '<p class="reveal d2">Clubs and other items turned in to the pro shop and clubhouse. If one is yours, call the pro shop at '
-      '<a href="tel:9056403633" style="color:var(--gold)">905-640-3633</a> or stop in to pick it up.</p></div>'
-      '<ul id="lost-box" class="lf-list reveal d2" aria-live="polite"><li class="lf-empty">Checking the list</li></ul></div></section>')
+      f'<p class="reveal d2">{how}. Our team checks every report against items turned in to the pro shop and clubhouse, and will call you if it turns up.</p>'
+      f'{btn}</div></div></section>')
 
 NAV_CSS = """
 /* golf camps: sign-up card beside the 2027 flyer */
@@ -150,6 +174,13 @@ WEEK_CSS = """
 .lf-date{flex:0 0 60px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
+/* week at a glance card, option A */
+.wk-feat{display:block;border:1px solid var(--gold);padding:20px 22px;margin-bottom:28px;background:rgba(184,154,45,.08)}
+.wk-k{display:block;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft)}
+.wk-t{display:block;font-family:var(--serif);font-size:1.45rem;line-height:1.25;color:#fff;margin:6px 0;transition:color .2s}
+.wk-d{display:block;font-size:.82rem;color:rgba(255,255,255,.65)}
+.wk-go{display:inline-block;margin-top:14px;font-size:.9rem;font-weight:600;color:var(--gold-soft);border-bottom:1px solid currentColor}
+.wk-feat:hover .wk-t{color:var(--gold-soft)}#mc-h:not(:first-child){font-size:1.1rem}
 /* restaurant reservations, panel A */
 .rv{margin:1.6rem 0}
 /* the page grid item must be allowed to shrink, or the day strip widens the whole page on a phone */
@@ -233,12 +264,13 @@ def build():
         for p in OUT.iterdir():
             if p.name not in {".git", ".github", ".gitignore", ".impeccable", ".superpowers", "README.md", "PRODUCT.md", "DESIGN.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
-    shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", "camp-2026.webp", *PRIVATE_DOCS))
+    shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", "camp-2026.webp", *PRIVATE_DOCS, *RETIRED_DOCS))
     # 2027 camp flyer (Braeden, 2026-10-16): image on the camps page plus the printable PDF
     shutil.copy(OUT/"tools/camps/camp-2027-flyer.jpg", OUT/"assets/img/camp-2027-flyer.jpg")
     shutil.copy(OUT/"tools/camps/2027-Camp-Flyer.pdf", OUT/"assets/docs/2027-Camp-Flyer.pdf")
-    global MAILS
-    MAILS = club_emails.write()
+    shutil.copy(OUT/"tools/camps/junior-lesson.jpg", OUT/"assets/img/junior-lesson.jpg")
+    global MAILS, WEEK
+    MAILS, WEEK = club_emails.write()
     exec_url = edit_exec()
     if exec_url:
         (OUT/"assets/js/edit-mode.js").write_text((EDIT_DIR/"edit-mode.js").read_text().replace("__EXEC_URL__", exec_url))
@@ -258,8 +290,10 @@ def build():
         s = s.replace("</body>", tail + "</body>", 1)
         s = re.sub(r' data-to="[^"]*"', "", s)
         s = edit(f, s)
+        # Golf Camps is now Junior Golf: camps, Operation 36 and the junior academy (E10 option A, Cullen 2026-10-17)
+        s = s.replace(">Golf Camps<", ">Junior Golf<")
         s = restyle(s)
-        for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num"):
+        for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps"):
             assert bad not in s, (f, bad)
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -281,18 +315,41 @@ def build():
     js = OUT/"assets/js/site.js"; t = js.read_text()
     a = t.find("document.querySelectorAll('.inquiry-form')"); b = t.find("\n", a)
     assert a > 0, "site.js forms"
-    t = t[:a] + ("document.querySelectorAll('.inquiry-form').forEach(function(f){f.addEventListener('submit',function(e){"
+    t = t[:a] + ("document.querySelectorAll('.inquiry-form:not([data-live])').forEach(function(f){f.addEventListener('submit',function(e){"
         "e.preventDefault();var n=f.querySelector('.form-note');if(n){n.style.display='block';"
         "n.textContent='Preview only. This form is not connected yet, so nothing was sent.';}})});") + t[b:]
     js.write_text(t)
     # June CSS: the mobile .btn padding squeezed the menu icon to 4px wide
     css = OUT/"assets/css/style.css"
-    css.write_text(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n" + WEEK_CSS + NAV_CSS)
+    css.write_text(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS)
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
+    shutil.copy(OUT/"tools/forms/inquiry.js", OUT/"assets/js/inquiry.js")
     if exec_url:
         (OUT/"assets/js/content.js").write_text((OUT/"tools/members/content.js").read_text().replace("__EXEC_URL__", exec_url))
     (OUT/".nojekyll").write_text("")
     (OUT/"robots.txt").write_text("User-agent: *\nDisallow: /\n")
+
+JUNIOR_PROGRAMS = (
+  '<section><div class="container"><div class="card-grid two">'
+  '<article id="operation-36" class="course-card reveal"><div class="course-art"><img src="../assets/img/member-junior.webp" alt="Two junior golfers walking a fairway at Spring Lakes"></div>'
+  '<div class="course-body"><h3 class="script" style="font-size:1.9rem">Operation 36</h3><p>Our development program for newer junior golfers. '
+  'Weekly coaching with our professionals, plus nine-hole rounds on the East Course that start 25 yards from the green. '
+  'Shoot 36 or better and you move back to the next distance.</p>'
+  '<a class="link-arrow" href="../contact-us/">Inquire about Operation 36 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div></article>'
+  '<article id="junior-academy" class="course-card reveal d1"><div class="course-art"><img src="../assets/img/junior-lesson.jpg" alt="A Spring Lakes professional coaching a junior on the range"></div>'
+  '<div class="course-body"><h3 class="script" style="font-size:1.9rem">Junior Academy</h3><p>Our performance program for committed juniors ready to compete. '
+  'Weekly guided practice, on-course coaching on the East Course, and a path into junior tournaments.</p>'
+  '<a class="link-arrow" href="../contact-us/">Inquire about the academy <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div></article>'
+  '</div></div></section>')
+
+def camp_button():
+    # E6: waitlist form now; in December set "registration_open": true in tools/forms/config.json
+    c = forms()
+    if c.get("registration_open") and c.get("registration"):
+        return f'<a class="btn btn-gold" href="{html.escape(c["registration"])}" target="_blank" rel="noopener">Register for camp</a>'
+    if c.get("waitlist"):
+        return f'<a class="btn btn-gold" href="{html.escape(c["waitlist"])}" target="_blank" rel="noopener">Join the 2027 waitlist</a>'
+    return '<a class="btn btn-gold" href="../contact-us/">Inquire about camp</a>'
 
 def sub(s, old, new, f):
     assert old in s, (f, old[:60])
@@ -310,7 +367,15 @@ def edit(f, s):
                    r'<img src="\1" alt="Aerial view over Spring Lakes">', s)
         assert "<video" not in s, f
         s = cut(s, '<section class="cta-band">', "<footer", "", f)
-        s = sub(s, "2026 weeks are now sold out.", "Four camp weeks for summer 2027.", f)
+        # E10: the camps card becomes Junior Golf
+        s = sub(s, "<p>Junior camps each season, a real pathway for young golfers. 2026 weeks are now sold out.</p>",
+                "<p>Summer camp, Operation 36 and the junior academy, a real pathway for young golfers.</p>", f)
+        s = sub(s, 'href="golf-camps/">Camp Info <svg', 'href="golf-camps/">Junior golf <svg', f)
+        # E1: weddings are no longer offered
+        s = sub(s, "From junior pathways to weddings on the moraine,", "From junior pathways to golf days on the moraine,", f)
+        s = sub(s, ">Weddings &amp; Events</h3><p>Weddings, corporate days and celebrations, framed by 45 lakes and open sky.</p>",
+                ">Events &amp; Golf Days</h3><p>Corporate days, golf tournaments and celebrations, framed by 45 lakes and open sky.</p>", f)
+        assert "edding" not in s, f
         # 2027 forms: categories differ by tier, so no blanket "unlimited golf" claim
         s = sub(s, "Unlimited golf across three courses, a clubhouse built for the whole family, and a calendar that fills the season, with no hidden minimums.",
                 "Three championship courses, a clubhouse built for the whole family, and a calendar that fills the season, with no clubhouse minimums.", f)
@@ -332,6 +397,16 @@ def edit(f, s):
           '<option value="">Choose one</option><option>2027 season</option><option>2028 or later</option></select></div>'
           '<div class="field"><label for="if-r">Referred by a member? (optional)</label><input name="referral" id="if-r" type="text"></div>'
           '<div class="field"><label for="if-m">Message</label>', f)
+        # E7: the form posts to the Membership Inquiries sheet, which keeps name, email, interest, year and referral,
+        # so phone and message come off rather than being dropped silently
+        s, n = re.subn(r'<div class="field"><label for="if-p">Phone</label>.*?</div>', "", s, count=1, flags=re.S)
+        assert n == 1, (f, "phone field")
+        s, n = re.subn(r'<div class="field"><label for="if-m">Message</label><textarea[^>]*></textarea></div>', "", s, count=1)
+        assert n == 1, (f, "message field")
+        s = sub(s, '<form class="inquiry-form" data-subject="Spring Lakes membership inquiry">',
+                f'<form class="inquiry-form" id="mem-inquiry" data-live data-exec="{INQUIRY_EXEC}">'
+                '<div class="hp" aria-hidden="true"><label for="if-w">Website</label><input name="website" id="if-w" type="text" tabindex="-1" autocomplete="off"></div>', f)
+        s = s.replace("</body>", '<script src="../assets/js/inquiry.js" defer></script></body>', 1)
     if f == "dining.html" and dining_exec():
         s = sub(s, '<div class="hours">', '<div id="reserve" class="rv"><p class="rv-note">To reserve a table, call the clubhouse at 905-640-3633.</p></div><div class="hours">', f)
         s = s.replace("</body>", '<script src="../assets/js/dining-rules.js" defer></script>'
@@ -342,18 +417,44 @@ def edit(f, s):
         s = re.sub(r"Thank you\. Every week of our 2026 junior camps has been filled\. To join the waitlist or to hear first when 2027 dates open,",
                    "Our 2026 camps were a full house. To hear first when 2027 dates and registration open,", s)
         s = s.replace("Join the Waitlist", "Get on the List")
-        s = sub(s, "<h1>Spring Lakes Camps 2026</h1>", "<h1>Spring Lakes Junior Camps</h1>", f)
+        # E10 option A (Cullen, 2026-10-17): this page is Junior Golf, with camp, Operation 36 and the junior academy
+        s = sub(s, "<h1>Spring Lakes Camps 2026</h1>", "<h1>Junior Golf</h1>", f)
+        s = sub(s, "<title>Golf Camps | Spring Lakes Golf Club</title>", "<title>Junior Golf | Spring Lakes Golf Club</title>", f)
+        s = sub(s, "&nbsp;/&nbsp; Golf Camps</div>", "&nbsp;/&nbsp; Junior Golf</div>", f)
         s = re.sub(r'<meta name="description" content="[^"]*">',
-                   '<meta name="description" content="Junior golf camps at Spring Lakes for ages 6 to 14, taught by PGA of Canada professionals. Four camp weeks in summer 2027.">', s, count=1)
+                   '<meta name="description" content="Junior golf at Spring Lakes: summer camp for ages 6 to 14, Operation 36 and the junior academy, taught by PGA of Canada professionals.">', s, count=1)
         # option A (Cullen, 2026-10-16): the 2027 flyer in place of the old poster, with a sign-up card
         s = sub(s, '<div class="figure-frame" style="aspect-ratio:3/4;max-width:430px"><img src="../assets/img/camp-2026.webp" alt="Spring Lakes Camp 2026 poster">',
                 '<div class="figure-frame" style="aspect-ratio:4/5;max-width:460px"><img src="../assets/img/camp-2027-flyer.jpg" alt="Spring Lakes Summer Camp 2027 flyer: ages 6 to 14, 9 am to 4 pm, four weeks in July and August">', f)
         s, n = re.subn(r'<div class="gate reveal".*?Call 905-640-3633</a></div></div>',
                        '<div class="camp-card reveal"><h2>Summer camp 2027</h2><p>Four weeks for golfers aged 6 to 14, taught by our PGA of Canada professionals. '
-                       'Spots are first come, first served.</p><div class="camp-btns"><a class="btn btn-gold" href="../contact-us/">Inquire about camp</a>'
+                       f'Spots are first come, first served.</p><div class="camp-btns">{camp_button()}'
                        '<a class="btn btn-ghost-navy" href="tel:9056403633">Call 905-640-3633</a></div>'
                        '<a class="camp-pdf" href="../assets/docs/2027-Camp-Flyer.pdf" target="_blank" rel="noopener">Download the flyer (PDF)</a></div>', s, count=1, flags=re.S)
         assert n == 1, (f, "camp gate")
+        s = sub(s, '<main id="main"><section><div class="container split"', '<main id="main"><section class="jg-intro"><div class="container narrow center">'
+                '<span class="eyebrow reveal">Three Programs</span><h2 class="reveal d1" style="font-size:clamp(2rem,4vw,3rem)">A pathway for young golfers</h2>'
+                '<p class="lead-text reveal d2" style="margin:1rem auto 0">Summer camp, Operation 36 and the junior academy, all taught by our PGA of Canada professionals.</p>'
+                '</div></section><section id="camp" style="padding-top:0"><div class="container split"', f)
+        s = sub(s, "</div></div></section></main>", "</div></div></section>" + JUNIOR_PROGRAMS + "</main>", f)
+        s = sub(s, "<h2>Looking for Year-Round Junior Golf?</h2><p>Beyond summer camps, our academy runs junior development programs and a performance pathway all season long.</p>",
+                "<h2>Looking for Private Lessons?</h2><p>Our professionals also teach juniors one on one, booked online through CoachNow.</p>", f)
+    if f == "events.html":
+        # weddings are no longer offered (Laura, 2026-10-16, E1)
+        s = sub(s, "Weddings, corporate functions and celebrations at Spring Lakes", "Corporate functions, golf days and celebrations at Spring Lakes", f)
+        s = s.replace(">Weddings and Functions<", ">Events and Functions<")
+        s = sub(s, "Spring Lakes hosts weddings, corporate days and celebrations", "Spring Lakes hosts corporate days, golf tournaments and celebrations", f)
+        s, n = re.subn(r'<article class="course-card reveal"><div class="course-art"><img src="(?:\.\./)?assets/img/g05\.webp" alt=""></div>'
+                       r'<div class="course-body"><h3 class="script"[^>]*>Weddings</h3>.*?</article>', "", s, count=1, flags=re.S)
+        assert n == 1, (f, "weddings card")
+        s = sub(s, '<div class="card-grid"><article class="course-card reveal d1">', '<div class="card-grid two"><article class="course-card reveal">', f)
+        assert "edding" not in s, f
+    if f == "golf-academy.html":
+        s = s.replace(" Winter lesson programs available.", "")
+        s, n = re.subn(r'<a class="link-arrow pro-extra" href="(?:\.\./)?assets/docs/Winter-[^"]*\.pdf".*?</a>', "", s, flags=re.S)
+        assert n == 2, (f, "winter links", n)
+        s = sub(s, "Yardage clinics, winter lesson programs and junior pathways", "Yardage clinics and junior pathways", f)
+        assert "winter" not in s.lower(), f
     if f == "contact.html":
         s = sub(s, '<h3 style="font-size:1.5rem;margin:34px 0 6px">Staff Directory</h3>',
                 '<div id="hours-wrap" class="hours-public" hidden><h3 style="font-size:1.5rem;margin:0 0 6px">Hours</h3>'
@@ -372,7 +473,7 @@ def edit(f, s):
                 'member password, checked on the server. Member documents (calendar, renewal forms) are added then.</p>', "members")
         s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">', f)
         s = sub(s, '</section><section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"',
-                '</section>' + this_week(MAILS) + '<section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
+                '</section>' + this_week(MAILS, WEEK) + '<section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
         s = s.replace("</body>", '<script src="../assets/js/weather.js" defer></script><script src="../assets/js/content.js" defer></script></body>', 1)
         k = s.find("Member Documents"); i = s.rfind("<section", 0, k); j = s.find("</section>", k) + len("</section>")
         assert k > 0 and i > 0, f
