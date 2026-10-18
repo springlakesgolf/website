@@ -73,23 +73,22 @@ sys.path.insert(0, str(OUT/"tools/members"))
 import club_emails
 
 def this_week(mails, week):
+    # option B (Cullen, 2026-10-18): club news first on the members page, with club hours and a one-line-per-day
+    # forecast in a cream sidebar instead of the navy band
     li = "".join(f'<li><a href="{html.escape(m["link"])}" target="_blank" rel="noopener"><span class="mc-date">'
                  f'{m["label"]}</span><span class="mc-title">{html.escape(m["title"])}</span></a></li>' for m in mails)
-    # option A (Cullen, 2026-10-17): the current week at a glance in a card above the list
+    # the current week at a glance in a card above the list (E9 option A, 2026-10-17)
     feat = (f'<a id="wk-feat" class="wk-feat" href="{html.escape(week["link"])}" target="_blank" rel="noopener"><span class="wk-k">Week at a glance</span>'
             f'<span class="wk-t">{html.escape(week["title"])}</span><span class="wk-d">Sent {week["label"]}</span><span class="wk-go">Read this week</span></a>') if week else ""
-    news = (f'<div id="mc-col"><h3 id="wk-h1"{"" if week else " hidden"}>This week at the club</h3>{feat}'
-            f'<h3 id="mc-h">{"Other club emails" if week else "Latest club emails"}</h3><ul id="mc-list" class="mc-list">{li}</ul>'
+    news = (f'<div id="mc-col">{feat}<h3 id="mc-h">{"Other club emails" if week else "Latest club emails"}</h3><ul id="mc-list" class="mc-list">{li}</ul>'
             f'<a class="mc-all" href="{club_emails.HOME}" target="_blank" rel="noopener">See all club emails</a></div>') if li or week else ""
-    side = ('<div id="side-col" class="reveal d2"><div id="hours-wrap" hidden><h3>Club hours</h3>'
-            '<div id="hours-box" class="hr-list" data-scope="members" aria-live="polite"></div></div>' + news + '</div>')
-    return ('<section id="this-week" class="week-band"><div class="container"><div class="reveal">'
-      '<span class="eyebrow">This Week</span><h2>Weather and club news</h2></div>'
-      '<div class="week-grid"><div id="wx-col" class="reveal d1"><h3>7-day forecast</h3>'
-      '<div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"></div>'
-      '<p class="wx-src">Forecast for the Markham area. Data Source: Environment and Climate Change Canada.</p></div>'
-      f'{side}</div></div></section>'
-      + lost_found())
+    side = ('<aside id="side-col" class="news-side"><div id="hours-wrap" hidden><h3>Club hours</h3>'
+            '<div id="hours-box" class="hr-list" data-scope="members" aria-live="polite"></div></div>'
+            '<div id="wx-col"><h3>7-day forecast</h3><div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"></div>'
+            '<p class="wx-src">Forecast for the Markham area. Data Source: Environment and Climate Change Canada.</p></div></aside>')
+    return ('<section id="this-week" class="news-band"><div class="container">'
+      '<span class="eyebrow">This Week</span><h2>Club news</h2>'
+      f'<div class="week-grid">{news}{side}</div></div></section>')
 
 def lost_found():
     # members report what they lost; reception sees the reports, and no items are listed here (staff edit E8)
@@ -137,34 +136,31 @@ NAV_CSS = """
 """
 
 WEEK_CSS = """
-.week-band{background:var(--navy);color:#fff}
-.week-band h2{color:#fff;font-size:clamp(2rem,4vw,2.8rem);margin-bottom:1.6rem}
-.week-band h3{color:#fff;font-size:1.45rem;margin:0 0 1rem}
-.week-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:40px;align-items:start}.week-grid.one{grid-template-columns:1fr}.week-grid>*{min-width:0}
-.wx-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
-.wx-day{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:14px 6px;text-align:center}
-.wx-name{font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft)}
-.wx-ico{width:34px;height:34px;margin:10px auto;color:#fff;display:block}
-.wx-temp b{font-size:1.15rem;font-weight:600;margin-right:6px}.wx-temp span{color:rgba(255,255,255,.62);font-size:.92rem}
-.wx-text{font-size:.72rem;line-height:1.35;color:rgba(255,255,255,.78);margin-top:6px}.wx-text em{font-style:normal;color:var(--gold-soft)}
-.wx-src{font-size:.74rem;color:rgba(255,255,255,.55);margin:12px 0 0}
-.mc-list{list-style:none;margin:0;padding:0;border-top:1px solid rgba(255,255,255,.14)}
-.mc-list li{border-bottom:1px solid rgba(255,255,255,.14)}
-.mc-list a{display:flex;gap:16px;padding:13px 0;align-items:baseline}
-.mc-list a:hover .mc-title{color:var(--gold-soft)}
-.mc-date{flex:0 0 52px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-soft)}
+.news-band{background:#fff;padding:56px 0 48px}
+.news-band h2{font-size:clamp(2rem,4vw,2.8rem);margin:0 0 1.4rem}
+.news-band h3{font-size:1.35rem;margin:0 0 .8rem;color:var(--navy)}
+.week-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:44px;align-items:start}.week-grid.one{grid-template-columns:1fr}.week-grid>*{min-width:0}
+.mc-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.mc-list li{border-bottom:1px solid var(--line)}
+.mc-list a{display:flex;gap:16px;padding:12px 0;align-items:baseline;color:var(--ink)}
+.mc-list a:hover .mc-title{color:var(--gold)}
+.mc-date{flex:0 0 52px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .mc-title{font-size:.95rem;line-height:1.45;transition:color .2s}
-.mc-all{display:inline-block;margin-top:16px;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-soft);border-bottom:1px solid currentColor}
-@media(max-width:900px){.week-grid{grid-template-columns:1fr;gap:32px}
-.wx-days{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(96px,1fr);overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
-.wx-day{scroll-snap-align:start}}
-
-#side-col h3{margin-top:0}#hours-wrap{margin-bottom:30px}
-.hr-list{border-top:1px solid rgba(255,255,255,.14)}
-.hr-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.14);align-items:baseline}
-.hr-what{font-size:.95rem}.hr-note{font-size:.76rem;color:rgba(255,255,255,.6);margin-top:2px}
-.hr-time{font-size:.9rem;font-weight:600;color:var(--gold-soft);text-align:right;white-space:nowrap}
-.hours-public{margin-top:30px}.hours-public .hr-list{border-color:var(--line)}
+.mc-all{display:inline-block;margin-top:14px;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);border-bottom:1px solid var(--gold)}
+.news-side{background:var(--cream);padding:24px}
+.news-side:not(:has(>:not([hidden]))){display:none}
+#hours-wrap{margin-bottom:28px}.news-side h3{border-bottom:1px solid rgba(50,60,96,.12);padding-bottom:10px;margin-bottom:0}
+.wx-row{display:grid;grid-template-columns:52px 22px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(50,60,96,.12)}
+.wx-name{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.wx-ico{width:22px;height:22px;color:var(--navy);display:block}
+.wx-text{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wx-text em{font-style:normal;color:var(--navy)}
+.wx-temp{font-size:.88rem;color:var(--muted);white-space:nowrap}.wx-temp b{color:var(--navy);font-weight:600;margin-right:4px}
+.wx-src{font-size:.72rem;color:var(--muted);margin:10px 0 0}
+@media(max-width:900px){.week-grid{grid-template-columns:1fr;gap:30px}}
+.hr-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(50,60,96,.12);align-items:baseline}
+.hr-what{font-size:.95rem;font-weight:600;color:var(--navy)}.hr-note{font-size:.78rem;color:var(--muted);margin-top:2px}
+.hr-time{font-size:.9rem;font-weight:600;color:var(--gold);text-align:right;white-space:nowrap}
+.hours-public{margin-top:30px}.hours-public .hr-list{border-top:1px solid var(--line)}
 .hours-public .hr-row{border-color:var(--line)}.hours-public .hr-what{color:var(--navy);font-weight:600}
 .hours-public .hr-note{color:var(--muted)}.hours-public .hr-time{color:var(--gold)}
 .lf-list{list-style:none;margin:0 auto;padding:0;max-width:720px;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}
@@ -174,13 +170,13 @@ WEEK_CSS = """
 .lf-date{flex:0 0 60px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
-/* week at a glance card, option A */
-.wk-feat{display:block;border:1px solid var(--gold);padding:20px 22px;margin-bottom:28px;background:rgba(184,154,45,.08)}
-.wk-k{display:block;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft)}
-.wk-t{display:block;font-family:var(--serif);font-size:1.45rem;line-height:1.25;color:#fff;margin:6px 0;transition:color .2s}
-.wk-d{display:block;font-size:.82rem;color:rgba(255,255,255,.65)}
-.wk-go{display:inline-block;margin-top:14px;font-size:.9rem;font-weight:600;color:var(--gold-soft);border-bottom:1px solid currentColor}
-.wk-feat:hover .wk-t{color:var(--gold-soft)}#mc-h:not(:first-child){font-size:1.1rem}
+/* week at a glance card (E9 option A), on the white news band */
+.wk-feat{display:block;border:1px solid var(--gold);border-left-width:4px;padding:20px 22px;margin-bottom:26px;background:var(--cream)}
+.wk-k{display:block;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.wk-t{display:block;font-family:var(--serif);font-size:1.5rem;line-height:1.25;color:var(--navy);margin:6px 0;transition:color .2s}
+.wk-d{display:block;font-size:.82rem;color:var(--muted)}
+.wk-go{display:inline-block;margin-top:12px;font-size:.9rem;font-weight:600;color:var(--navy);border-bottom:1px solid var(--gold)}
+.wk-feat:hover .wk-t{color:var(--gold)}#mc-h:not(:first-child){font-size:1.1rem}
 /* restaurant reservations, panel A */
 .rv{margin:1.6rem 0}
 /* the page grid item must be allowed to shrink, or the day strip widens the whole page on a phone */
@@ -471,9 +467,9 @@ def edit(f, s):
         s = re.sub(r'<script>\(function\(\)\{var fm=document\.getElementById\("memform"\).*?</script>', "", s, flags=re.S)
         s = cut(s, '<div id="memgate"', '<div id="memarea"', '<p class="preview-note">Preview: at launch this page sits behind the '
                 'member password, checked on the server. Member documents (calendar, renewal forms) are added then.</p>', "members")
-        s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">', f)
+        s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">' + this_week(MAILS, WEEK), f)
         s = sub(s, '</section><section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"',
-                '</section>' + this_week(MAILS, WEEK) + '<section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
+                '</section>' + lost_found() + '<section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
         s = s.replace("</body>", '<script src="../assets/js/weather.js" defer></script><script src="../assets/js/content.js" defer></script></body>', 1)
         k = s.find("Member Documents"); i = s.rfind("<section", 0, k); j = s.find("</section>", k) + len("</section>")
         assert k > 0 and i > 0, f

@@ -41,10 +41,10 @@
     });
     box.innerHTML = days.slice(0, 7).map(function(x){
       var k = kind(Number(x.code));
-      return '<div class="wx-day"><div class="wx-name">' + esc(x.label) + '</div>'
+      return '<div class="wx-row"><span class="wx-name">' + esc(x.label) + '</span>'
         + '<svg class="wx-ico" viewBox="0 0 24 24" aria-hidden="true" ' + G + '>' + SVG[k] + '</svg>'
-        + '<div class="wx-temp">' + (x.high != null ? '<b>' + esc(x.high) + '&deg;</b>' : '') + (x.low != null ? '<span>' + esc(x.low) + '&deg;</span>' : '') + '</div>'
-        + '<div class="wx-text">' + esc(x.text) + (x.pop ? ' <em>' + esc(x.pop) + '%</em>' : '') + '</div></div>';
+        + '<span class="wx-text" title="' + esc(x.text) + '">' + esc(x.text) + (x.pop ? ' <em>' + esc(x.pop) + '%</em>' : '') + '</span>'
+        + '<span class="wx-temp">' + (x.high != null ? '<b>' + esc(x.high) + '&deg;</b>' : '') + (x.low != null ? esc(x.low) + '&deg;' : '') + '</span></div>';
     }).join('');
     box.setAttribute('aria-busy', 'false');
   }).catch(function(){ drop('wx-col'); });
@@ -78,7 +78,8 @@
     if (h1) h1.hidden = false; if (h) h.textContent = 'Other club emails';
   }
 
-  // a panel that cannot load is removed; the other takes the full width,
+  // a panel that cannot load is removed (news, or the sidebar once hours and forecast are both gone);
+  // the other takes the full width,
   // and the band goes away if nothing in it loads
   function drop(id){
     var col = document.getElementById(id);
@@ -88,7 +89,7 @@
   function relayout(){
     var band = document.getElementById('this-week'); if (!band) return;
     var side = document.getElementById('side-col');
-    if (side && !side.querySelector('#hours-wrap,#mc-col')) side.parentNode.removeChild(side);
+    if (side && !side.querySelector('#hours-wrap,#wx-col')) side.parentNode.removeChild(side);
     var grid = band.querySelector('.week-grid');
     if (!grid.children.length) band.parentNode.removeChild(band);
     else grid.classList.toggle('one', grid.children.length === 1);
