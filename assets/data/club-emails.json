@@ -1,6 +1,18 @@
 {
  "emails": [
   {
+   "date": "2026-10-19",
+   "label": "Oct 19",
+   "title": "Tombstone Trick or Treat - Saturday, October 31st",
+   "link": "https://mailchi.mp/8798826ea9c2/tombstone-trick-or-treat-saturday-october-31st"
+  },
+  {
+   "date": "2026-10-19",
+   "label": "Oct 19",
+   "title": "Update to First Tee Time",
+   "link": "https://mailchi.mp/375fab8aa1f3/update-to-first-tee-time"
+  },
+  {
    "date": "2026-10-17",
    "label": "Oct 17",
    "title": "Respecting our Greens",
@@ -17,18 +29,6 @@
    "label": "Oct 10",
    "title": "Fall Hours Update: Effective Tuesday, October 13th",
    "link": "https://mailchi.mp/6a0569687e13/fall-hours-update-effective-tuesday-october-13th-6752494"
-  },
-  {
-   "date": "2026-10-02",
-   "label": "Oct 2",
-   "title": "Course Update: October 2026",
-   "link": "https://mailchi.mp/e1dde41c937e/course-update-october-6752372"
-  },
-  {
-   "date": "2026-10-01",
-   "label": "Oct 1",
-   "title": "Spotlight of the Week - Steve McGrath, 18 Seasons on the Turf Team",
-   "link": "https://mailchi.mp/5b5c3bd53457/spotlight-of-the-week-steve-mcgrath-18-seasons-on-the-turf-team-6752349"
   }
  ],
  "week": null,
