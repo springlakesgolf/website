@@ -1,6 +1,12 @@
 {
  "emails": [
   {
+   "date": "2026-10-21",
+   "label": "Oct 21",
+   "title": "2026 Season Close Dates",
+   "link": "https://mailchi.mp/e8e1bc048b26/2026-season-close-dates"
+  },
+  {
    "date": "2026-10-20",
    "label": "Oct 20",
    "title": "Respecting our Greens",
@@ -23,12 +29,6 @@
    "label": "Oct 19",
    "title": "Update to First Tee Time",
    "link": "https://mailchi.mp/375fab8aa1f3/update-to-first-tee-time"
-  },
-  {
-   "date": "2026-10-10",
-   "label": "Oct 10",
-   "title": "Fall Hours Update: Effective Tuesday, October 13th",
-   "link": "https://mailchi.mp/6a0569687e13/fall-hours-update-effective-tuesday-october-13th-6752494"
   }
  ],
  "week": null,
