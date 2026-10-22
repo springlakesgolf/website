@@ -1,6 +1,18 @@
 {
  "emails": [
   {
+   "date": "2026-10-22",
+   "label": "Oct 22",
+   "title": "Tombstone Trick or Treat - Saturday, October 31st",
+   "link": "https://mailchi.mp/a6f584c06960/tombstone-trick-or-treat-saturday-october-31st-6752668"
+  },
+  {
+   "date": "2026-10-22",
+   "label": "Oct 22",
+   "title": "Update to First Tee Time",
+   "link": "https://mailchi.mp/0c83c669df0c/update-to-first-tee-time-6752663"
+  },
+  {
    "date": "2026-10-21",
    "label": "Oct 21",
    "title": "2026 Season Close Dates",
@@ -17,18 +29,6 @@
    "label": "Oct 20",
    "title": "Upcoming Frost Delay: Sunday, October 18th",
    "link": "https://mailchi.mp/392176f8ea17/upcoming-frost-delay-sunday-october-18th-6752650"
-  },
-  {
-   "date": "2026-10-19",
-   "label": "Oct 19",
-   "title": "Tombstone Trick or Treat - Saturday, October 31st",
-   "link": "https://mailchi.mp/8798826ea9c2/tombstone-trick-or-treat-saturday-october-31st"
-  },
-  {
-   "date": "2026-10-19",
-   "label": "Oct 19",
-   "title": "Update to First Tee Time",
-   "link": "https://mailchi.mp/375fab8aa1f3/update-to-first-tee-time"
   }
  ],
  "week": null,
