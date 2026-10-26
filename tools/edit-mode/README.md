@@ -48,4 +48,5 @@ merges the PR; after merging, set the row to Done.
   `anthropic` installed) and `node --test tools/edit-mode/code.test.js`.
 - Try Claude on the fixture rows without git, PRs or the sheet:
   `python3 tools/edit-mode/staff_edits.py --dry-run --rows tools/edit-mode/fixtures/rows.json`
-  (needs `ANTHROPIC_API_KEY`).
+  (needs `ANTHROPIC_API_KEY`), or in GitHub: Actions > Staff edits > Run workflow with
+  **Test run on the sample rows only** ticked.

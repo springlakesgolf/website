@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: "4,19,34,49 * * * *"
   workflow_dispatch:
+    inputs:
+      fixtures:
+        description: "Test run on the sample rows only (no PRs, no sheet changes)"
+        type: boolean
+        default: false
 permissions:
   contents: write
   pull-requests: write
@@ -20,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install anthropic==2.3.0
-      - run: python3 tools/edit-mode/staff_edits.py
+      - run: python3 tools/edit-mode/staff_edits.py ${{ inputs.fixtures && '--dry-run --rows tools/edit-mode/fixtures/rows.json' || '' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           EDITS_BOT_SECRET: ${{ secrets.EDITS_BOT_SECRET }}
