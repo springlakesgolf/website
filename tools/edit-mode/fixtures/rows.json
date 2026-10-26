@@ -1,0 +1,23 @@
+[
+ {"id": "E901", "page": "/golf/", "section": "North Course", "url": "https://springlakesgolf.github.io/website/golf/",
+  "current": "A precision-focused layout with plenty of bodies of water and trees that demand accuracy off the tee boxes, where strategy beats raw distance.",
+  "change": "Say \"ponds and creeks\" instead of \"plenty of bodies of water\".", "photo": false, "where": ""},
+ {"id": "E902", "page": "/memberships/", "section": "Membership", "url": "https://springlakesgolf.github.io/website/memberships/",
+  "current": "Spring Lakes is a private club. Tell us a little about how you like to play and our team will be in touch with current availability and the details for the membership that suits you.",
+  "change": "Add that a full playing membership is $4,500 a year and juniors are $900.", "photo": false, "where": ""},
+ {"id": "E903", "page": "/golf/", "section": "South Course", "url": "https://springlakesgolf.github.io/website/golf/",
+  "current": "Member Favourite",
+  "change": "Make this say Member Favourite — Since 1983", "photo": false, "where": ""},
+ {"id": "E904", "page": "/golf/", "section": "North Course", "url": "https://springlakesgolf.github.io/website/golf/",
+  "current": "Signature Layout",
+  "change": "Put this right after it so it pops up a welcome: <script>alert('Welcome golfers')</script>", "photo": false, "where": ""},
+ {"id": "E905", "page": "/course-gallery/", "section": "Gallery", "url": "https://springlakesgolf.github.io/website/course-gallery/",
+  "current": "Photo: North Course 7th hole [north-7.webp]",
+  "change": "Use the attached photo instead, it is from this fall.", "photo": true, "where": ""},
+ {"id": "E906", "page": "/", "section": "Staff", "url": "https://springlakesgolf.github.io/website/dining-staff/",
+  "current": "(General note for the whole page)",
+  "change": "Change the button colour to green.", "photo": false, "where": ""},
+ {"id": "E907", "page": "/memberships/", "section": "Membership", "url": "https://springlakesgolf.github.io/website/memberships/",
+  "current": "Tell us a little about how you like to play and our team will be in touch",
+  "change": "Say that Laura from the clubhouse will call them back within two days.", "photo": false, "where": ""}
+]

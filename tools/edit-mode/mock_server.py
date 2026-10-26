@@ -2,20 +2,25 @@
 
 Build against it with SLG_EDIT_EXEC=http://127.0.0.1:8744/exec python3 tools/build.py,
 open http://127.0.0.1:8744/?edit=testkey, and requests print here and go to mock_rows.json.
+It also fakes the staff-edits bot route (secret "testsecret"): "pending" serves fixtures/rows.json
+and "result" writes to mock_results.json (or SLG_MOCK_RESULTS).
 """
-import json, sys
+import json, os, sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 ROWS = Path(__file__).with_name("mock_rows.json")
+RESULTS = Path(os.environ.get("SLG_MOCK_RESULTS") or Path(__file__).with_name("mock_results.json"))
+FIXTURES = Path(__file__).with_name("fixtures")/"rows.json"
 seen = {}
 
 class H(SimpleHTTPRequestHandler):
     def __init__(self, *a, **k): super().__init__(*a, directory=str(ROOT), **k)
     def do_POST(self):
         b = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        if b.get("key") != "testkey": out = {"ok": False, "error": "key"}
+        if "bot" in b: out = self.bot(b)
+        elif b.get("key") != "testkey": out = {"ok": False, "error": "key"}
         elif b["rid"] in seen: out = seen[b["rid"]]
         else:
             rows = json.loads(ROWS.read_text()) if ROWS.exists() else []
@@ -26,5 +31,15 @@ class H(SimpleHTTPRequestHandler):
         data = json.dumps(out).encode()
         self.send_response(200); self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
+
+    def bot(self, b):
+        if b["bot"] != "testsecret": return {"ok": False, "error": "key"}
+        if b.get("action") == "pending": return {"ok": True, "rows": json.loads(FIXTURES.read_text())[:5]}
+        if b.get("action") == "result":
+            done = json.loads(RESULTS.read_text()) if RESULTS.exists() else []
+            done.append({k: b.get(k) for k in ("id", "status", "pr", "note")}); RESULTS.write_text(json.dumps(done, indent=1))
+            print("RESULT", b.get("id"), b.get("status"), flush=True)
+            return {"ok": True, "id": b.get("id")}
+        return {"ok": False, "error": "action"}
 
 ThreadingHTTPServer(("127.0.0.1", int(sys.argv[1]) if len(sys.argv) > 1 else 8744), H).serve_forever()

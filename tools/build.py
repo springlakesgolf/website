@@ -28,6 +28,20 @@ PREVIEW_PILL = '<div class="preview-pill" aria-hidden="true">Staff preview</div>
 # or SLG_EDIT_EXEC to point a test build at a mock
 EDIT_DIR = OUT/"tools/edit-mode"
 
+# text edits opened as PRs by the staff-edits Action (W2), one file per sheet row; replayed after
+# the fixes below so a rebuild keeps them. Delete a file once the June source has the change.
+STAFF_EDITS = EDIT_DIR/"staff-edits"
+
+def staff_edits(page, s):
+    for p in sorted(STAFF_EDITS.glob("E*.json"), key=lambda p: int(p.stem[1:])):
+        e = json.loads(p.read_text())
+        if e["file"] != page: continue
+        for c in e["changes"]:
+            if s.count(c["find"]) == 1: s = s.replace(c["find"], c["replace"])
+            elif c["replace"] not in s:
+                raise SystemExit(f"{p.name}: its old text is no longer on {page}; redo the edit or delete the file")
+    return s
+
 def edit_exec():
     if os.environ.get("SLG_EDIT_EXEC"): return os.environ["SLG_EDIT_EXEC"]
     cfg = EDIT_DIR/"config.json"
@@ -289,6 +303,7 @@ def build():
         # Golf Camps is now Junior Golf: camps, Operation 36 and the junior academy (E10 option A, Cullen 2026-10-17)
         s = s.replace(">Golf Camps<", ">Junior Golf<")
         s = restyle(s)
+        s = staff_edits(f"{slug}/index.html" if slug else "index.html", s)
         for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps"):
             assert bad not in s, (f, bad)
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"

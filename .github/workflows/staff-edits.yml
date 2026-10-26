@@ -1,0 +1,27 @@
+# Turns new "Suggest an edit" rows into pull requests every 15 minutes (W2). Nothing goes live until
+# a person merges the PR. Secrets: ANTHROPIC_API_KEY (Club Website workspace), EDITS_BOT_SECRET (the
+# Website Edits script's BOT_SECRET). See tools/edit-mode/README.md.
+name: Staff edits
+on:
+  schedule:
+    - cron: "4,19,34,49 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency: staff-edits
+jobs:
+  edits:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install anthropic==2.3.0
+      - run: python3 tools/edit-mode/staff_edits.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EDITS_BOT_SECRET: ${{ secrets.EDITS_BOT_SECRET }}
+          GH_TOKEN: ${{ github.token }}
