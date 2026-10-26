@@ -4,8 +4,10 @@
 var SHEET_ID = '1Ax7KBAsa37WQ6NEEcjxCgDEn8TI2Aqsf7jOKzSykwLc';
 
 var HEAD = ['ID', 'Submitted', 'Name', 'Page', 'Section', 'Current text', 'Requested change',
-            'Photo', 'Status', 'Done on', 'Cullen notes', 'Page link', 'Where (for Cullen)', 'Screen', 'Request id'];
-var STATUS = ['New', 'In progress', 'Done', 'Question', 'Not doing'];
+            'Photo', 'Status', 'Done on', 'Cullen notes', 'Page link', 'Where (for Cullen)', 'Screen', 'Request id',
+            'PR', 'Claude note'];
+// PR open and Needs Cullen are set by the staff-edits GitHub Action (W2)
+var STATUS = ['New', 'In progress', 'PR open', 'Needs Cullen', 'Done', 'Question', 'Not doing'];
 
 function setup() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
@@ -14,11 +16,12 @@ function setup() {
   sh.getRange(1, 1, 1, HEAD.length).setValues([HEAD]).setFontWeight('bold')
     .setBackground('#323C60').setFontColor('#ffffff');
   sh.setFrozenRows(1);
-  var widths = [60, 130, 80, 150, 180, 300, 340, 90, 100, 90, 240, 200, 200, 80, 110];
+  var widths = [60, 130, 80, 150, 180, 300, 340, 90, 100, 90, 240, 200, 200, 80, 110, 220, 260];
   widths.forEach(function (w, i) { sh.setColumnWidth(i + 1, w); });
   sh.getRange('F:G').setWrap(true);
   sh.getRange('K:K').setWrap(true);
-  sh.getRange('A:O').setVerticalAlignment('top');
+  sh.getRange('Q:Q').setWrap(true);
+  sh.getRange('A:Q').setVerticalAlignment('top');
   sh.getRange('B:B').setNumberFormat('mmm d, h:mm am/pm');
   sh.getRange('J:J').setNumberFormat('mmm d');
   sh.getRange(2, 9, sh.getMaxRows() - 1, 1).setDataValidation(
@@ -27,7 +30,9 @@ function setup() {
   var props = PropertiesService.getScriptProperties();
   if (!props.getProperty('EDIT_KEY')) props.setProperty('EDIT_KEY', Utilities.getUuid().replace(/-/g, '').slice(0, 12));
   if (!props.getProperty('PHOTO_FOLDER')) props.setProperty('PHOTO_FOLDER', DriveApp.createFolder('Website Edit Photos').getId());
+  if (!props.getProperty('BOT_SECRET')) props.setProperty('BOT_SECRET', Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, ''));
   Logger.log('EDIT_KEY=' + props.getProperty('EDIT_KEY'));
+  Logger.log('BOT_SECRET (GitHub secret EDITS_BOT_SECRET)=' + props.getProperty('BOT_SECRET'));
 }
 
 // Hours and Lost & Found for the site, from the "Website Content" sheet that
@@ -62,6 +67,7 @@ function doPost(e) {
   var b;
   try { b = JSON.parse(e.postData.contents); } catch (err) { return json({ ok: false, error: 'bad json' }); }
   var props = PropertiesService.getScriptProperties();
+  if (b.bot) return json(bot(b, props.getProperty('BOT_SECRET')));
   if (!b.key || b.key !== props.getProperty('EDIT_KEY')) return json({ ok: false, error: 'key' });
   if (!b.rid || !b.change) return json({ ok: false, error: 'missing' });
 
@@ -100,6 +106,56 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// The staff-edits GitHub Action (W2): "pending" lists New rows with no PR yet,
+// "result" writes the PR link or a Needs Cullen note back to one row.
+// Guarded by BOT_SECRET, which is also the repo secret EDITS_BOT_SECRET.
+var BOT_LIMIT = 5;
+
+function bot(b, secret) {
+  if (!secret || !same(String(b.bot), secret)) return { ok: false, error: 'key' };
+  var sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Edits');
+  var last = sh.getLastRow();
+  var rows = last < 2 ? [] : sh.getRange(2, 1, last - 1, HEAD.length).getValues();
+  if (b.action === 'pending') {
+    var out = [];
+    for (var i = 0; i < rows.length && out.length < BOT_LIMIT; i++) {
+      var r = rows[i];
+      if (r[8] !== 'New' || r[15] || !r[0]) continue;
+      out.push({ id: String(r[0]), page: String(r[3]), section: String(r[4]), current: String(r[5]),
+                 change: String(r[6]), photo: !!r[7], url: String(r[11]), where: String(r[12]) });
+    }
+    return { ok: true, rows: out };
+  }
+  if (b.action === 'result') {
+    if (['PR open', 'Needs Cullen'].indexOf(b.status) < 0) return { ok: false, error: 'status' };
+    if (last < 2) return { ok: false, error: 'no row' };
+    if (b.pr && !/^https:\/\/github\.com\/springlakesgolf\/website\/pull\/\d+$/.test(b.pr)) return { ok: false, error: 'pr' };
+    var lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      rows = sh.getRange(2, 1, last - 1, HEAD.length).getValues();
+      for (var j = 0; j < rows.length; j++) if (String(rows[j][0]) === String(b.id)) {
+        // a person changed the row since the Action read it: leave their status alone
+        if (rows[j][8] !== 'New') return { ok: false, error: 'not new' };
+        sh.getRange(j + 2, 9).setValue(b.status);
+        sh.getRange(j + 2, 16, 1, 2).setValues([[b.pr || '', clip(b.note, 1000)]]);
+        return { ok: true, id: b.id };
+      }
+      return { ok: false, error: 'no row' };
+    } finally {
+      lock.releaseLock();
+    }
+  }
+  return { ok: false, error: 'action' };
+}
+
+// Compares every character so the time taken does not hint at the secret.
+function same(a, b) {
+  var diff = a.length ^ b.length;
+  for (var i = 0; i < Math.max(a.length, b.length); i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
 }
 
 // Keeps a typed value from being read as a formula.
