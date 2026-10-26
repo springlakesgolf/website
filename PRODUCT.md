@@ -20,7 +20,7 @@ Canada's largest 54-hole private club: three distinct 18-hole courses (North, Ea
 ## Operating Context
 - Membership is handled by inquiry. The membership inquiry form posts to an Apps Script that writes to the "Membership Inquiries" sheet.
 - Tee times run on Lightspeed Golf / Chronogolf (club 18694), and leagues and events run on Golf Genius.
-- Staff suggest site edits through the "Suggest an edit" mode on the preview, which posts to the Website Edits sheet. Hours and Lost & Found come from the "Website Content" sheet.
+- Staff suggest site edits through the "Suggest an edit" mode on the preview, which posts to the Edits tab of the "Spring Lakes Website" sheet. Hours and Lost & Found come from tabs in the same sheet.
 - Hosting is moving to Cloudflare. The members area will sit behind a shared password checked on the server.
 
 ## Capabilities and Constraints

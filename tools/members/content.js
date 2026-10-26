@@ -1,4 +1,4 @@
-/* Hours and Lost & Found from the "Website Content" Google Sheet, through the
+/* Hours and Lost & Found from the "Spring Lakes Website" Google Sheet, through the
    Website Edits Apps Script (?feed=content). Staff change a row in the sheet and
    the site shows it within a minute. The last good copy is kept in this browser
    so the page fills in at once; if nothing loads, the hours block is removed. */

@@ -19,7 +19,7 @@ folder "Website Edit Photos". URLs are in `config.json`; the key is in
 
 ## Hours and Lost & Found
 
-The same script answers `GET ?feed=content` from the "Website Content" sheet
+The same script answers `GET ?feed=content` from the Hours and Lost & Found tabs
 (`content_sheet` in `config.json`): tab **Hours** (Show to: Everyone, Members only
 or Hidden) and tab **Lost & Found** (items stay up until Status is Claimed or 90
 days pass). `tools/members/content.js` shows them on the contact page (Everyone

@@ -35,9 +35,10 @@ function setup() {
   Logger.log('BOT_SECRET (GitHub secret EDITS_BOT_SECRET)=' + props.getProperty('BOT_SECRET'));
 }
 
-// Hours and Lost & Found for the site, from the "Website Content" sheet that
-// staff edit. Cached a minute so a busy page does not hit the sheet each time.
-var CONTENT_ID = '1TecRaoIITgztIyDoQaPuJm9LuXd8E4DYtNxYQyjGWyI';
+// Hours and Lost & Found for the site, from the tabs of the same name in this
+// workbook ("Spring Lakes Website"), which staff edit. Cached a minute so a busy
+// page does not hit the sheet each time.
+var CONTENT_ID = SHEET_ID;
 
 function doGet(e) {
   if (e && e.parameter && e.parameter.feed === 'content') return json(content());
