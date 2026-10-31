@@ -1,6 +1,12 @@
 {
  "emails": [
   {
+   "date": "2026-10-31",
+   "label": "Oct 31",
+   "title": "2026 Christmas Santa Brunch",
+   "link": "https://mailchi.mp/950947a15bc8/2026-christmas-santa-brunch"
+  },
+  {
    "date": "2026-10-24",
    "label": "Oct 24",
    "title": "2026 Season Close Dates",
@@ -23,12 +29,6 @@
    "label": "Oct 20",
    "title": "Respecting our Greens",
    "link": "https://mailchi.mp/36b4d1e78de1/respecting-our-greens-6752654"
-  },
-  {
-   "date": "2026-10-20",
-   "label": "Oct 20",
-   "title": "Upcoming Frost Delay: Sunday, October 18th",
-   "link": "https://mailchi.mp/392176f8ea17/upcoming-frost-delay-sunday-october-18th-6752650"
   }
  ],
  "week": null,
