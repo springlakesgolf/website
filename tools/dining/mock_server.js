@@ -55,7 +55,7 @@ function handle(q, b) {
     const from = q.from === undefined || q.from === '' ? today() : q.from;
     if (!isDate(from)) return {ok: false, error: 'date'};
     const count = Math.min(31, Math.max(1, Math.floor(Number(q.count)) || 14));
-    return {ok: true, days: R.days({from, count, settings, events, today: today()})};
+    return {ok: true, days: R.days({from, count, settings, events, blocks, today: today()})};
   }
   if (q.action === 'times') {
     if (!isDate(q.date)) return {ok: false, error: 'date'};

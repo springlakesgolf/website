@@ -53,7 +53,7 @@
     w.appendChild(i); form.appendChild(w); return i;
   }
   var fName = field('name', 'Full name', 'text', 'name'), fMember = field('member', 'Member number', 'text', 'off'),
-      fEmail = field('email', 'Email', 'email', 'email'), fPhone = field('phone', 'Phone', 'tel', 'tel'),
+      fEmail = field('email', 'Email', 'email', 'email'), fPhone = field('phone', 'Phone, in case we need to call you', 'tel', 'tel'),
       fNotes = field('notes', 'Notes (optional)', 'text', 'off');
   fNotes.placeholder = 'Allergies, a birthday, the patio';
   var row = el('div', 'rv-row');

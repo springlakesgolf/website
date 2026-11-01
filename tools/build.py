@@ -418,6 +418,16 @@ def edit(f, s):
                 f'<form class="inquiry-form" id="mem-inquiry" data-live data-exec="{INQUIRY_EXEC}">'
                 '<div class="hp" aria-hidden="true"><label for="if-w">Website</label><input name="website" id="if-w" type="text" tabindex="-1" autocomplete="off"></div>', f)
         s = s.replace("</body>", '<script src="../assets/js/inquiry.js" defer></script></body>', 1)
+    if f == "dining.html":
+        # E14 (Cullen, 2026-10-28): social membership goes through the membership inquiry form, not its own form here
+        s = sub(s, "Get in touch and we will share the details.",
+                '<a href="../memberships/?interest=social#inquire" style="color:var(--gold)">Make a membership inquiry</a> and our team will share the details.', f)
+        s, n = re.subn(r'<div class="perk reveal d2"><div class="ic">(.*?)</div><h3>Social Membership</h3><p>.*?</p></div>',
+                       r'<div class="perk reveal d2"><div class="ic">\1</div><h3>On the Course</h3><p>The beverage cart runs daily, so a cold drink is never far from the next tee.</p></div>',
+                       s, count=1, flags=re.S)
+        assert n == 1, (f, "social perk")
+        s = cut(s, '<section><div class="container narrow"><div class="section-head center"><span class="eyebrow reveal">Inquire', "</main>", "", f)
+        assert "Ask about social membership" not in s, f
     if f == "dining.html" and dining_exec():
         s = sub(s, '<div class="hours">', '<div id="reserve" class="rv"><p class="rv-note">To reserve a table, call the clubhouse at 905-640-3633.</p></div><div class="hours">', f)
         s = s.replace("</body>", '<script src="../assets/js/dining-rules.js" defer></script>'

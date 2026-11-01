@@ -153,7 +153,7 @@ function doGet(e) {
       var from = q.from === undefined || q.from === '' ? today() : q.from;
       if (!isDate(from)) return json({ok: false, error: 'date'});
       var count = Math.min(31, Math.max(1, Math.floor(Number(q.count)) || 14));
-      return json({ok: true, days: DiningRules.days({from: from, count: count, settings: s, events: events(), today: today()})});
+      return json({ok: true, days: DiningRules.days({from: from, count: count, settings: s, events: events(), blocks: blocks(), today: today()})});
     }
     if (q.action === 'times') {
       if (!isDate(q.date)) return json({ok: false, error: 'date'});

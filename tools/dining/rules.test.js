@@ -129,3 +129,13 @@ test('staffStatus: hours and Events only, no booking window', () => {
   assert.strictEqual(R.dayStatus('2027-05-01', S, evs, '2027-05-10').reason, 'Past');
   assert.strictEqual(R.dayStatus('2027-09-01', S, evs, '2027-05-10').reason, 'Not open for booking yet');
 });
+
+test('a whole-day block closes the day for members (E15, rain)', () => {
+  const blocks = [{date: '2027-05-15', from: '00:00', to: '23:59', reason: 'Rain'}];
+  const d = R.days({from: '2027-05-14', count: 2, settings: S, events: [], blocks, today: '2027-05-10'});
+  assert.deepStrictEqual(d.map(x => [x.date, x.open, x.reason]), [['2027-05-14', true, ''], ['2027-05-15', false, 'Rain']]);
+  const t = R.openTimes({date: '2027-05-15', guests: 2, settings: S, bookings: [], blocks, events: [], today: '2027-05-15', nowMinutes: 9 * 60});
+  assert.strictEqual(t.status, 'closed');
+  assert.strictEqual(t.reason, 'Rain');
+  assert.strictEqual(R.allDay({from: '17:00', to: '18:00'}), false);
+});

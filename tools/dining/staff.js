@@ -114,7 +114,7 @@
     }
     var ok = dayState === 'ok';
     var rows = [];
-    data.blocks.forEach(function (b) { rows.push({t: b.from, html: '<tr class="blk"><td class="t">' + esc(short(b.from)) + '</td><td colspan="4" class="r">Blocked ' + esc(R.label(b.from)) + ' to ' + esc(R.label(b.to)) + (b.reason ? ': ' + esc(b.reason) : '') + '</td><td><div class="acts"><button data-unblock="' + esc(b.id) + '">Remove</button></div></td></tr>'}); });
+    data.blocks.forEach(function (b) { rows.push({t: b.from, html: '<tr class="blk"><td class="t">' + (R.allDay(b) ? 'All day' : esc(short(b.from))) + '</td><td colspan="4" class="r">' + (R.allDay(b) ? 'Closed all day' : 'Blocked ' + esc(R.label(b.from)) + ' to ' + esc(R.label(b.to))) + (b.reason ? ': ' + esc(b.reason) : '') + '</td><td><div class="acts"><button data-unblock="' + esc(b.id) + '">Remove</button></div></td></tr>'}); });
     data.bookings.forEach(function (b) {
       rows.push({t: b.time, html: '<tr class="' + esc(b.status) + '"><td class="t">' + esc(short(b.time)) + '</td><td class="g">' + esc(b.guests) + '</td><td>' + esc(b.name) + '<span class="src">' + esc(b.source) + '</span></td><td class="ph">' + esc(b.phone) + '</td><td class="note">' + esc(b.notes) + '</td>'
         + '<td><div class="acts"><button data-id="' + esc(b.id) + '" data-s="Seated" class="' + (b.status === 'Seated' ? 'on' : '') + '">Seated</button><button data-id="' + esc(b.id) + '" data-s="No-show" class="ns ' + (b.status === 'No-show' ? 'on' : '') + '">No-show</button><button data-cancel="' + esc(b.id) + '" aria-label="Cancel booking">Cancel</button></div></td></tr>'});
@@ -179,8 +179,10 @@
         return act({action: 'add', date: date, time: v.time, guests: g, name: v.name.trim(), phone: v.phone, notes: v.notes}, true);
       }, 'Save', function (f) { pick(f.elements.time, '17:00'); });
     else if (b.hasAttribute('data-block')) sheet('Block off time',
-      '<div class="row"><label>From<select name="from">__TIMES__</select></label><label>To<select name="to">__TIMES__</select></label></div><label>Reason<input name="reason" maxlength="120" placeholder="Event or note for staff"></label>',
+      '<label class="chk"><input type="checkbox" name="allday"> Close the whole day (rain, event)</label>'
+      + '<div class="row"><label>From<select name="from">__TIMES__</select></label><label>To<select name="to">__TIMES__</select></label></div><label>Reason<input name="reason" maxlength="120" placeholder="Event or note for staff"></label>',
       function (v, fail) {
+        if (v.allday) return act({action: 'block', date: date, from: '00:00', to: '23:59', reason: v.reason || 'Closed'}, true);
         if (!(v.from < v.to)) { fail('Pick a "To" time later than the "From" time.'); return false; }
         return act({action: 'block', date: date, from: v.from, to: v.to, reason: v.reason}, true);
       }, 'Save', function (f) {

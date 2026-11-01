@@ -6,6 +6,8 @@
   if (!f) return;
   var note = f.querySelector('.form-note'), btn = f.querySelector('button[type=submit]');
   var label = btn.textContent;
+  // the Dining page links here with ?interest=social (staff edit E14)
+  if (/[?&]interest=social(&|$)/.test(location.search)) f.elements.interest.value = 'Social membership (clubhouse)';
   function val(n){ var el = f.elements[n]; return el ? el.value.trim() : ''; }
   function say(msg, bad){ note.style.display = 'block'; note.textContent = msg; note.style.color = bad ? '#a3261d' : ''; }
   function fail(msg, el){ say(msg, true); btn.disabled = false; btn.textContent = label; if (el) el.focus(); }

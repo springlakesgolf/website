@@ -50,9 +50,16 @@ var DiningRules = (function () {
     var st = hoursStatus(date, settings, events);
     return {open: st.open, reason: st.reason};
   }
+  // A whole-day block (staff "Close the whole day", for rain; staff edit E15) runs 00:00 to 23:59.
+  function allDay(b) { return b.from === '00:00' && b.to === '23:59'; }
+  function dayClosure(blocks, date) {
+    var hit = (blocks || []).filter(function (b) { return b.date === date && allDay(b); })[0];
+    return hit ? {open: false, reason: hit.reason || 'Closed', limit: 0} : null;
+  }
   function counted(b) { return b.status === 'Booked' || b.status === 'Seated'; }
   function openTimes(o) {
     var st = dayStatus(o.date, o.settings, o.events, o.today);
+    if (st.open) st = dayClosure(o.blocks, o.date) || st;
     if (!st.open) return {status: 'closed', reason: st.reason, times: []};
     var used = {};
     o.bookings.forEach(function (b) { if (b.date === o.date && counted(b)) used[b.time] = (used[b.time] || 0) + Number(b.guests); });
@@ -70,6 +77,7 @@ var DiningRules = (function () {
     var out = [];
     for (var i = 0; i < o.count; i++) {
       var d = addDays(o.from, i), st = dayStatus(d, o.settings, o.events, o.today);
+      if (st.open) st = dayClosure(o.blocks, d) || st;
       out.push({date: d, open: st.open, reason: st.reason});
     }
     return out;
@@ -101,7 +109,7 @@ var DiningRules = (function () {
     if (String(b.phone || '').replace(/\D/g, '').length < 7) return 'phone';
     return '';
   }
-  return {slotTimes: slotTimes, dayStatus: dayStatus, staffStatus: staffStatus, openTimes: openTimes, days: days, isMember: isMember,
+  return {slotTimes: slotTimes, dayStatus: dayStatus, staffStatus: staffStatus, openTimes: openTimes, days: days, allDay: allDay, isMember: isMember,
           clean: clean, checkBooking: checkBooking, label: label, weekdayOf: weekdayOf, addDays: addDays};
 })();
 if (typeof module !== 'undefined') module.exports = DiningRules;
