@@ -49,34 +49,40 @@
     box.setAttribute('aria-busy', 'false');
   }).catch(function(){ drop('wx-col'); });
 
-  // Latest club emails: the page ships with the list from the last build, then
-  // this swaps in the hourly-refreshed file so new campaigns show up right away.
-  var list = document.getElementById('mc-list');
+  // Club news (option A, E11): the chosen email shows in the frame and the recent ones sit beside it.
+  // The page ships with the list from the last build, then this swaps in the hourly-refreshed file so
+  // new campaigns show up right away; Braeden's week at a glance is tagged where it falls by date (E9).
+  var list = document.getElementById('mc-list'), frame = document.getElementById('mc-frame'), open = document.getElementById('mc-open');
+  var picked = false;
+  function show(btn){
+    var link = btn.getAttribute('data-link');
+    if (frame.getAttribute('src') !== link) frame.src = link;
+    frame.title = 'Club email: ' + btn.querySelector('.mc-title').textContent;
+    open.href = link;
+    [].forEach.call(list.querySelectorAll('button'), function(b){ b.setAttribute('aria-current', b === btn ? 'true' : 'false'); });
+  }
+  if (list && frame) list.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-link]'); if (!b) return;
+    picked = true; show(b);
+  });
   var src = (document.currentScript && document.currentScript.src) || '';
   var data = /js\/weather\.js/.test(src) ? src.replace(/js\/weather\.js.*$/, 'data/club-emails.json') : '../assets/data/club-emails.json';
-  fetch(data + '?t=' + Date.now())
+  if (list && frame) fetch(data + '?t=' + Date.now())
     .then(function(r){ if (!r.ok) throw 0; return r.json(); })
     .then(function(d){
-      if ((!d.emails || !d.emails.length) && !d.week) throw 0;
-      if (!list) return;
-      week(d.week);
-      list.innerHTML = (d.emails || []).map(function(m){
-        return '<li><a href="' + esc(m.link) + '" target="_blank" rel="noopener"><span class="mc-date">' + esc(m.label)
-          + '</span><span class="mc-title">' + esc(m.title) + '</span></a></li>';
+      var items = (d.emails || []).map(function(m){ return {m: m, week: false}; });
+      if (d.week) items.push({m: d.week, week: true});
+      if (!items.length) throw 0;
+      items.sort(function(a, b){ return a.m.date < b.m.date ? 1 : a.m.date > b.m.date ? -1 : 0; });
+      var cur = frame.getAttribute('src');
+      list.innerHTML = items.map(function(x){
+        return '<li><button type="button" data-link="' + esc(x.m.link) + '" aria-current="false"><span class="mc-date">' + esc(x.m.label)
+          + '</span><span class="mc-title">' + esc(x.m.title) + '</span>' + (x.week ? '<span class="mc-tag">Week at a glance</span>' : '') + '</button></li>';
       }).join('');
-    }).catch(function(){ if (!list || !list.children.length) drop('mc-col'); });
-
-  // Braeden's current week at a glance, in its own card above the list (staff edit E9)
-  function week(w){
-    var col = document.getElementById('mc-col'); if (!col) return;
-    var card = document.getElementById('wk-feat'), h1 = document.getElementById('wk-h1'), h = document.getElementById('mc-h');
-    if (!w) { if (card) card.parentNode.removeChild(card); if (h1) h1.hidden = true; if (h) h.textContent = 'Latest club emails'; return; }
-    if (!card) { card = document.createElement('a'); card.id = 'wk-feat'; card.className = 'wk-feat'; card.target = '_blank'; card.rel = 'noopener'; h.parentNode.insertBefore(card, h); }
-    card.href = w.link;
-    card.innerHTML = '<span class="wk-k">Week at a glance</span><span class="wk-t">' + esc(w.title) + '</span><span class="wk-d">Sent '
-      + esc(w.label) + '</span><span class="wk-go">Read this week</span>';
-    if (h1) h1.hidden = false; if (h) h.textContent = 'Other club emails';
-  }
+      var btns = list.querySelectorAll('button'), keep = null;
+      if (picked) [].forEach.call(btns, function(b){ if (b.getAttribute('data-link') === cur) keep = b; });
+      show(keep || btns[0]);
+    }).catch(function(){ if (!list.children.length) { drop('mc-col'); drop('mc-pick'); } });
 
   // a panel that cannot load is removed (news, or the sidebar once hours and forecast are both gone);
   // the other takes the full width,
@@ -89,7 +95,7 @@
   function relayout(){
     var band = document.getElementById('this-week'); if (!band) return;
     var side = document.getElementById('side-col');
-    if (side && !side.querySelector('#hours-wrap,#wx-col')) side.parentNode.removeChild(side);
+    if (side && !side.querySelector('#mc-pick,#hours-wrap,#wx-col')) side.parentNode.removeChild(side);
     var grid = band.querySelector('.week-grid');
     if (!grid.children.length) band.parentNode.removeChild(band);
     else grid.classList.toggle('one', grid.children.length === 1);

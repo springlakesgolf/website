@@ -330,6 +330,20 @@ section{padding:clamp(60px,8vw,108px) 0}
 .lf-date{flex:0 0 60px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
+/* members page option A (E11, E13) */
+.tee-band{background:var(--cream);padding:36px 0;scroll-margin-top:90px}#events{scroll-margin-top:90px}
+.tee-band .container{display:flex;gap:28px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tee-band h2{font-size:clamp(1.9rem,3.4vw,2.5rem);margin:.25rem 0 .35rem}.tee-band p{margin:0;color:var(--muted);max-width:640px}
+.tee-band p a{color:var(--navy);font-weight:600}.tee-btns{display:flex;gap:12px;flex-wrap:wrap}
+.mc-frame{border:1px solid var(--line);height:640px;background:#fff}.mc-frame iframe{width:100%;height:100%;border:0;display:block}
+#mc-pick{margin-bottom:28px}#mc-pick .mc-list{border-top:0}
+.mc-list button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-wrap:wrap;gap:2px 16px;width:100%;padding:12px 8px;align-items:baseline}
+.mc-list button:hover .mc-title{color:var(--gold)}.mc-list button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.mc-list button[aria-current=true]{background:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+.mc-tag{flex-basis:100%;padding-left:68px;font-size:.66rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.ev-form{max-width:640px;margin:48px auto 0;text-align:center}.ev-form h3{font-size:1.8rem;margin-bottom:.4rem}.ev-form>p{color:var(--muted)}
+.ev-form form{text-align:left;margin-top:20px}
+@media(max-width:900px){.mc-frame{height:500px}}
 /* week at a glance card (E9 option A), on the white news band */
 .wk-feat{display:block;border:1px solid var(--gold);border-left-width:4px;padding:20px 22px;margin-bottom:26px;background:var(--cream)}
 .wk-k{display:block;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}

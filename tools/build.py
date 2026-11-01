@@ -86,23 +86,56 @@ INQUIRY_EXEC = "https://script.google.com/macros/s/AKfycbztt-0KQKXHHbw0jHFwxzUqi
 sys.path.insert(0, str(OUT/"tools/members"))
 import club_emails
 
+def club_items(mails, week):
+    # newest first, with the week at a glance tagged where it falls by date
+    items = [dict(m, week=False) for m in mails]
+    if week: items.append(dict(week, week=True))
+    return sorted(items, key=lambda m: m["date"], reverse=True)
+
 def this_week(mails, week):
-    # option B (Cullen, 2026-10-18): club news first on the members page, with club hours and a one-line-per-day
-    # forecast in a cream sidebar instead of the navy band
-    li = "".join(f'<li><a href="{html.escape(m["link"])}" target="_blank" rel="noopener"><span class="mc-date">'
-                 f'{m["label"]}</span><span class="mc-title">{html.escape(m["title"])}</span></a></li>' for m in mails)
-    # the current week at a glance in a card above the list (E9 option A, 2026-10-17)
-    feat = (f'<a id="wk-feat" class="wk-feat" href="{html.escape(week["link"])}" target="_blank" rel="noopener"><span class="wk-k">Week at a glance</span>'
-            f'<span class="wk-t">{html.escape(week["title"])}</span><span class="wk-d">Sent {week["label"]}</span><span class="wk-go">Read this week</span></a>') if week else ""
-    news = (f'<div id="mc-col">{feat}<h3 id="mc-h">{"Other club emails" if week else "Latest club emails"}</h3><ul id="mc-list" class="mc-list">{li}</ul>'
-            f'<a class="mc-all" href="{club_emails.HOME}" target="_blank" rel="noopener">See all club emails</a></div>') if li or week else ""
-    side = ('<aside id="side-col" class="news-side"><div id="hours-wrap" hidden><h3>Club hours</h3>'
+    # option A (Cullen, 2026-11-01, E11): the latest club email shown right in the page, the recent ones beside it to
+    # switch between, club hours and the forecast under them; weather.js swaps in the hourly-refreshed list
+    items = club_items(mails, week)
+    TAG = '<span class="mc-tag">Week at a glance</span>'
+    li = "".join(f'<li><button type="button" data-link="{html.escape(m["link"])}" aria-current="{"true" if i == 0 else "false"}">'
+                 f'<span class="mc-date">{m["label"]}</span><span class="mc-title">{html.escape(m["title"])}</span>'
+                 f'{TAG if m["week"] else ""}</button></li>' for i, m in enumerate(items))
+    first = items[0] if items else None
+    news = (f'<div id="mc-col"><div class="mc-frame"><iframe id="mc-frame" src="{html.escape(first["link"])}" '
+            f'title="Club email: {html.escape(first["title"])}" loading="lazy"></iframe></div>'
+            f'<a id="mc-open" class="mc-all" href="{html.escape(first["link"])}" target="_blank" rel="noopener">Open this email in a new tab</a></div>') if first else ""
+    pick = (f'<div id="mc-pick"><h3>Recent emails</h3><ul id="mc-list" class="mc-list">{li}</ul>'
+            f'<a class="mc-all" href="{club_emails.HOME}" target="_blank" rel="noopener">See all club emails</a></div>') if first else ""
+    side = (f'<aside id="side-col" class="news-side">{pick}<div id="hours-wrap" hidden><h3>Club hours</h3>'
             '<div id="hours-box" class="hr-list" data-scope="members" aria-live="polite"></div></div>'
             '<div id="wx-col"><h3>7-day forecast</h3><div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"></div>'
             '<p class="wx-src">Forecast for the Markham area. Data Source: Environment and Climate Change Canada.</p></div></aside>')
     return ('<section id="this-week" class="news-band"><div class="container">'
-      '<span class="eyebrow">This Week</span><h2>Club news</h2>'
+      '<span class="eyebrow">From the Club</span><h2>Club news</h2>'
       f'<div class="week-grid">{news}{side}</div></div></section>')
+
+# tee times first on the members page (E13); the header button jumps here
+TEE_BAND = ('<section id="book" class="tee-band"><div class="container"><div><span class="eyebrow">Tee Times</span><h2>Book a tee time</h2>'
+  '<p>All three courses, the live tee sheet and your member rates, with your Chronogolf member login. Trouble booking? '
+  'Call the pro shop at <a href="tel:9056403633">905-640-3633</a>.</p></div><div class="tee-btns">'
+  '<a class="btn btn-gold tee-link" href="https://chronogolf.com/club/18694" target="_blank" rel="noopener">Book a tee time</a>'
+  '<a class="btn btn-ghost-navy" href="#leagues">Sign up for leagues</a></div></div></section>')
+
+# events and functions are for members only (Cullen, 2026-10-28, E12): the Events page content moves here
+MEMBER_EVENTS = (
+  '<section id="events" class="bg-cream"><div class="container"><div class="section-head center"><span class="eyebrow reveal">Events and Functions</span>'
+  '<h2 class="reveal d1">Host your event at the club</h2><p class="reveal d2">Corporate days, golf tournaments and celebrations of every size, '
+  'with versatile spaces and a team that handles the details. Every event inquiry is handled personally, from the first idea to the day itself.</p></div>'
+  '<div class="card-grid two"><article class="course-card reveal"><div class="course-art"><img src="../assets/img/g12.webp" alt=""></div>'
+  '<div class="course-body"><h3 style="font-size:1.6rem">Corporate and golf days</h3><p>Adaptable spaces and three championship courses make for a seamless corporate outing or tournament.</p></div></article>'
+  '<article class="course-card reveal d2"><div class="course-art"><img src="../assets/img/g28.webp" alt=""></div>'
+  '<div class="course-body"><h3 style="font-size:1.6rem">Social celebrations</h3><p>Birthdays, anniversaries and gatherings of every size, with food and service handled by our team.</p></div></article></div>'
+  '<div class="ev-form"><h3 id="event-inquiry">Plan your event with us</h3><p>Tell us what you have in mind and we will put together the right space, menu and quote for your occasion.</p>'
+  '<form class="inquiry-form" data-subject="Spring Lakes member event inquiry"><div class="field"><label for="ev-n">Name</label><input name="name" id="ev-n" type="text" autocomplete="name" required></div>'
+  '<div class="field"><label for="ev-e">Email</label><input name="email" id="ev-e" type="email" autocomplete="email" required></div>'
+  '<div class="field"><label for="ev-p">Phone</label><input name="phone" id="ev-p" type="tel" autocomplete="tel"></div>'
+  '<div class="field"><label for="ev-m">Message</label><textarea name="message" id="ev-m"></textarea></div>'
+  '<button class="btn btn-gold" type="submit">Send inquiry</button><p class="form-note note" style="display:none"></p></form></div></div></section>')
 
 def lost_found():
     # members report what they lost; reception sees the reports, and no items are listed here (staff edit E8)
@@ -184,6 +217,20 @@ WEEK_CSS = """
 .lf-date{flex:0 0 60px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .lf-what{flex:1;color:var(--navy);font-weight:600}.lf-where{display:block;font-weight:400;color:var(--muted);font-size:.88rem}
 .lf-photo{font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor}
+/* members page option A (E11, E13) */
+.tee-band{background:var(--cream);padding:36px 0;scroll-margin-top:90px}#events{scroll-margin-top:90px}
+.tee-band .container{display:flex;gap:28px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tee-band h2{font-size:clamp(1.9rem,3.4vw,2.5rem);margin:.25rem 0 .35rem}.tee-band p{margin:0;color:var(--muted);max-width:640px}
+.tee-band p a{color:var(--navy);font-weight:600}.tee-btns{display:flex;gap:12px;flex-wrap:wrap}
+.mc-frame{border:1px solid var(--line);height:640px;background:#fff}.mc-frame iframe{width:100%;height:100%;border:0;display:block}
+#mc-pick{margin-bottom:28px}#mc-pick .mc-list{border-top:0}
+.mc-list button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-wrap:wrap;gap:2px 16px;width:100%;padding:12px 8px;align-items:baseline}
+.mc-list button:hover .mc-title{color:var(--gold)}.mc-list button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.mc-list button[aria-current=true]{background:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+.mc-tag{flex-basis:100%;padding-left:68px;font-size:.66rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.ev-form{max-width:640px;margin:48px auto 0;text-align:center}.ev-form h3{font-size:1.8rem;margin-bottom:.4rem}.ev-form>p{color:var(--muted)}
+.ev-form form{text-align:left;margin-top:20px}
+@media(max-width:900px){.mc-frame{height:500px}}
 /* week at a glance card (E9 option A), on the white news band */
 .wk-feat{display:block;border:1px solid var(--gold);border-left-width:4px;padding:20px 22px;margin-bottom:26px;background:var(--cream)}
 .wk-k{display:block;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
@@ -303,6 +350,10 @@ def build():
         # Golf Camps is now Junior Golf: camps, Operation 36 and the junior academy (E10 option A, Cullen 2026-10-17)
         s = s.replace(">Golf Camps<", ">Junior Golf<")
         s = restyle(s)
+        s, n = re.subn(r'<li><a href="[^"]*events-spring-lakes/"[^>]*>Events</a></li>|<a href="[^"]*events-spring-lakes/">Events</a>', "", s)
+        assert n == 3, (f, "events links", n)
+        s, n = re.subn(r'(<a class="btn btn-gold" href="[^"]*members/)(">Book a tee time</a>)', r"\1#book\2", s)
+        assert n == 2, (f, "tee time buttons", n)
         s = staff_edits(f"{slug}/index.html" if slug else "index.html", s)
         for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps"):
             assert bad not in s, (f, bad)
@@ -316,12 +367,14 @@ def build():
         (OUT/"dining-staff").mkdir(exist_ok=True)
         (OUT/"dining-staff/index.html").write_text(nodash("staff.html"))
         (OUT/"assets/js/dining-staff.js").write_text(nodash("staff.js"))
-    # the live /tournaments/ page is leftover template copy; send it to events
-    (OUT/"tournaments").mkdir(exist_ok=True)
-    (OUT/"tournaments/index.html").write_text(
-        '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">'
-        '<meta http-equiv="refresh" content="0; url=../events-spring-lakes/">'
-        '<link rel="canonical" href="../events-spring-lakes/"><a href="../events-spring-lakes/">Events</a>')
+    # the live /tournaments/ page is leftover template copy, and events are members only (E12): both old
+    # addresses keep working and land on the events section of the Member's Area
+    for old in ("tournaments", "events-spring-lakes"):
+        (OUT/old).mkdir(exist_ok=True)
+        (OUT/old/"index.html").write_text(
+            '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">'
+            '<meta http-equiv="refresh" content="0; url=../members/#events">'
+            '<link rel="canonical" href="../members/"><a href="../members/#events">Member events</a>')
     # preview forms send nothing; they get wired to the inquiry sheet at launch
     js = OUT/"assets/js/site.js"; t = js.read_text()
     a = t.find("document.querySelectorAll('.inquiry-form')"); b = t.find("\n", a)
@@ -387,6 +440,12 @@ def edit(f, s):
         s = sub(s, ">Weddings &amp; Events</h3><p>Weddings, corporate days and celebrations, framed by 45 lakes and open sky.</p>",
                 ">Events &amp; Golf Days</h3><p>Corporate days, golf tournaments and celebrations, framed by 45 lakes and open sky.</p>", f)
         assert "edding" not in s, f
+        s, n = re.subn(r'<article class="course-card reveal d2"><div class="course-art"><img src="assets/img/g15\.webp" alt=""></div><div class="course-body">'
+                       r'<h3 class="script"[^>]*>Events &amp; Golf Days</h3>.*?</article>', "", s, count=1, flags=re.S)
+        assert n == 1, (f, "events card")
+        s = sub(s, '<span class="eyebrow reveal">Events &amp; Academy</span>', '<span class="eyebrow reveal">Academy &amp; Juniors</span>', f)
+        s = sub(s, "From junior pathways to golf days on the moraine, Spring Lakes hosts the moments that matter.</p></div><div class=\"card-grid\">",
+                "From first lessons to a real junior pathway, our PGA of Canada professionals teach golfers of every age.</p></div><div class=\"card-grid two\">", f)
         # 2027 forms: categories differ by tier, so no blanket "unlimited golf" claim
         s = sub(s, "Unlimited golf across three courses, a clubhouse built for the whole family, and a calendar that fills the season, with no hidden minimums.",
                 "Three championship courses, a clubhouse built for the whole family, and a calendar that fills the season, with no clubhouse minimums.", f)
@@ -492,9 +551,11 @@ def edit(f, s):
         s = re.sub(r'<script>\(function\(\)\{var fm=document\.getElementById\("memform"\).*?</script>', "", s, flags=re.S)
         s = cut(s, '<div id="memgate"', '<div id="memarea"', '<p class="preview-note">Preview: at launch this page sits behind the '
                 'member password, checked on the server. Member documents (calendar, renewal forms) are added then.</p>', "members")
-        s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">' + this_week(MAILS, WEEK), f)
+        s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">' + TEE_BAND + this_week(MAILS, WEEK) + MEMBER_EVENTS, f)
+        s, n = re.subn(r'<section id="book" class="bg-cream">.*?</section>', "", s, count=1, flags=re.S)
+        assert n == 1, (f, "old tee time section")
         s = sub(s, '</section><section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"',
-                '</section>' + lost_found() + '<section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
+                '</section>' + lost_found() + '<section id="leagues"><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
         s = s.replace("</body>", '<script src="../assets/js/weather.js" defer></script><script src="../assets/js/content.js" defer></script></body>', 1)
         k = s.find("Member Documents"); i = s.rfind("<section", 0, k); j = s.find("</section>", k) + len("</section>")
         assert k > 0 and i > 0, f
