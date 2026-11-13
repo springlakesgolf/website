@@ -3,7 +3,7 @@
 Members book from the Dining page. Staff run the day from /dining-staff/ on the restaurant iPad.
 The spec and plan are in CullenAI/Knowledge (Restaurant-Reservations-Spec-2026-10-16.md and -Plan-).
 
-- **Sheet:** "Restaurant Bookings" in cullenpacas@gmail.com, private. Its ID and the script link
+- **Sheet:** "Restaurant Bookings", owned by the Google account that runs the script, private. Its ID and the script link
   live in `config.local.json`, which is gitignored and never committed, because the repo is public.
   `config.json` holds only the public web app address.
   - Laura changes the hours, limits, Staff PIN (6 or more digits) and Email mode in Settings.

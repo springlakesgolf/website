@@ -14,7 +14,8 @@ Design agreed with Cullen on 2026-10-17 for staff edits E6 (camp waitlist, Decem
 No items are listed on the members page any more; reception works from the Lost Item Report Sheet.
 
 ## Run it once
-1. script.google.com, New project, paste `build_forms.gs`, run `buildAll`, approve the permissions.
+1. script.google.com, New project, paste `build_forms.gs`. First set Project Settings > Script Properties `alerts` to
+   `{"waitlist": "...", "registration": "...", "lost": "..."}` with the club addresses, then run `buildAll` and approve the permissions.
 2. Open View, Logs. Copy the three `live` links into `tools/forms/config.json`:
    ```json
    {"waitlist": "https://docs.google.com/forms/d/e/.../viewform",

@@ -1,0 +1,30 @@
+# Publishes only the public pages and assets. Without this, GitHub Pages served the
+# whole repo (tools/, README.md, PRODUCT.md and so on) under springlakesgolf.github.io/website/.
+# Before the first run: Settings > Pages > Source must be "GitHub Actions"
+# (gh api -X PUT repos/springlakesgolf/website/pages -f build_type=workflow).
+name: Pages
+on:
+  push: { branches: [main] }
+  # the club-emails bot pushes with GITHUB_TOKEN, which starts no push workflows
+  workflow_run: { workflows: ["Club emails"], types: [completed] }
+  workflow_dispatch:
+permissions: { contents: read, pages: write, id-token: write }
+concurrency: { group: pages, cancel-in-progress: false }
+jobs:
+  deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: { name: github-pages, url: "${{ steps.deployment.outputs.page_url }}" }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy public files only
+        run: |
+          mkdir _site
+          cp -R index.html robots.txt .nojekyll assets contact-us course-gallery dining-staff events-spring-lakes food-beverage golf golf-academy golf-camps members memberships tournaments _site/
+          # a new top-level page folder must be added above, or the run fails (the old site stays live)
+          for d in */; do d=${d%/}; [ "$d" = tools ] || [ "$d" = _site ] && continue
+            if [ -f "$d/index.html" ] && [ ! -d "_site/$d" ]; then echo "page folder $d missing from pages.yml"; exit 1; fi; done
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4

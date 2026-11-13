@@ -6,3 +6,4 @@ tools/design-options/
 .superpowers/
 tools/dining/dist/
 tools/dining/config.local.json
+tools/edit-mode/config.local.json

@@ -2,8 +2,9 @@
 
 Staff open the preview with `?edit=<key>`, tap **Suggest an edit**, tap the part of
 the page to change, and type the change. Each request becomes a row in the
-"Website Edits" Google Sheet (owner cullenpacas@gmail.com); photos go to the Drive
-folder "Website Edit Photos". URLs are in `config.json`; the key is in
+"Website Edits" Google Sheet (owner: the Google account that runs the script); photos go to the Drive
+folder "Website Edit Photos". The web app URL is in `config.json`; the Sheet and script
+links are in `config.local.json` (gitignored); the key is in
 `edit-key.txt` (gitignored, the repo is public) and in the script's properties.
 
 - `edit-mode.js`: the button and picker. `tools/build.py` copies it into
@@ -20,7 +21,7 @@ folder "Website Edit Photos". URLs are in `config.json`; the key is in
 ## Hours and Lost & Found
 
 The same script answers `GET ?feed=content` from the Hours and Lost & Found tabs
-(`content_sheet` in `config.json`): tab **Hours** (Show to: Everyone, Members only
+(`content_sheet` in `config.local.json`): tab **Hours** (Show to: Everyone, Members only
 or Hidden) and tab **Lost & Found** (items stay up until Status is Claimed or 90
 days pass). `tools/members/content.js` shows them on the contact page (Everyone
 rows only) and the members page. The script caches for a minute.

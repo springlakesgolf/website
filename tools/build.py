@@ -14,7 +14,9 @@ SLUG = {  # June file -> live URL folder ('' = home)
 }
 # member-only or pricing documents never go on a public preview
 PRIVATE_DOCS = {"2026-JI-Renewal.pdf", "2026-Junior-Renewal.pdf",
-                "2026-Member-Calendar.pdf", "2026-Renewal-Form.pdf"}
+                "2026-Member-Calendar.pdf", "2026-Renewal-Form.pdf",
+                # menu and wine list are members only (review 2026-10-16 item 4)
+                "Restaurant-Menu.pdf", "Wine-List.pdf"}
 # winter lessons are no longer offered (Braeden, 2026-10-16, E4/E5)
 RETIRED_DOCS = {"Winter-Lessons-Rhys.pdf", "Winter-Programming-Braeden.pdf"}
 
@@ -355,7 +357,8 @@ def build():
         s, n = re.subn(r'(<a class="btn btn-gold" href="[^"]*members/)(">Book a tee time</a>)', r"\1#book\2", s)
         assert n == 2, (f, "tee time buttons", n)
         s = staff_edits(f"{slug}/index.html" if slug else "index.html", s)
-        for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps"):
+        for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps",
+                    "Restaurant-Menu.pdf", "Wine-List.pdf"):
             assert bad not in s, (f, bad)
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -449,6 +452,15 @@ def edit(f, s):
         # 2027 forms: categories differ by tier, so no blanket "unlimited golf" claim
         s = sub(s, "Unlimited golf across three courses, a clubhouse built for the whole family, and a calendar that fills the season, with no hidden minimums.",
                 "Three championship courses, a clubhouse built for the whole family, and a calendar that fills the season, with no clubhouse minimums.", f)
+        # review item 16 + perks note (2026-10-16): dining is for members and their guests; no feature list in public copy
+        s = sub(s, '<span class="eyebrow reveal">Clubhouse &amp; Dining</span>', '<span class="eyebrow reveal">The Clubhouse</span>', f)
+        s = sub(s, '>Patios, Plates &amp; Long Summer Evenings</h2>', '>Long Summer Evenings on the Back Patio</h2>', f)
+        s = sub(s, 'A relaxed clubhouse for members and their guests, with classic flavours and a few creative twists from the kitchen. Wind down after a round or settle in on the patio for the evening.',
+                'A relaxed clubhouse for members and their guests. Wind down after a round or settle in on the back patio for the evening.', f)
+        s = sub(s, '<a class="btn btn-ghost-navy" href="food-beverage/">Explore Dining</a>',
+                '<a class="btn btn-ghost-navy" href="memberships/?interest=social#inquire">Make a membership inquiry</a>', f)
+        s, n = re.subn(r'<div class="perks">.*?</p></div></div>(?=<div style="display:flex)', "", s, count=1, flags=re.S)
+        assert n == 1 and "Zero Clubhouse Minimums" not in s, (f, "perks")
     if f == "memberships.html":
         i = s.find('<main id="main">') + len('<main id="main">')
         j = s.find('<section><div class="container narrow"><div class="section-head center"><span class="eyebrow reveal">Inquire')
@@ -492,6 +504,12 @@ def edit(f, s):
         s = s.replace("</body>", '<script src="../assets/js/dining-rules.js" defer></script>'
                       '<script src="../assets/js/dining-api.js" defer></script>'
                       '<script src="../assets/js/dining.js" defer></script></body>', 1)
+    if f == "dining.html":
+        # review 2026-10-16 item 4: no public restaurant hours, menu or wine list; they go to /members/ at launch
+        s, n = re.subn(r'<div class="hours">.*?</div></div></div>', "", s, count=1, flags=re.S); assert n == 1, (f, "hours strip")
+        s, n = re.subn(r'<div class="doc-links">.*?</div>', "", s, count=1, flags=re.S); assert n == 1, (f, "menu links")
+        # review item 17: dining is for members and their guests
+        s = sub(s, "Dining is reserved for members.", "Dining is for members and their guests.", f)
     if f == "golf-camps.html":
         s = sub(s, "All 2026 camp weeks are sold out", "2027 camp dates are coming soon", f)
         s = re.sub(r"Thank you\. Every week of our 2026 junior camps has been filled\. To join the waitlist or to hear first when 2027 dates open,",
@@ -543,6 +561,8 @@ def edit(f, s):
         s = s.replace("</body>", '<script src="../assets/js/content.js" defer></script></body>', 1)
         s = re.sub(r' ·\s*<a href="mailto:[a-z]+@springlakesgolf\.com"[^>]*>[a-z]+@springlakesgolf\.com</a>', "", s)
         assert not re.search(r'(braeden|luke|cullen|rhys|laura|ashley|kelly|chris)@', s), f
+        # review item 16 / E14: no separate dining topic; social membership goes through the membership inquiry
+        s = sub(s, '<option>Golf lessons</option><option>Dining</option>', '<option>Golf lessons</option>', f)
     if f == "golf.html":
         s = re.sub(r'<a [^>]*href="assets/docs/[A-Za-z]+-Scorecard\.pdf"[^>]*>.*?</a>', "", s)
         s = re.sub(r'<a [^>]*href="\.\./assets/docs/[A-Za-z]+-Scorecard\.pdf"[^>]*>.*?</a>', "", s)

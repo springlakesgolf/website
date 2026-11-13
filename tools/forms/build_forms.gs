@@ -10,11 +10,9 @@
  * tools/forms/config.json. Running it again makes a second set, so run it once.
  */
 
-var ALERTS = {
-  waitlist: 'braeden@springlakesgolf.com',
-  registration: 'braeden@springlakesgolf.com',
-  lost: 'reception@springlakesgolf.com'
-};
+// Who gets each alert: Script Properties > alerts, JSON {"waitlist": ..., "registration": ..., "lost": ...}.
+// Kept out of this file because the repo is public. A missing address just skips that alert.
+var ALERTS = JSON.parse(PropertiesService.getScriptProperties().getProperty('alerts') || '{}');
 
 var WEEKS = ['Week 1: July 5 to 9', 'Week 2: July 19 to 23', 'Week 3: August 2 to 6', 'Week 4: August 16 to 20'];
 var AGES = ['6', '7', '8', '9', '10', '11', '12', '13', '14'];
