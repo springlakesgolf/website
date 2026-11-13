@@ -553,6 +553,7 @@ def edit(f, s):
         assert n == 2, (f, "winter links", n)
         s = sub(s, "Yardage clinics, winter lesson programs and junior pathways", "Yardage clinics and junior pathways", f)
         assert "winter" not in s.lower(), f
+        s = sub(s, "Dialed-in fittings with Head Fitter Luke Roth using", "Dialed-in fittings with our head fitter using", f)
     if f == "contact.html":
         s = sub(s, '<h3 style="font-size:1.5rem;margin:34px 0 6px">Staff Directory</h3>',
                 '<div id="hours-wrap" class="hours-public" hidden><h3 style="font-size:1.5rem;margin:0 0 6px">Hours</h3>'
@@ -563,6 +564,15 @@ def edit(f, s):
         assert not re.search(r'(braeden|luke|cullen|rhys|laura|ashley|kelly|chris)@', s), f
         # review item 16 / E14: no separate dining topic; social membership goes through the membership inquiry
         s = sub(s, '<option>Golf lessons</option><option>Dining</option>', '<option>Golf lessons</option>', f)
+        # house rule: public copy says "our team", not staff names; same extensions, by department
+        s, n = re.subn(r'<h3 style="font-size:1.5rem;margin:34px 0 6px">Staff Directory</h3>(?:<div class="staff-row">.*?<div class="s-ext">[^<]*</div></div>)+',
+                       '<h3 style="font-size:1.5rem;margin:34px 0 6px">Departments</h3>' + "".join(
+                           f'<div class="staff-row"><div><div class="s-name">{d}</div><div class="s-role">{r}</div></div><div class="s-ext">Ext. {x}</div></div>'
+                           for d, r, x in (("Pro Shop", "Tee times, lessons and club fitting", 234),
+                                           ("Clubhouse and Events", "Membership inquiries and events", 236),
+                                           ("Food and Beverage", "For members and their guests", 225),
+                                           ("Course Maintenance", "Course conditions", 243))), s, count=1, flags=re.S)
+        assert n == 1 and not re.search(r"Piccione|Yake|McNeill|Contois", s), (f, "staff directory")
     if f == "golf.html":
         s = re.sub(r'<a [^>]*href="assets/docs/[A-Za-z]+-Scorecard\.pdf"[^>]*>.*?</a>', "", s)
         s = re.sub(r'<a [^>]*href="\.\./assets/docs/[A-Za-z]+-Scorecard\.pdf"[^>]*>.*?</a>', "", s)
