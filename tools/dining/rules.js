@@ -110,6 +110,6 @@ var DiningRules = (function () {
     return '';
   }
   return {slotTimes: slotTimes, dayStatus: dayStatus, staffStatus: staffStatus, openTimes: openTimes, days: days, allDay: allDay, isMember: isMember,
-          clean: clean, checkBooking: checkBooking, label: label, weekdayOf: weekdayOf, addDays: addDays};
+          clean: clean, fold: fold, checkBooking: checkBooking, label: label, weekdayOf: weekdayOf, addDays: addDays};
 })();
 if (typeof module !== 'undefined') module.exports = DiningRules;

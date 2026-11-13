@@ -81,8 +81,9 @@ function handle(q, b) {
       else if (!R.slotTimes(settings, R.weekdayOf(b.date)).includes(b.time)) out = {ok: false, rid: b.rid, error: 'time'};
       else if (!slot || !slot.open) out = {ok: false, rid: b.rid, error: 'full'};
       else if (!R.isMember(members, b.member, b.name)) out = {ok: false, rid: b.rid, error: 'member'};
+      else if (bookings.some(x => x.date === b.date && x.source === 'Website' && (x.status === 'Booked' || x.status === 'Seated') && R.fold(x.member) === R.fold(b.member))) out = {ok: false, rid: b.rid, error: 'already'};
       else {
-        const row = {id: 'R' + nextId++, date: b.date, time: b.time, guests: Number(b.guests), name: R.clean(b.name, 80),
+        const row = {id: 'R' + nextId++, date: b.date, time: b.time, guests: Number(b.guests), name: R.clean(b.name, 80), member: b.member,
           phone: R.clean(b.phone, 30), notes: R.clean(b.notes, 300), status: 'Booked', source: 'Website', token: crypto.randomUUID()};
         bookings.push(row);
         console.log('BOOKED', row.id, row.date, row.time, row.guests, row.name, 'cancel token', row.token);

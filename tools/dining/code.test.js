@@ -113,6 +113,8 @@ function makeEnv(opts) {
   env.ctx = ctx;
   ctx.setup();
   setSetting(env, 'Staff PIN', '432198');
+  setSetting(env, 'Test email', 'staff@example.com');
+  setSetting(env, 'Reply-to', 'staff@example.com');
   ss.getSheetByName('Members').appendRow(['9001', 'Test']);
   events.length = 0;
   return env;
@@ -201,8 +203,8 @@ test('book: succeeds, one row, one confirmation email to the Test address', () =
   assert.match(rows[0][12], /^[0-9a-f]{32}$/);
   assert.strictEqual(rows[0][13], 'a1');
   assert.strictEqual(env.mail.length, 1);
-  assert.strictEqual(env.mail[0].to, 'cullen@springlakesgolf.com');
-  assert.strictEqual(env.mail[0].replyTo, 'laurap@springlakesgolf.com');
+  assert.strictEqual(env.mail[0].to, 'staff@example.com');
+  assert.strictEqual(env.mail[0].replyTo, 'staff@example.com');
   assert.ok(env.mail[0].htmlBody.includes('?t=' + rows[0][12]));
   assert.ok(env.mail[0].htmlBody.includes('7:00 pm'));
   assert.ok(!/[–—]/.test(env.mail[0].htmlBody + env.mail[0].subject), 'no em or en dashes in the email');
@@ -217,9 +219,48 @@ test('book: Live mode emails the member; a mail failure does not fail the bookin
   assert.strictEqual(post(env, member(d, {rid: 'l1'})).ok, true);
   assert.strictEqual(env.mail[0].to, 'jo@example.com');
   env.mailFails = true;
-  const r = post(env, member(d, {rid: 'l2', time: '18:00'}));
+  env.ss.getSheetByName('Members').appendRow(['9002', 'Test']);
+  const r = post(env, member(d, {rid: 'l2', time: '18:00', member: '9002'}));
   assert.strictEqual(r.ok, true);
   assert.strictEqual(rowsOf(env, 'Bookings').length, 2);
+});
+
+test('book: a second booking for the same member and date gives already', () => {
+  const env = makeEnv();
+  const d = openDate(3);
+  assert.strictEqual(post(env, member(d, {rid: 'm1'})).ok, true);
+  const again = post(env, member(d, {rid: 'm2', time: '18:00', member: ' 9 001'}));
+  assert.deepStrictEqual(again, {ok: false, rid: 'm2', error: 'already'});
+  assert.strictEqual(rowsOf(env, 'Bookings').length, 1);
+  assert.strictEqual(env.mail.length, 1);
+  // another day is fine
+  const other = addDays(d, 1) === mondayDate() ? addDays(d, 2) : addDays(d, 1);
+  assert.strictEqual(post(env, member(other, {rid: 'm3'})).ok, true);
+  // a cancelled booking no longer counts, so cancel and rebook works
+  env.ss.getSheetByName('Bookings').put(2, 10, 'Cancelled');
+  assert.strictEqual(post(env, member(d, {rid: 'm4', time: '18:00'})).ok, true);
+});
+
+test('book: a non-member gets member, never already', () => {
+  const env = makeEnv();
+  const d = openDate(3);
+  assert.strictEqual(post(env, member(d, {rid: 'n1'})).ok, true);
+  assert.strictEqual(post(env, member(d, {rid: 'n2', time: '18:00', name: 'TEST Jo Nobody'})).error, 'member');
+});
+
+test('book: confirmation emails stop after 20 in an hour, the booking still saves', () => {
+  const env = makeEnv();
+  const hk = 'mailcount:' + env.ctx.Utilities.formatDate(new Date(), 'America/Toronto', 'yyyyMMddHH');
+  env.cache.set(hk, '20');
+  const r = post(env, member(openDate(3), {rid: 'c1'}));
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(env.mail.length, 0);
+  assert.strictEqual(rowsOf(env, 'Bookings').length, 1);
+  env.cache.set(hk, '3');
+  env.ss.getSheetByName('Members').appendRow(['9002', 'Test']);
+  assert.strictEqual(post(env, member(openDate(3), {rid: 'c2', time: '18:00', member: '9002'})).ok, true);
+  assert.strictEqual(env.mail.length, 1);
+  assert.strictEqual(env.cache.get(hk), '4');
 });
 
 test('book: HTML in a name is escaped in the email', () => {
@@ -399,7 +440,7 @@ test('clearTestRows removes only TEST rows; sendTestEmail goes to the Test email
   assert.deepStrictEqual(rowsOf(env, 'Bookings').map(r => r[4]), ['Real Person']);
   env.ctx.sendTestEmail();
   assert.strictEqual(env.mail.length, 1);
-  assert.strictEqual(env.mail[0].to, 'cullen@springlakesgolf.com');
+  assert.strictEqual(env.mail[0].to, 'staff@example.com');
 });
 
 // ---- review fixes ---------------------------------------------------------
