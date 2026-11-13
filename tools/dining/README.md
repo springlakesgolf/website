@@ -22,6 +22,8 @@ The spec and plan are in CullenAI/Knowledge (Restaurant-Reservations-Spec-2026-1
   - Laura answers her questions.
   - Load the real Members list.
   - Set Email mode to Live.
+  - Check Settings > Test email and Reply-to are filled in. They have no defaults in the code (the repo is public), so a new sheet starts with them blank.
+  - Online limits: one website booking per member number per day (a second gets "You already have a reservation that day"), and at most 20 confirmation emails an hour; past that the booking still saves but no email goes out, so that member cancels by phone.
   - Send confirmations from a club dining address. That means moving the script to that account and redeploying, which changes the web address in config.json.
   - Load the 2027 calendar events.
   - Save /dining-staff/ to the iPad home screen.
