@@ -3,7 +3,7 @@ import html, json, os, re, shutil, sys
 from pathlib import Path
 
 SRC = Path.home()/"Downloads/Marketing & Promotions/springlakes-site"
-OUT = Path.home()/"Projects/springlakes-website"
+OUT = Path(__file__).resolve().parents[1]  # the checkout this script sits in (worktree-safe)
 
 SLUG = {  # June file -> live URL folder ('' = home)
     "index.html": "", "golf.html": "golf", "golf-academy.html": "golf-academy",
@@ -316,16 +316,24 @@ def rel(prefix, m):
     s = SLUG[page]
     return f'href="{prefix}{s + "/" if s else ""}{frag}"' if (s or frag) else f'href="{prefix or "./"}"'
 
+# the standing heron is taller than it is wide, so it needs more height than the old flying heron
+HERON_CSS = (".brand .heron{height:54px}.footer .f-lock .heron{height:58px}"
+             ".hero-mark{height:128px}.cx img{height:84px}\n")
+
 def build():
     if OUT.joinpath("index.html").exists():
         for p in OUT.iterdir():
             if p.name not in {".git", ".github", ".gitignore", ".impeccable", ".superpowers", "README.md", "PRODUCT.md", "DESIGN.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
-    shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", "camp-2026.webp", *PRIVATE_DOCS, *RETIRED_DOCS))
+    shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", "camp-2026.webp", "heron-gold.png", "heron-navy.png", *PRIVATE_DOCS, *RETIRED_DOCS))
     # 2027 camp flyer (Braeden, 2026-10-16): image on the camps page plus the printable PDF
     shutil.copy(OUT/"tools/camps/camp-2027-flyer.jpg", OUT/"assets/img/camp-2027-flyer.jpg")
     shutil.copy(OUT/"tools/camps/2027-Camp-Flyer.pdf", OUT/"assets/docs/2027-Camp-Flyer.pdf")
     shutil.copy(OUT/"tools/camps/junior-lesson.jpg", OUT/"assets/img/junior-lesson.jpg")
+    # new club heron (standing heron in the reeds, Fable kit 2026-11-10, approved by Braeden 2026-11-17):
+    # replaces the old flying heron everywhere; the June heron-gold/heron-navy files are skipped above
+    for f in ("heron-mark-reverse.png", "heron-mark.png", "apple-touch-icon.png", "favicon-64.png"):
+        shutil.copy(OUT/"tools/brand"/f, OUT/"assets/img"/f)
     global MAILS, WEEK
     MAILS, WEEK = club_emails.write()
     exec_url = edit_exec()
@@ -343,6 +351,9 @@ def build():
         s = s.replace('src="assets/', f'src="{prefix}assets/').replace('href="assets/', f'href="{prefix}assets/')
         s = s.replace('poster="assets/', f'poster="{prefix}assets/')
         s = s.replace("<head>", "<head>" + PREVIEW_HEAD, 1)
+        s = s.replace("assets/img/heron-gold.png", "assets/img/heron-mark-reverse.png")
+        s = s.replace("<head>", f'<head><link rel="icon" type="image/png" href="{prefix}assets/img/favicon-64.png">'
+                      f'<link rel="apple-touch-icon" href="{prefix}assets/img/apple-touch-icon.png">', 1)
         tail = PREVIEW_PILL + (f'<script src="{prefix}assets/js/edit-mode.js" defer></script>' if exec_url else "")
         s = s.replace("</body>", tail + "</body>", 1)
         s = re.sub(r' data-to="[^"]*"', "", s)
@@ -355,7 +366,7 @@ def build():
         s, n = re.subn(r'(<a class="btn btn-gold" href="[^"]*members/)(">Book a tee time</a>)', r"\1#book\2", s)
         assert n == 2, (f, "tee time buttons", n)
         s = staff_edits(f"{slug}/index.html" if slug else "index.html", s)
-        for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps"):
+        for bad in ("—", "–", "SLGC2026", "heron-gold", "heron-navy", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps"):
             assert bad not in s, (f, bad)
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -385,7 +396,7 @@ def build():
     js.write_text(t)
     # June CSS: the mobile .btn padding squeezed the menu icon to 4px wide
     css = OUT/"assets/css/style.css"
-    css.write_text(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS)
+    css.write_text(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + HERON_CSS)
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
     shutil.copy(OUT/"tools/forms/inquiry.js", OUT/"assets/js/inquiry.js")
     if exec_url:
