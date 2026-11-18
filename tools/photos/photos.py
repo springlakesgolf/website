@@ -50,7 +50,7 @@ def slots(hero):
             ("hero-aerial.jpg", h[0], "", None, h[1], h[2]),
             ("g18.webp", "island-green", "m", None, "50% 55%", "50% 55%"),
             ("course-east.webp", "green-big-sky", "m", None, "50% 70%", "50% 70%"),
-            ("g25.webp", "golden-fairways", "m", None, "50% 50%", "50% 50%"),
+            ("g25.webp", "clubhouse-path", "m", None, "45% 40%", "45% 40%"),  # clubhouse and dining teaser
             ("g05.webp", "chip-shot", "m", None, "60% 45%", "60% 45%"),
             ("g26.webp", "bunker-blue-sky", "m", None, "50% 55%", "50% 55%"),
         ],
@@ -79,10 +79,10 @@ def slots(hero):
 LAND = ["morning-ponds", "storm-fairway", "island-green", "bunker-big-sky", "pond-pines", "flag-green-pond",
         "green-big-sky", "swan", "ponds-above", "fescue", "bunker-blue-sky", "figure-eight-pond", "pond-channel",
         "pond-reflection", "sun-rays", "golden-flare", "green-bunker", "dusk-fairway", "golden-fairways"]
-CLUB = ["clubhouse-fountain", "clubhouse-gardens", "heron-sculpture", "white-chairs", "clubhouse-green",
-        "stone-lettering", "teams-clubhouse"]
+CLUB = ["clubhouse-fountain", "clubhouse-gardens", "clubhouse-path", "heron-sculpture", "white-chairs", "clubhouse-green",
+        "stone-lettering"]
 PLAY = ["members-putting", "tee-shot-maple", "foursome-tee", "walking-bags", "driver-swing", "handshake-green",
-        "bunker-shot"]
+        "teams-clubhouse"]
 # layout C: (heading, line under it, feature photo, the rest)
 SECTIONS = [
     ("The Land", "Ponds, pines and fescue across the Oak Ridges Moraine.", "morning-ponds", [p for p in LAND if p != "morning-ponds"]),
@@ -95,7 +95,7 @@ MIXED = ["*morning-ponds", "storm-fairway", "island-green", "bunker-big-sky", "p
          "*clubhouse-fountain", "fescue", "clubhouse-gardens", "heron-sculpture", "white-chairs", "bunker-blue-sky",
          "figure-eight-pond", "clubhouse-green", "pond-channel",
          "*members-putting", "tee-shot-maple", "foursome-tee", "walking-bags", "driver-swing", "handshake-green",
-         "bunker-shot", "pond-reflection", "sun-rays", "stone-lettering", "golden-flare", "green-bunker",
+         "clubhouse-path", "pond-reflection", "sun-rays", "stone-lettering", "golden-flare", "green-bunker",
          "dusk-fairway", "teams-clubhouse", "golden-fairways"]
 # object-position for tiles that are cropped to 3:2 (default is the centre)
 TILE_POS = {"sun-rays": "50% 62%", "morning-ponds": "50% 68%", "clubhouse-fountain": "50% 40%",

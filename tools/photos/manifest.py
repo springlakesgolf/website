@@ -34,6 +34,7 @@ PHOTOS = {
     "clubhouse-green":   ("_RSN0152", None, "The clubhouse across a green with a Canada flag on the pin"),
     "clubhouse-fountain": ("_RSN0096", None, "The clubhouse across the pond and fountain"),
     "clubhouse-gardens": ("_RSN5979", None, "The clubhouse veranda and gardens"),
+    "clubhouse-path":    ("Club Championship|_RSN9819", None, "A couple walking up the garden path to the clubhouse veranda"),
     "heron-sculpture":   ("_RSN5992", None, "A heron sculpture in the flower garden by the clubhouse"),
     "white-chairs":      ("_RSN9724", None, "Two white chairs in the shade of a spruce"),
     "stone-lettering":   ("_RSN0441", None, "Spring Lakes Golf Club engraved in stone at the entrance"),

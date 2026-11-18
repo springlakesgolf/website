@@ -25,7 +25,7 @@ The site now runs on the Rich Nixx Media 2026 photos. Picks and the do-not-use l
 | Home | hero | `hero-aerial.jpg` (option O, the original) | Autumn aerial with the island green, ponds and fairways |
 | Home | about figure | `island-green` | Island green beside the clubhouse, from the air |
 | Home, Golf | East course card | `green-big-sky` | A green on the East Course (Ryder Cup) |
-| Home | dining teaser | `golden-fairways` | Golden evening light over fairways and ponds, from the air |
+| Home | clubhouse and dining teaser | `clubhouse-path` | A couple walking up the garden path to the clubhouse veranda |
 | Home | Academy card | `chip-shot` | Golfer chipping onto a green |
 | Home | Junior Golf card | `bunker-blue-sky` | Bunker and fairway, blue sky |
 | Golf | hero | `property-wide` | Wide over the property, island green and clubhouse |
@@ -41,6 +41,11 @@ The site now runs on the Rich Nixx Media 2026 photos. Picks and the do-not-use l
 | Members | leagues figure | `handshake-green` | Four players shaking hands on a green |
 | Course Gallery | hero | `ponds-wide` | Wide aerial with ponds |
 | Course Gallery | 33 photos | see `LAND`, `CLUB`, `PLAY` in `photos.py` | Land first, then the clubhouse, then members at play |
+
+## Photo matches the words (checked 2026-11-18, at Cullen's request)
+Every slot was checked against the heading and copy beside it and against its own alt text, at desktop and phone crops.
+- Changed: the home clubhouse and dining teaser showed fairways from the air; it now shows the clubhouse (`clubhouse-path`). In the gallery, the team photo moved from The Clubhouse to Members at Play, and `clubhouse-path` joined The Clubhouse (the bunker shot left the gallery to keep the rows even; it is still the Golf Academy hero).
+- Closest available, not a true match: the Golf Academy card and hero show members playing short game shots, because the library has no lesson, range or fitting photos. The Junior Golf card and hero show a bunker with no people, because new junior photos wait on consent.
 
 ## Kept the old photo, and why
 - Home hero (`hero-aerial.jpg`): Cullen's pick, see above.
