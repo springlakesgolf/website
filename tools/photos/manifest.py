@@ -9,6 +9,7 @@ PHOTOS = {
     "morning-ponds":     ("DJI_20260701094719_0014_D", None, "Morning light over two ponds, pines and bunkers at Spring Lakes, seen from the air"),
     "golden-flare":      ("DJI_20260712202345_0107_D", (0, 0, .93, 1), "The sun setting over fairways and bunkers at Spring Lakes, seen from the air"),
     "property-wide":     ("DJI_20260701162502_0098_D", None, "Aerial view across Spring Lakes with the island green and the clubhouse"),
+    "property-sky":      ("DJI_20260710093219_0040_D", (.06, .02, 1, .66), "The whole of Spring Lakes from high above, ponds and fairways under a wide sky"),
     "dusk-fairway":      ("DJI_20260712203621_0131_D", (0, .08, .745, .86), "Dusk over a fairway and bunkers, with the clubhouse in the trees"),
     "island-green":      ("DJI_20260701162144_0092_D", None, "The island green beside the clubhouse, seen from the air"),
     "golden-fairways":   ("DJI_20260712202841_0116_D", (.53, .2, 1, .71), "Golden evening light over fairways, ponds and bunkers, seen from the air"),

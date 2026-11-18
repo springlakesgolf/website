@@ -7,7 +7,12 @@ The site now runs on the Rich Nixx Media 2026 photos. Picks and the do-not-use l
 - `tools/photos/export.py` turns the originals into web files in `tools/photos/img/` (WebP: 2000 px under 400 KB, 1200 px `-m`, 800 px `-t`). It needs Spring Lakes Media Drive 1 (`E:\Spring Lakes Photos`). The exported files are committed, so nothing else needs the drive.
 - `tools/photos/photos.py` puts them on the pages: one photo per image slot (with its alt text and crop position for desktop and phone), the course gallery, and the photo viewer (`tools/photos/gallery.js`).
 - `tools/build.py` calls it, so a rebuild on the Mac keeps the new photos even though the June source folder still has the old ones. On the PC, where the June source folder does not exist, `python tools/photos/photos.py` applies the same thing to the built pages.
-- Two settings at the top of `photos.py`: `HERO` (home hero A to D) and `GALLERY` (layout A to C).
+- Two settings at the top of `photos.py`: `HERO` (home hero: O the original, or A to E) and `GALLERY` (layout A to C).
+
+## Cullen's picks (2026-11-18)
+- Home hero: he asked for a bigger property shot like the original, and to keep the original if no new photo beat it. None did (the two widest new shots have a road and ploughed field, or the parking lot, in frame), so `HERO = "O"` keeps the original autumn aerial (`tools/photos/img/hero-aerial.jpg`). The closest new shot is exported as `property-sky` (option E) if he wants to switch.
+- Gallery: layout C, three sections.
+- Courses: Canada Day Men's Night and the Club Championship were both played on the East. The Canada Day set also has photos from all three courses, so no photo is confirmed as North or South.
 
 ## To change a photo
 1. New photo: add a line to `manifest.py`, then `python tools/photos/export.py`.
@@ -17,7 +22,7 @@ The site now runs on the Rich Nixx Media 2026 photos. Picks and the do-not-use l
 ## Slot map
 | Page | Slot | Photo id | What it shows |
 |---|---|---|---|
-| Home | hero | `morning-ponds` (option A) | Morning over two ponds, pines and bunkers, from the air |
+| Home | hero | `hero-aerial.jpg` (option O, the original) | Autumn aerial with the island green, ponds and fairways |
 | Home | about figure | `island-green` | Island green beside the clubhouse, from the air |
 | Home, Golf | East course card | `green-big-sky` | A green on the East Course (Ryder Cup) |
 | Home | dining teaser | `golden-fairways` | Golden evening light over fairways and ponds, from the air |
@@ -38,7 +43,8 @@ The site now runs on the Rich Nixx Media 2026 photos. Picks and the do-not-use l
 | Course Gallery | 33 photos | see `LAND`, `CLUB`, `PLAY` in `photos.py` | Land first, then the clubhouse, then members at play |
 
 ## Kept the old photo, and why
-- North and South course cards (`course-north.webp`, `course-south.webp`): the course in each new shot is not confirmed. Swap once Cullen says which course Canada Day Men's Night and the Club Championship were played on.
+- Home hero (`hero-aerial.jpg`): Cullen's pick, see above.
+- North and South course cards (`course-north.webp`, `course-south.webp`): both events were on the East, so no new photo is confirmed as North or South. Swap when a photo is known to show that course.
 - Pro portraits on the Golf Academy page: staff headshots are not in the new library.
 - Junior Golf page (`camp-2027-flyer.jpg`, `member-junior.webp`, `junior-lesson.jpg`): no new junior photos until photo consent is confirmed. The page hero and the home card use a course photo with no people.
 

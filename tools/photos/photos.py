@@ -19,16 +19,25 @@ from manifest import PHOTOS, name
 
 IMG = HERE / "img"
 
-HERO = "A"     # home page hero (Cullen picks): A morning ponds, B golden sun flare, C wide over the property, D dusk
-GALLERY = "C"  # course gallery layout (Cullen picks): A masonry, B editorial grid, C three sections
+HERO = "O"     # home page hero: O the original autumn aerial (Cullen's pick, 2026-11-18), A morning ponds,
+               # B golden sun flare, C wide over the property, D dusk, E whole property under a wide sky
+GALLERY = "C"  # course gallery layout (Cullen's pick): A masonry, B editorial grid, C three sections
 
-# id, desktop object-position, phone object-position
+# id (or a file kept in tools/photos/img as it is), desktop object-position, phone object-position
 HEROES = {
+    "O": ("hero-aerial.jpg", "50% 45%", "30% 50%"),
     "A": ("morning-ponds", "50% 22%", "36% 50%"),
     "B": ("golden-flare", "50% 8%", "34% 50%"),
     "C": ("property-wide", "50% 62%", "58% 50%"),
     "D": ("dusk-fairway", "50% 78%", "52% 50%"),
+    "E": ("property-sky", "30% 40%", "55% 50%"),
 }
+# alt text for files that are not in manifest.py
+FILE_ALT = {"hero-aerial.jpg": "Spring Lakes from the air in autumn, with the island green, ponds and fairways"}
+
+def src(pid, size=""):
+    """The web file for a photo id, or the file itself when the id is a file name."""
+    return pid if "." in pid else name(pid, size)
 
 def slots(hero):
     """page folder -> [(old image file in the built page, photo id, size, alt or None, desktop position, phone position)]
@@ -101,7 +110,7 @@ def dims(pid, size):
     raise ValueError(name(pid, size))
 
 def alt(pid):
-    a = PHOTOS[pid][2]
+    a = FILE_ALT[pid] if "." in pid else PHOTOS[pid][2]
     for bad in ("—", "–"):
         assert bad not in a, pid
     return html.escape(a, quote=True)
@@ -152,7 +161,7 @@ def apply(slug, s, hero=None, layout=None):
     for i, (old, pid, size, a, pos, pos_m) in enumerate(slots(hero).get(slug, [])):
         sid = f"{slug or 'home'}:{Path(old).stem}"
         first = i == 0 and size == ""  # the page hero loads first; everything else is lazy
-        tag = (f'<img src="{prefix}assets/img/{name(pid, size)}" alt="{html.escape(a, quote=True) if a else alt(pid)}" '
+        tag = (f'<img src="{prefix}assets/img/{src(pid, size)}" alt="{html.escape(a, quote=True) if a else alt(pid)}" '
                f'data-photo="{sid}" style="--pos:{pos};--pos-m:{pos_m}"'
                + (' fetchpriority="high"' if first else ' loading="lazy" decoding="async"') + ">")
         s, n = re.subn(rf'<img\b[^>]*\bdata-photo="{re.escape(sid)}"[^>]*>', lambda m: tag, s)
@@ -208,7 +217,7 @@ def css(text):
 
 def needed(hero=None):
     """The web files the pages use: slot images, gallery tiles, and each gallery photo at full size."""
-    files = {name(pid, size) for page in slots(hero or HERO).values() for _, pid, size, *_ in page}
+    files = {src(pid, size) for page in slots(hero or HERO).values() for _, pid, size, *_ in page}
     return files | set(re.findall(r"sl26-[\w-]+\.webp", gallery(GALLERY)))
 
 def install(out):
