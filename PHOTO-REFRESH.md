@@ -18,7 +18,7 @@ Branch `claude/photo-refresh-concept`. Only image files changed; no HTML, CSS or
 | `g05.webp` | home, golf academy, course gallery | Ryder Cup, Best Of `_RSN5965.jpg` | Golfer chipping |
 | `g26.webp` | home, golf camps, course gallery | Ryder Cup, Best Of `RSN06553.jpg` | Bunker and big sky, East Course |
 | `g15.webp` | memberships, course gallery | Canada Day, Sneak Peak `_RSN0152.jpg` | Clubhouse over the green with the flag |
-| `g04.webp` | contact hero, course gallery | Canada Day, Sneak Peak `_RSN8934.jpg` | Engraved entrance stone (1600 px to stay under 400 KB) |
+| `g04.webp` | contact hero, course gallery | Canada Day, Sneak Peak `DJI_20260701163128_0113_D.jpg` | Drone over the clubhouse and green (Cullen asked for a drone shot here). Entrance stone `_RSN8934.jpg` is a good alternate for another slot |
 | `g12.webp` | members, course gallery | Canada Day, Sneak Peak `_RSN9067.jpg` | Group in red and white, Canada Day (1800 px) |
 | `g17.webp` | members, course gallery | Ryder Cup, Best Of `_RSN7158.jpg` | Golfer near a bunker |
 | `g28.webp` | members, course gallery | Canada Day, Sneak Peak `_RSN9975.jpg` | Swing, finish position |
