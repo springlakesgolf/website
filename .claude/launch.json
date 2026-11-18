@@ -4,8 +4,26 @@
     {
       "name": "springlakes-website",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8742", "--directory", "/Users/cullenpacas/Projects/springlakes-website"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8742",
+        "--directory",
+        "/Users/cullenpacas/Projects/springlakes-website"
+      ],
       "port": 8742
+    },
+    {
+      "name": "springlakes-website-pc",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8743",
+        "--directory",
+        "C:/Users/culle/Projects/springlakes-website"
+      ],
+      "port": 8743
     }
   ]
 }

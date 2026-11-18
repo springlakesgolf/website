@@ -86,6 +86,11 @@ INQUIRY_EXEC = "https://script.google.com/macros/s/AKfycbztt-0KQKXHHbw0jHFwxzUqi
 sys.path.insert(0, str(OUT/"tools/members"))
 import club_emails
 
+# 2026 photos (Rich Nixx Media): the web files live in tools/photos/img and are laid over the June
+# images on every build, so a rebuild keeps them. Picks, crops and alt text: tools/photos/photos.py
+sys.path.insert(0, str(OUT/"tools/photos"))
+import photos
+
 def club_items(mails, week):
     # newest first, with the week at a glance tagged where it falls by date
     items = [dict(m, week=False) for m in mails]
@@ -323,7 +328,7 @@ HERON_CSS = (".brand .heron{height:54px}.footer .f-lock .heron{height:58px}"
 def build():
     if OUT.joinpath("index.html").exists():
         for p in OUT.iterdir():
-            if p.name not in {".git", ".github", ".gitignore", ".impeccable", ".superpowers", "README.md", "PRODUCT.md", "DESIGN.md", "tools", ".claude"}:
+            if p.name not in {".git", ".github", ".gitignore", ".impeccable", ".superpowers", "README.md", "PRODUCT.md", "DESIGN.md", "PHOTO-REFRESH.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
     shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", "camp-2026.webp", "heron-gold.png", "heron-navy.png", *PRIVATE_DOCS, *RETIRED_DOCS))
     # 2027 camp flyer (Braeden, 2026-10-16): image on the camps page plus the printable PDF
@@ -334,6 +339,7 @@ def build():
     # replaces the old flying heron everywhere; the June heron-gold/heron-navy files are skipped above
     for f in ("heron-mark-reverse.png", "heron-mark.png", "apple-touch-icon.png", "favicon-64.png"):
         shutil.copy(OUT/"tools/brand"/f, OUT/"assets/img"/f)
+    photos.install(OUT)
     global MAILS, WEEK
     MAILS, WEEK = club_emails.write()
     exec_url = edit_exec()
@@ -358,6 +364,7 @@ def build():
         s = s.replace("</body>", tail + "</body>", 1)
         s = re.sub(r' data-to="[^"]*"', "", s)
         s = edit(f, s)
+        s = photos.apply(slug, s)
         # Golf Camps is now Junior Golf: camps, Operation 36 and the junior academy (E10 option A, Cullen 2026-10-17)
         s = s.replace(">Golf Camps<", ">Junior Golf<")
         s = restyle(s)
@@ -396,13 +403,15 @@ def build():
     js.write_text(t)
     # June CSS: the mobile .btn padding squeezed the menu icon to 4px wide
     css = OUT/"assets/css/style.css"
-    css.write_text(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + HERON_CSS)
+    css.write_text(photos.css(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + HERON_CSS))
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
     shutil.copy(OUT/"tools/forms/inquiry.js", OUT/"assets/js/inquiry.js")
     if exec_url:
         (OUT/"assets/js/content.js").write_text((OUT/"tools/members/content.js").read_text().replace("__EXEC_URL__", exec_url))
     (OUT/".nojekyll").write_text("")
     (OUT/"robots.txt").write_text("User-agent: *\nDisallow: /\n")
+    # the June images the new photos replaced are not shipped (these are this build's own copies)
+    photos.prune(OUT)
 
 JUNIOR_PROGRAMS = (
   '<section><div class="container"><div class="card-grid two">'

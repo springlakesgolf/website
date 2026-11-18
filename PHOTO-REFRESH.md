@@ -1,51 +1,54 @@
-# Photo refresh concept (2026-11-17)
+# Photo refresh (2026-11-18)
 
-Rough first pass using the Rich Nixx Media 2026 photos. Fable 5.2 finishes it.
-Branch `claude/photo-refresh-concept`. Only image files changed; no HTML, CSS or copy edits.
+The site now runs on the Rich Nixx Media 2026 photos. Picks and the do-not-use list: `tools/photos/PICKS.md`.
 
-## How it was done
-- New photos were written over the existing slot files (same filename, same format), so every page picks them up with no markup change. The old files are still on `main`.
-- Web size: about 2000 px wide (1600 to 1800 where needed), under 400 KB each, `.webp` slots as WebP and `.jpg` slots as JPEG.
-- Originals live on Spring Lakes Media Drive 1 (`E:\Spring Lakes Photos`), mirrored on Drive 2 (F:). Source paths below are relative to that root.
-- `tools/build.py` rebuilds from the Mac's `~/Downloads/Marketing & Promotions/springlakes-site`. Carry these swaps into that source's `assets/img`, or a rebuild will put the old photos back.
+## How it works
+- `tools/photos/manifest.py` lists every photo: an id, the original on the photo drive, an optional crop, and its alt text.
+- `tools/photos/export.py` turns the originals into web files in `tools/photos/img/` (WebP: 2000 px under 400 KB, 1200 px `-m`, 800 px `-t`). It needs Spring Lakes Media Drive 1 (`E:\Spring Lakes Photos`). The exported files are committed, so nothing else needs the drive.
+- `tools/photos/photos.py` puts them on the pages: one photo per image slot (with its alt text and crop position for desktop and phone), the course gallery, and the photo viewer (`tools/photos/gallery.js`).
+- `tools/build.py` calls it, so a rebuild on the Mac keeps the new photos even though the June source folder still has the old ones. On the PC, where the June source folder does not exist, `python tools/photos/photos.py` applies the same thing to the built pages.
+- Two settings at the top of `photos.py`: `HERO` (home hero A to D) and `GALLERY` (layout A to C).
+
+## To change a photo
+1. New photo: add a line to `manifest.py`, then `python tools/photos/export.py`.
+2. Point the slot (or the gallery list) at its id in `photos.py`. `--pos` is the crop position on desktop, `--pos-m` on phones.
+3. `python tools/photos/photos.py` (PC) or `python3 tools/build.py` (Mac), check the page, commit.
 
 ## Slot map
-| Slot file | Pages | New photo (source) | Notes |
+| Page | Slot | Photo id | What it shows |
 |---|---|---|---|
-| `hero-aerial.jpg` | home hero, course gallery | Canada Day, Sneak Peak `DJI_20260701162502_0098_D.jpg` | Drone, wide over the property and clubhouse |
-| `g18.webp` | home, course gallery | Canada Day, Sneak Peak `DJI_20260701162144_0092_D.jpg` | Drone, island green with clubhouse; alt "Aerial view over Spring Lakes" still fits |
-| `golf-aerial.jpg` | golf, course gallery | Canada Day, Sneak Peak `DJI_20260701094719_0014_D.jpg` | Drone, ponds and fairways |
-| `g05.webp` | home, golf academy, course gallery | Ryder Cup, Best Of `_RSN5965.jpg` | Golfer chipping |
-| `g26.webp` | home, golf camps, course gallery | Ryder Cup, Best Of `RSN06553.jpg` | Bunker and big sky, East Course |
-| `g15.webp` | memberships, course gallery | Canada Day, Sneak Peak `_RSN0152.jpg` | Clubhouse over the green with the flag |
-| `g04.webp` | contact hero, course gallery | Canada Day, Sneak Peak `DJI_20260701163128_0113_D.jpg` | Drone over the clubhouse and green (Cullen asked for a drone shot here). Entrance stone `_RSN8934.jpg` is a good alternate for another slot |
-| `g12.webp` | members, course gallery | Canada Day, Sneak Peak `_RSN9067.jpg` | Group in red and white, Canada Day (1800 px) |
-| `g17.webp` | members, course gallery | Ryder Cup, Best Of `_RSN7158.jpg` | Golfer near a bunker |
-| `g28.webp` | members, course gallery | Canada Day, Sneak Peak `_RSN9975.jpg` | Swing, finish position |
-| `member-leagues.webp` | members (leagues) | Ryder Cup, Best Of `RSN06700.jpg` | Group on a green under a big sky |
+| Home | hero | `morning-ponds` (option A) | Morning over two ponds, pines and bunkers, from the air |
+| Home | about figure | `island-green` | Island green beside the clubhouse, from the air |
+| Home, Golf | East course card | `green-big-sky` | A green on the East Course (Ryder Cup) |
+| Home | dining teaser | `golden-fairways` | Golden evening light over fairways and ponds, from the air |
+| Home | Academy card | `chip-shot` | Golfer chipping onto a green |
+| Home | Junior Golf card | `bunker-blue-sky` | Bunker and fairway, blue sky |
+| Golf | hero | `property-wide` | Wide over the property, island green and clubhouse |
+| Golf Academy | hero | `bunker-shot` | Bunker shot, sand in the air |
+| Junior Golf | hero | `bunker-blue-sky` | Bunker and fairway, blue sky |
+| Memberships | hero | `clubhouse-green` | Clubhouse across a green, Canada flag pin |
+| Contact | hero | `clubhouse-aerial` | Clubhouse and island green from the air |
+| Dining | hero | `clubhouse-fountain` | Clubhouse across the pond and fountain |
+| Dining | figure | `clubhouse-gardens` | Clubhouse veranda and gardens |
+| Members | hero | `members-putting` | Members putting under a big sky |
+| Members | events card, corporate and golf days | `teams-clubhouse` | Both Ryder Cup teams at the clubhouse |
+| Members | events card, social celebrations | `banquet-room` | Members in the banquet room (members area only) |
+| Members | leagues figure | `handshake-green` | Four players shaking hands on a green |
+| Course Gallery | hero | `ponds-wide` | Wide aerial with ponds |
+| Course Gallery | 33 photos | see `LAND`, `CLUB`, `PLAY` in `photos.py` | Land first, then the clubhouse, then members at play |
 
-Folder shorthand: "Canada Day, Sneak Peak" = `01 By Event\2026-07-01 Canada Day Mens Night\Spring Lakes - Canada Day - Sneak Peak`; "Ryder Cup, Best Of" = `08 Best Of (website and social picks)\2026-08-15 Ryder Cup`.
+## Kept the old photo, and why
+- North and South course cards (`course-north.webp`, `course-south.webp`): the course in each new shot is not confirmed. Swap once Cullen says which course Canada Day Men's Night and the Club Championship were played on.
+- Pro portraits on the Golf Academy page: staff headshots are not in the new library.
+- Junior Golf page (`camp-2027-flyer.jpg`, `member-junior.webp`, `junior-lesson.jpg`): no new junior photos until photo consent is confirmed. The page hero and the home card use a course photo with no people.
 
-## Left alone on purpose
-- `course-north/east/south.webp`: the drone shots are not tagged by course yet. Only swap once the course in the shot is confirmed (the Ryder Cup was played on the East).
-- `g25.webp`: its alt text promises golden evening light; the new sets are midday summer.
-- `clubhouse.jpg` (dining page): dining is for members and their guests, so do not add food or patio-dining imagery to public pages. A plain clubhouse exterior is fine if a better one turns up.
-- `junior-lesson.jpg`, `member-junior.webp` (golf camps): Junior Summer Camp photos are in `05 Juniors (consent check before public use)`. Confirm photo consent before any junior photo goes on a public page.
-- Food shots (`_RSN0276`, `_RSN0308` etc.): members area only, never public dining promotion.
-- Course gallery: picks up the swaps above automatically. For the full refresh, pull roughly 30 from `08 Best Of` and `02 Course and Grounds`.
-
-## Do not use
-- Anything showing the old flying heron (for example golf cart roofs, `_RSN8947`) or the retired 10 Years badge (check event pin flags such as `_RSN0052` before using them). The current mark is the standing heron.
+## Rules that still apply
+- The standing heron is the only logo. Nothing showing the old flying heron (pin flags, tee markers, signs, cart roofs, the entrance stone emblem) or the 10 Years badge.
+- No junior photos on public pages until consent is confirmed. No food, bar or patio dining photos on public pages.
+- At most three Canada flag pins in the gallery.
+- Alt text: one plain sentence, no dashes, no staff or member names.
+- Never commit the photographer's gallery links.
 
 ## Still to come
-- Club Championship and Junior Summer Camp galleries are being downloaded and sorted on Drive 1; check their `08 Best Of` folders for more picks.
-- Member Guest High-Res is not downloaded (Pic-time charges $500); waiting on Cullen.
-
-## For Fable 5.2
-1. Review each swap at desktop and phone widths; check `object-position` on hero crops.
-2. Write real `alt` text for slots that have `alt=""` (g05, g26, g15, g04, g17, g12, g28) where the image carries meaning.
-3. Carry the final picks into the Mac source folder, rebuild with `tools/build.py`, preview, then merge.
-4. House rules for any copy: no em or en dashes, say "our team" not staff names, never publish membership prices, no public dining promotion.
-
-## Final picks
-The full pick list, the do-not-use list and the build plan are in `tools/photos/PICKS.md` (2026-11-18).
+- Member Guest photos are not downloaded yet.
+- Drive 2 (F:) has not been mirrored since the Club Championship set was sorted.
