@@ -46,3 +46,6 @@ Folder shorthand: "Canada Day, Sneak Peak" = `01 By Event\2026-07-01 Canada Day 
 2. Write real `alt` text for slots that have `alt=""` (g05, g26, g15, g04, g17, g12, g28) where the image carries meaning.
 3. Carry the final picks into the Mac source folder, rebuild with `tools/build.py`, preview, then merge.
 4. House rules for any copy: no em or en dashes, say "our team" not staff names, never publish membership prices, no public dining promotion.
+
+## Final picks
+The full pick list, the do-not-use list and the build plan are in `tools/photos/PICKS.md` (2026-11-18).
