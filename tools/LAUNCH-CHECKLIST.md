@@ -15,6 +15,7 @@ From the review on 2026-10-16 (CullenAI/Knowledge/Website-Review-2026-10-16.md, 
 - [ ] Replace `robots.txt` (`Disallow: /`) with an allow plus a sitemap line, served from the domain root.
 - [ ] Stop injecting `edit-mode.js`, or keep it behind a separate staff-only preview build.
 - [ ] Remove the "Preview only" note on /members/ and the form stub in `site.js`.
+- [ ] Shop link: once Braeden opens the Shopify store (its storefront password page is off) and `shop.springlakesgolf.com` points at Shopify, change `SHOP_URL` in `tools/build.py` to `https://shop.springlakesgolf.com/` and rebuild.
 
 ## Cutover
 - [ ] Change only the `@` A records and the `www` CNAME. Leave MX, `mail`, `autodiscover` and the TXT records alone.

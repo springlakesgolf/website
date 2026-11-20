@@ -416,6 +416,16 @@ section{padding:clamp(60px,8vw,108px) 0}
 .figure-wrap.reveal.in,.course-card.reveal.in,.pro-card.reveal.in,.gallery.reveal.in,.hero-mark.reveal.in,.hero-title.reveal.in,.hero-place.reveal.in,.hero-cta.reveal.in{opacity:1;transform:none}
 .reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}}
 .brand .heron{height:54px}.footer .f-lock .heron{height:58px}.hero-mark{height:128px}.cx img{height:84px}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.shop-band{padding:clamp(44px,6vw,72px) 0}
+.shop-band-in{display:flex;align-items:center;justify-content:space-between;gap:24px 40px;flex-wrap:wrap}
+.shop-band h2{font-size:clamp(1.8rem,3.4vw,2.4rem);margin:0}
+.shop-band p{color:var(--muted);font-size:1.02rem;margin:.6rem 0 0;max-width:520px}
+@media(max-width:520px){.shop-band .btn{width:100%;justify-content:center}}
+
+.nav-links>li>a{white-space:nowrap}
+@media(max-width:1120px){.nav-links,.nav-cta .btn:not(.menu-toggle){display:none}.menu-toggle{display:flex}}
 /* photos:start */
 /* 2026 photos: crop positions (set per image in tools/photos/photos.py), course gallery and photo viewer */
 img[data-photo],.hero-bg img[data-photo],.page-hero .ph-bg img[data-photo]{object-position:var(--pos,center)}

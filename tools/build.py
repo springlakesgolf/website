@@ -315,6 +315,54 @@ def restyle(s):
                lambda a: a.group(1) + a.group(2) + ARROW + a.group(3), m.group(1)), s, count=1, flags=re.S)
     return s
 
+# Online pro shop: Braeden's Shopify store ("Re: Logo and Shopify", 2026-11-17). This is the store's own
+# address; once shop.springlakesgolf.com points at Shopify (needs the Cloudflare login), change SHOP_URL only.
+SHOP_URL = "https://qwxqmg-5i.myshopify.com/"
+# Where the link shows: "menu" (top menu), "golf" (Golf dropdown), "footer" (footer only) or "home"
+# (a band on the home page). Every option also adds it to the footer. SLG_SHOP overrides this for an options build.
+SHOP_PLACEMENT = os.environ.get("SLG_SHOP", "menu")
+NEW_TAB = '<span class="sr-only"> (opens in a new tab)</span>'
+SHOP_CSS = """
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.shop-band{padding:clamp(44px,6vw,72px) 0}
+.shop-band-in{display:flex;align-items:center;justify-content:space-between;gap:24px 40px;flex-wrap:wrap}
+.shop-band h2{font-size:clamp(1.8rem,3.4vw,2.4rem);margin:0}
+.shop-band p{color:var(--muted);font-size:1.02rem;margin:.6rem 0 0;max-width:520px}
+@media(max-width:520px){.shop-band .btn{width:100%;justify-content:center}}
+"""
+# a seventh top-menu item needs about 1100px on one line, so below that the menu button takes over
+SHOP_MENU_CSS = """
+.nav-links>li>a{white-space:nowrap}
+@media(max-width:1120px){.nav-links,.nav-cta .btn:not(.menu-toggle){display:none}.menu-toggle{display:flex}}
+"""
+
+def shop_a(label, cls=""):
+    c = f' class="{cls}"' if cls else ""
+    return f'<a{c} href="{SHOP_URL}" target="_blank" rel="noopener">{label}{NEW_TAB}</a>'
+
+def shop_link(f, s, where=None):
+    """Add the online pro shop link to one built page (after restyle, so the dropdown arrow is already in place)."""
+    where = where or SHOP_PLACEMENT
+    assert where in ("menu", "golf", "footer", "home"), ("SLG_SHOP", where)
+    def one(pat, rep, label, flags=0):
+        nonlocal s
+        s, n = re.subn(pat, rep, s, count=1, flags=flags)
+        assert n == 1, (f, "shop link", label)
+    one(r'(Member.s Area</a></li>)(</ul></div>)', r"\1<li>" + shop_a("Pro Shop Online") + r"</li>\2", "footer")
+    if where == "menu":
+        one(r'(<li><a href="[^"]*contact-us/"[^>]*>Contact Us</a></li></ul></nav>)', "<li>" + shop_a("Shop") + r"</li>\1", "top menu")
+        one(r'(<a href="[^"]*contact-us/"[^>]*>Contact Us</a><a class="btn btn-gold")', shop_a("Shop") + r"\1", "phone menu")
+    elif where == "golf":
+        item = f'<li><a href="{SHOP_URL}" target="_blank" rel="noopener">Pro Shop Online{NEW_TAB}{ARROW}</a></li>'
+        one(r'(<ul class="submenu">.*?)(</ul>)', r"\1" + item.replace("\\", "\\\\") + r"\2", "Golf dropdown", re.S)
+        one(r'(<a class="sub" href="[^"]*course-gallery/"[^>]*>Course Gallery</a>)', r"\1" + shop_a("Pro Shop Online", "sub"), "phone menu")
+    elif where == "home" and f == "index.html":
+        band = ('<section class="bg-cream shop-band"><div class="container shop-band-in"><div><span class="eyebrow">Pro Shop</span>'
+                '<h2>The Pro Shop, Online</h2><p>Browse the Spring Lakes pro shop and order online.</p></div>'
+                + shop_a("Visit the shop", "btn btn-navy") + '</div></section>')
+        one(r'(</section>)(</main>)', r"\1" + band + r"\2", "home band")
+    return s
+
 def rel(prefix, m):
     page, frag = m.group(1), m.group(2) or ""
     if page not in SLUG: return m.group(0)
@@ -368,6 +416,7 @@ def build():
         # Golf Camps is now Junior Golf: camps, Operation 36 and the junior academy (E10 option A, Cullen 2026-10-17)
         s = s.replace(">Golf Camps<", ">Junior Golf<")
         s = restyle(s)
+        s = shop_link(f, s)
         s, n = re.subn(r'<li><a href="[^"]*events-spring-lakes/"[^>]*>Events</a></li>|<a href="[^"]*events-spring-lakes/">Events</a>', "", s)
         assert n == 3, (f, "events links", n)
         s, n = re.subn(r'(<a class="btn btn-gold" href="[^"]*members/)(">Book a tee time</a>)', r"\1#book\2", s)
@@ -403,7 +452,7 @@ def build():
     js.write_text(t)
     # June CSS: the mobile .btn padding squeezed the menu icon to 4px wide
     css = OUT/"assets/css/style.css"
-    css.write_text(photos.css(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + HERON_CSS))
+    css.write_text(photos.css(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + HERON_CSS + SHOP_CSS + (SHOP_MENU_CSS if SHOP_PLACEMENT == "menu" else "")))
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
     shutil.copy(OUT/"tools/forms/inquiry.js", OUT/"assets/js/inquiry.js")
     if exec_url:
