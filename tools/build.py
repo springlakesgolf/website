@@ -703,4 +703,6 @@ def edit(f, s):
     return s
 
 if __name__ == "__main__":
-    build(); print("built", OUT)
+    build()
+    # say which form was built, and when the shell's SLG_LAUNCH overrode the LAUNCH line in this file
+    print("built", OUT, "| launch form:", LAUNCH + (" (from SLG_LAUNCH; unset it to use the file)" if os.environ.get("SLG_LAUNCH") else ""))

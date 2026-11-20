@@ -105,6 +105,15 @@ class MemberPieces(unittest.TestCase):
         self.b.MEMBER_PIECES["reservations"] = False
         self.assertIsNone(self.b.dining_exec())
 
+    def test_dining_pages_get_the_soft_heron_when_reservations_are_on(self):
+        # cancel.html and staff.html are written for the standing heron; marks() points them at the soft files
+        self.b.SOFT, self.b.MARK = True, self.b.MARKS["soft"]
+        for p in sorted((REPO/"tools/dining").iterdir()):
+            if p.suffix not in {".html", ".js"} or p.name.endswith(".test.js"): continue
+            out = self.b.marks(p.read_text())
+            for f in STANDING:
+                self.assertEqual(refs(out, f), [], (p.name, f))
+
     def test_reservations_off_is_the_default(self):
         self.assertFalse(self.b.MEMBER_PIECES["reservations"])
 
