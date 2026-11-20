@@ -5,6 +5,25 @@ from pathlib import Path
 SRC = Path.home()/"Downloads/Marketing & Promotions/springlakes-site"
 OUT = Path(__file__).resolve().parents[1]  # the checkout this script sits in (worktree-safe)
 
+# ---- Launch form (Braeden, 2026-11-20). THE ONE SETTING: "soft" or "full".
+# soft: what goes live first. No Shop links (top menu, footer, home band), the flying heron in place of the
+#       standing heron (the new logo is not released yet), and only the member pieces switched on below.
+# full: the Shop link and the standing heron. Flip LAUNCH to "full" on the logo release date and rebuild.
+# SLG_LAUNCH=full python3 tools/build.py builds the other form once without changing this line.
+LAUNCH = os.environ.get("SLG_LAUNCH", "soft")
+assert LAUNCH in ("soft", "full"), ("SLG_LAUNCH", LAUNCH)
+SOFT = LAUNCH == "soft"
+# Unfinished members area pieces, one line each: True shows it, False hides it. They apply in both forms,
+# so each piece goes live when it is ready, not with the logo.
+MEMBER_PIECES = {
+    "reservations": False,   # Reserve a table on Dining, plus /food-beverage/cancel/ and the /dining-staff/ iPad page.
+                             # Off until Laura's settings are real (tools/dining/README.md).
+    "event_inquiry": True,   # "Plan your event with us" form in Member events (not wired yet, see LAUNCH-CHECKLIST.md).
+                             # Off shows a call-the-clubhouse line instead.
+    "renewal_form": True,    # the renewal form under "Renew your membership" (not wired yet). Off keeps the dates and
+                             # a call-the-clubhouse line.
+}
+
 SLUG = {  # June file -> live URL folder ('' = home)
     "index.html": "", "golf.html": "golf", "golf-academy.html": "golf-academy",
     "golf-camps.html": "golf-camps", "memberships.html": "memberships",
@@ -54,7 +73,8 @@ DINING_DIR = OUT/"tools/dining"
 
 def dining_exec():
     # A mock build passes SLG_DINING_EXEC. config.json is what ships, so it can never
-    # point at a local or plain http address.
+    # point at a local or plain http address. MEMBER_PIECES["reservations"] False builds no panel at all.
+    if not MEMBER_PIECES["reservations"]: return None
     if os.environ.get("SLG_DINING_EXEC"): return os.environ["SLG_DINING_EXEC"]
     cfg = DINING_DIR/"config.json"
     url = json.loads(cfg.read_text()).get("exec") if cfg.exists() else None
@@ -135,12 +155,19 @@ MEMBER_EVENTS = (
   '<div class="course-body"><h3 style="font-size:1.6rem">Corporate and golf days</h3><p>Adaptable spaces and three championship courses make for a seamless corporate outing or tournament.</p></div></article>'
   '<article class="course-card reveal d2"><div class="course-art"><img src="../assets/img/g28.webp" alt=""></div>'
   '<div class="course-body"><h3 style="font-size:1.6rem">Social celebrations</h3><p>Birthdays, anniversaries and gatherings of every size, with food and service handled by our team.</p></div></article></div>'
-  '<div class="ev-form"><h3 id="event-inquiry">Plan your event with us</h3><p>Tell us what you have in mind and we will put together the right space, menu and quote for your occasion.</p>'
+  '<!--event-inquiry--><div class="ev-form"><h3 id="event-inquiry">Plan your event with us</h3><p>Tell us what you have in mind and we will put together the right space, menu and quote for your occasion.</p>'
   '<form class="inquiry-form" data-subject="Spring Lakes member event inquiry"><div class="field"><label for="ev-n">Name</label><input name="name" id="ev-n" type="text" autocomplete="name" required></div>'
   '<div class="field"><label for="ev-e">Email</label><input name="email" id="ev-e" type="email" autocomplete="email" required></div>'
   '<div class="field"><label for="ev-p">Phone</label><input name="phone" id="ev-p" type="tel" autocomplete="tel"></div>'
   '<div class="field"><label for="ev-m">Message</label><textarea name="message" id="ev-m"></textarea></div>'
-  '<button class="btn btn-gold" type="submit">Send inquiry</button><p class="form-note note" style="display:none"></p></form></div></div></section>')
+  '<button class="btn btn-gold" type="submit">Send inquiry</button><p class="form-note note" style="display:none"></p></form></div><!--/event-inquiry--></div></section>')
+# MEMBER_PIECES["event_inquiry"] False: the form gives way to this line
+EVENT_CALL = ('<div class="ev-form"><h3 id="event-inquiry">Plan your event with us</h3><p>Tell us what you have in mind. '
+  'Call the clubhouse at <a href="tel:9056403633">905-640-3633</a> and our team will put together the right space, menu and quote for your occasion.</p></div>')
+
+def member_events():
+    if MEMBER_PIECES["event_inquiry"]: return MEMBER_EVENTS.replace("<!--event-inquiry-->", "").replace("<!--/event-inquiry-->", "")
+    return re.sub(r"<!--event-inquiry-->.*?<!--/event-inquiry-->", lambda m: EVENT_CALL, MEMBER_EVENTS, flags=re.S)
 
 def lost_found():
     # members report what they lost; reception sees the reports, and no items are listed here (staff edit E8)
@@ -322,8 +349,8 @@ SHOP_URL = "https://qwxqmg-5i.myshopify.com/"
 # (a band on the home page). Every option also adds it to the footer. SLG_SHOP overrides this for an options build.
 SHOP_PLACEMENT = os.environ.get("SLG_SHOP", "menu")
 NEW_TAB = '<span class="sr-only"> (opens in a new tab)</span>'
+SR_CSS = ".sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}\n"
 SHOP_CSS = """
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .shop-band{padding:clamp(44px,6vw,72px) 0}
 .shop-band-in{display:flex;align-items:center;justify-content:space-between;gap:24px 40px;flex-wrap:wrap}
 .shop-band h2{font-size:clamp(1.8rem,3.4vw,2.4rem);margin:0}
@@ -369,24 +396,45 @@ def rel(prefix, m):
     s = SLUG[page]
     return f'href="{prefix}{s + "/" if s else ""}{frag}"' if (s or frag) else f'href="{prefix or "./"}"'
 
-# the standing heron is taller than it is wide, so it needs more height than the old flying heron
+# the standing heron is taller than it is wide, so it needs more height than the old flying heron (full form only)
 HERON_CSS = (".brand .heron{height:54px}.footer .f-lock .heron{height:58px}"
              ".hero-mark{height:128px}.cx img{height:84px}\n")
+# Logo files by launch form. full: the standing heron in the reeds (tools/brand/). soft: the flying heron the
+# June pages already use (heron-gold on navy, heron-navy on white) and icons made from it (tools/brand/flying/).
+MARKS = {
+    "full": {"reverse": "heron-mark-reverse.png", "light": "heron-mark.png", "icon": "favicon-64.png", "touch": "apple-touch-icon.png"},
+    "soft": {"reverse": "heron-gold.png", "light": "heron-navy.png", "icon": "heron-flying-icon-64.png", "touch": "heron-flying-touch.png"},
+}
+MARK = MARKS[LAUNCH]
+# the other form's logo files never appear in this build (tools/test_build.py checks the soft form)
+NOT_MARKS = [v for k, v in MARKS["full" if SOFT else "soft"].items()]
+
+def marks(s):
+    """Point a page written for the standing heron (tools/dining pages) at this form's logo files."""
+    for k, v in MARKS["full"].items():
+        s = s.replace(v, MARK[k])
+    return s
 
 def build():
     if OUT.joinpath("index.html").exists():
         for p in OUT.iterdir():
             if p.name not in {".git", ".github", ".gitignore", ".impeccable", ".superpowers", "README.md", "PRODUCT.md", "DESIGN.md", "PHOTO-REFRESH.md", "tools", ".claude"}:
                 shutil.rmtree(p) if p.is_dir() else p.unlink()
-    shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", "camp-2026.webp", "heron-gold.png", "heron-navy.png", *PRIVATE_DOCS, *RETIRED_DOCS))
+    old_heron = () if SOFT else ("heron-gold.png", "heron-navy.png")
+    shutil.copytree(SRC/"assets", OUT/"assets", ignore=shutil.ignore_patterns(".DS_Store", "video", "camp-2026.webp", *old_heron, *PRIVATE_DOCS, *RETIRED_DOCS))
     # 2027 camp flyer (Braeden, 2026-10-16): image on the camps page plus the printable PDF
     shutil.copy(OUT/"tools/camps/camp-2027-flyer.jpg", OUT/"assets/img/camp-2027-flyer.jpg")
     shutil.copy(OUT/"tools/camps/2027-Camp-Flyer.pdf", OUT/"assets/docs/2027-Camp-Flyer.pdf")
     shutil.copy(OUT/"tools/camps/junior-lesson.jpg", OUT/"assets/img/junior-lesson.jpg")
-    # new club heron (standing heron in the reeds, Fable kit 2026-11-10, approved by Braeden 2026-11-17):
-    # replaces the old flying heron everywhere; the June heron-gold/heron-navy files are skipped above
-    for f in ("heron-mark-reverse.png", "heron-mark.png", "apple-touch-icon.png", "favicon-64.png"):
-        shutil.copy(OUT/"tools/brand"/f, OUT/"assets/img"/f)
+    # full form: the new club heron (standing heron in the reeds, Fable kit 2026-11-10, approved by Braeden 2026-11-17)
+    # replaces the old flying heron everywhere; the June heron-gold/heron-navy files are skipped above.
+    # soft form: the June flying heron stays, with icons made from it; prune() drops whichever file goes unused.
+    if SOFT:
+        for f in (MARK["icon"], MARK["touch"]):
+            shutil.copy(OUT/"tools/brand/flying"/f, OUT/"assets/img"/f)
+    else:
+        for f in ("heron-mark-reverse.png", "heron-mark.png", "apple-touch-icon.png", "favicon-64.png"):
+            shutil.copy(OUT/"tools/brand"/f, OUT/"assets/img"/f)
     photos.install(OUT)
     global MAILS, WEEK
     MAILS, WEEK = club_emails.write()
@@ -405,9 +453,9 @@ def build():
         s = s.replace('src="assets/', f'src="{prefix}assets/').replace('href="assets/', f'href="{prefix}assets/')
         s = s.replace('poster="assets/', f'poster="{prefix}assets/')
         s = s.replace("<head>", "<head>" + PREVIEW_HEAD, 1)
-        s = s.replace("assets/img/heron-gold.png", "assets/img/heron-mark-reverse.png")
-        s = s.replace("<head>", f'<head><link rel="icon" type="image/png" href="{prefix}assets/img/favicon-64.png">'
-                      f'<link rel="apple-touch-icon" href="{prefix}assets/img/apple-touch-icon.png">', 1)
+        s = s.replace("assets/img/heron-gold.png", f'assets/img/{MARK["reverse"]}')
+        s = s.replace("<head>", f'<head><link rel="icon" type="image/png" href="{prefix}assets/img/{MARK["icon"]}">'
+                      f'<link rel="apple-touch-icon" href="{prefix}assets/img/{MARK["touch"]}">', 1)
         tail = PREVIEW_PILL + (f'<script src="{prefix}assets/js/edit-mode.js" defer></script>' if exec_url else "")
         s = s.replace("</body>", tail + "</body>", 1)
         s = re.sub(r' data-to="[^"]*"', "", s)
@@ -416,13 +464,14 @@ def build():
         # Golf Camps is now Junior Golf: camps, Operation 36 and the junior academy (E10 option A, Cullen 2026-10-17)
         s = s.replace(">Golf Camps<", ">Junior Golf<")
         s = restyle(s)
-        s = shop_link(f, s)
+        if not SOFT: s = shop_link(f, s)  # the Shop is not live at the soft launch
         s, n = re.subn(r'<li><a href="[^"]*events-spring-lakes/"[^>]*>Events</a></li>|<a href="[^"]*events-spring-lakes/">Events</a>', "", s)
         assert n == 3, (f, "events links", n)
         s, n = re.subn(r'(<a class="btn btn-gold" href="[^"]*members/)(">Book a tee time</a>)', r"\1#book\2", s)
         assert n == 2, (f, "tee time buttons", n)
         s = staff_edits(f"{slug}/index.html" if slug else "index.html", s)
-        for bad in ("—", "–", "SLGC2026", "heron-gold", "heron-navy", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps"):
+        for bad in ("—", "–", "SLGC2026", "Renewal-Form.pdf", "Member-Calendar.pdf", "b-num", "Winter-", "Golf Camps", *NOT_MARKS,
+                    *((SHOP_URL, "Pro Shop Online") if SOFT else ())):
             assert bad not in s, (f, bad)
         dest = OUT/slug/"index.html" if slug else OUT/"index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -430,9 +479,9 @@ def build():
     if dining:
         # after the page loop: food-beverage/ is created there
         (OUT/"food-beverage/cancel").mkdir(parents=True, exist_ok=True)
-        (OUT/"food-beverage/cancel/index.html").write_text(nodash("cancel.html"))
+        (OUT/"food-beverage/cancel/index.html").write_text(marks(nodash("cancel.html")))
         (OUT/"dining-staff").mkdir(exist_ok=True)
-        (OUT/"dining-staff/index.html").write_text(nodash("staff.html"))
+        (OUT/"dining-staff/index.html").write_text(marks(nodash("staff.html")))
         (OUT/"assets/js/dining-staff.js").write_text(nodash("staff.js"))
     # the live /tournaments/ page is leftover template copy, and events are members only (E12): both old
     # addresses keep working and land on the events section of the Member's Area
@@ -452,7 +501,9 @@ def build():
     js.write_text(t)
     # June CSS: the mobile .btn padding squeezed the menu icon to 4px wide
     css = OUT/"assets/css/style.css"
-    css.write_text(photos.css(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + HERON_CSS + SHOP_CSS + (SHOP_MENU_CSS if SHOP_PLACEMENT == "menu" else "")))
+    shop_css = "" if SOFT else SHOP_CSS + (SHOP_MENU_CSS if SHOP_PLACEMENT == "menu" else "")
+    css.write_text(photos.css(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + SR_CSS
+                              + ("" if SOFT else HERON_CSS) + shop_css))
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
     shutil.copy(OUT/"tools/forms/inquiry.js", OUT/"assets/js/inquiry.js")
     if exec_url:
@@ -620,7 +671,7 @@ def edit(f, s):
         s = re.sub(r'<script>\(function\(\)\{var fm=document\.getElementById\("memform"\).*?</script>', "", s, flags=re.S)
         s = cut(s, '<div id="memgate"', '<div id="memarea"', '<p class="preview-note">Preview: at launch this page sits behind the '
                 'member password, checked on the server. Member documents (calendar, renewal forms) are added then.</p>', "members")
-        s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">' + TEE_BAND + this_week(MAILS, WEEK) + MEMBER_EVENTS, f)
+        s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">' + TEE_BAND + this_week(MAILS, WEEK) + member_events(), f)
         s, n = re.subn(r'<section id="book" class="bg-cream">.*?</section>', "", s, count=1, flags=re.S)
         assert n == 1, (f, "old tee time section")
         s = sub(s, '</section><section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"',
@@ -642,6 +693,13 @@ def edit(f, s):
         s = sub(s, "<option>E-transfer</option><option>Cheque</option><option>Call me to arrange</option><option>Other</option>",
                 "<option>E-transfer</option><option>One cheque (by January 31)</option><option>Two cheques (January 31 and March 31)</option>"
                 "<option>Credit card (service fee applies)</option><option>Call me to arrange</option>", f)
+        if not MEMBER_PIECES["renewal_form"]:
+            s, n = re.subn(r'(<section id="renew">.*?)<form class="inquiry-form[^"]*"[^>]*data-subject="Spring Lakes membership renewal">.*?</form>',
+                           lambda m: m.group(1) + '<p class="center">To renew, call the clubhouse at <a href="tel:9056403633">905-640-3633</a>.</p>',
+                           s, count=1, flags=re.S)
+            assert n == 1, (f, "renewal form")
+            s = s.replace("Send it through and the office will confirm your renewal and arrange payment.",
+                          "Our team will confirm your renewal and arrange payment.")
     return s
 
 if __name__ == "__main__":
