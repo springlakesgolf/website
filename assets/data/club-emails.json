@@ -1,10 +1,16 @@
 {
  "emails": [
   {
-   "date": "2026-11-17",
-   "label": "Nov 17",
+   "date": "2026-11-20",
+   "label": "Nov 20",
    "title": "Christmas Sale",
-   "link": "https://mailchi.mp/e0c8e5f5ba89/christmas-sale"
+   "link": "https://mailchi.mp/53ee6a2c14d2/christmas-sale-6753069"
+  },
+  {
+   "date": "2026-11-20",
+   "label": "Nov 20",
+   "title": "Friday, November 20th - Clubhouse Closure",
+   "link": "https://mailchi.mp/9713e9885a92/friday-november-20th-clubhouse-closure"
   },
   {
    "date": "2026-11-16",
@@ -23,12 +29,6 @@
    "label": "Nov 3",
    "title": "2026 Christmas Santa Brunch",
    "link": "https://mailchi.mp/2417648f244e/2026-christmas-santa-brunch-6752853"
-  },
-  {
-   "date": "2026-10-24",
-   "label": "Oct 24",
-   "title": "2026 Season Close Dates",
-   "link": "https://mailchi.mp/deeb5c7940ac/2026-season-close-dates-6752718"
   }
  ],
  "week": null,
