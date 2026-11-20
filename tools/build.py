@@ -415,6 +415,10 @@ def build():
         s = photos.apply(slug, s)
         # Golf Camps is now Junior Golf: camps, Operation 36 and the junior academy (E10 option A, Cullen 2026-10-17)
         s = s.replace(">Golf Camps<", ">Junior Golf<")
+        # Junior Golf hub (Braeden, 2026-11-20): the menu, phone menu and footer entry opens /junior-golf/, whose
+        # three cards lead to camps (/golf-camps/, unchanged), Operation 36 and the Junior Academy application
+        s, n = re.subn(r'href="([^"]*)golf-camps/"([^>]*)>Junior Golf', r'href="\1junior-golf/"\2>Junior Golf', s)
+        assert n == 3, (f, "Junior Golf links", n)
         s = restyle(s)
         s = shop_link(f, s)
         s, n = re.subn(r'<li><a href="[^"]*events-spring-lakes/"[^>]*>Events</a></li>|<a href="[^"]*events-spring-lakes/">Events</a>', "", s)
@@ -503,7 +507,7 @@ def edit(f, s):
         # E10: the camps card becomes Junior Golf
         s = sub(s, "<p>Junior camps each season, a real pathway for young golfers. 2026 weeks are now sold out.</p>",
                 "<p>Summer camp, Operation 36 and the junior academy, a real pathway for young golfers.</p>", f)
-        s = sub(s, 'href="golf-camps/">Camp Info <svg', 'href="golf-camps/">Junior golf <svg', f)
+        s = sub(s, 'href="golf-camps/">Camp Info <svg', 'href="junior-golf/">Junior golf <svg', f)
         # E1: weddings are no longer offered
         s = sub(s, "From junior pathways to weddings on the moraine,", "From junior pathways to golf days on the moraine,", f)
         s = sub(s, ">Weddings &amp; Events</h3><p>Weddings, corporate days and celebrations, framed by 45 lakes and open sky.</p>",
@@ -567,11 +571,11 @@ def edit(f, s):
                    "Our 2026 camps were a full house. To hear first when 2027 dates and registration open,", s)
         s = s.replace("Join the Waitlist", "Get on the List")
         # E10 option A (Cullen, 2026-10-17): this page is Junior Golf, with camp, Operation 36 and the junior academy
-        s = sub(s, "<h1>Spring Lakes Camps 2026</h1>", "<h1>Junior Golf</h1>", f)
-        s = sub(s, "<title>Golf Camps | Spring Lakes Golf Club</title>", "<title>Junior Golf | Spring Lakes Golf Club</title>", f)
-        s = sub(s, "&nbsp;/&nbsp; Golf Camps</div>", "&nbsp;/&nbsp; Junior Golf</div>", f)
+        s = sub(s, "<h1>Spring Lakes Camps 2026</h1>", "<h1>Junior Camps</h1>", f)
+        s = sub(s, "<title>Golf Camps | Spring Lakes Golf Club</title>", "<title>Junior Camps | Spring Lakes Golf Club</title>", f)
+        s = sub(s, "&nbsp;/&nbsp; Golf Camps</div>", '&nbsp;/&nbsp; <a href="../junior-golf/">Junior Golf</a> &nbsp;/&nbsp; Junior Camps</div>', f)
         s = re.sub(r'<meta name="description" content="[^"]*">',
-                   '<meta name="description" content="Junior golf at Spring Lakes: summer camp for ages 6 to 14, Operation 36 and the junior academy, taught by PGA of Canada professionals.">', s, count=1)
+                   '<meta name="description" content="Spring Lakes summer camp 2027 for golfers aged 6 to 14, taught by our PGA of Canada professionals.">', s, count=1)
         # option A (Cullen, 2026-10-16): the 2027 flyer in place of the old poster, with a sign-up card
         s = sub(s, '<div class="figure-frame" style="aspect-ratio:3/4;max-width:430px"><img src="../assets/img/camp-2026.webp" alt="Spring Lakes Camp 2026 poster">',
                 '<div class="figure-frame" style="aspect-ratio:4/5;max-width:460px"><img src="../assets/img/camp-2027-flyer.jpg" alt="Spring Lakes Summer Camp 2027 flyer: ages 6 to 14, 9 am to 4 pm, four weeks in July and August">', f)
@@ -581,11 +585,8 @@ def edit(f, s):
                        '<a class="btn btn-ghost-navy" href="tel:9056403633">Call 905-640-3633</a></div>'
                        '<a class="camp-pdf" href="../assets/docs/2027-Camp-Flyer.pdf" target="_blank" rel="noopener">Download the flyer (PDF)</a></div>', s, count=1, flags=re.S)
         assert n == 1, (f, "camp gate")
-        s = sub(s, '<main id="main"><section><div class="container split"', '<main id="main"><section class="jg-intro"><div class="container narrow center">'
-                '<span class="eyebrow reveal">Three Programs</span><h2 class="reveal d1" style="font-size:clamp(2rem,4vw,3rem)">A pathway for young golfers</h2>'
-                '<p class="lead-text reveal d2" style="margin:1rem auto 0">Summer camp, Operation 36 and the junior academy, all taught by our PGA of Canada professionals.</p>'
-                '</div></section><section id="camp" style="padding-top:0"><div class="container split"', f)
-        s = sub(s, "</div></div></section></main>", "</div></div></section>" + JUNIOR_PROGRAMS + "</main>", f)
+        s = sub(s, '<main id="main"><section><div class="container split"', '<main id="main"><section id="camp"><div class="container split"', f)
+        s = sub(s, "</div></div></section></main>", "</div></div></section>" + JUNIOR_MORE + "</main>", f)
         s = sub(s, "<h2>Looking for Year-Round Junior Golf?</h2><p>Beyond summer camps, our academy runs junior development programs and a performance pathway all season long.</p>",
                 "<h2>Looking for Private Lessons?</h2><p>Our professionals also teach juniors one on one, booked online through CoachNow.</p>", f)
     if f == "events.html":
