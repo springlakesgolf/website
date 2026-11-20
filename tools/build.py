@@ -358,7 +358,7 @@ def shop_link(f, s, where=None):
         one(r'(<a class="sub" href="[^"]*course-gallery/"[^>]*>Course Gallery</a>)', r"\1" + shop_a("Pro Shop Online", "sub"), "phone menu")
     elif where == "home" and f == "index.html":
         band = ('<section class="bg-cream shop-band"><div class="container shop-band-in"><div><span class="eyebrow">Pro Shop</span>'
-                '<h2>The Pro Shop, Online</h2><p>Browse the Spring Lakes pro shop and order online.</p></div>'
+                '<h2>The Pro Shop, Online</h2><p>The Spring Lakes pro shop has its own online store.</p></div>'
                 + shop_a("Visit the shop", "btn btn-navy") + '</div></section>')
         one(r'(</section>)(</main>)', r"\1" + band + r"\2", "home band")
     return s
