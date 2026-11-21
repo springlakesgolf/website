@@ -424,6 +424,22 @@ section{padding:clamp(60px,8vw,108px) 0}
 .shop-band p{color:var(--muted);font-size:1.02rem;margin:.6rem 0 0;max-width:520px}
 @media(max-width:520px){.shop-band .btn{width:100%;justify-content:center}}
 
+/* Junior Golf hub and Junior Academy application (Braeden, 2026-11-20) */
+.jg-programs{padding-top:0}
+.jg-cards .course-body h3{font-size:1.9rem}
+.jg-when{font-size:.72rem!important;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)!important;font-weight:600;margin:0 0 .7rem!important}
+.ac-closed{background:#f6f1e3;border-left:3px solid var(--gold);padding:14px 18px;margin:0 auto 28px;color:var(--navy);max-width:640px}
+.ac-form{max-width:640px;margin:0 auto}
+.ac-form fieldset{border:0;padding:0;margin:0;min-width:0}
+.ac-form legend{font-family:var(--serif);font-size:1.5rem;color:var(--navy);margin:0 0 14px;padding:0}
+.ac-form .ac-legend2{display:block;margin-top:14px}
+.ac-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0 16px}.ac-row.two{grid-template-columns:repeat(2,1fr)}
+.ac-form fieldset[disabled] .field input,.ac-form fieldset[disabled] .field textarea{background:#f4f4f6;cursor:not-allowed}
+.ac-form fieldset[disabled] .btn{opacity:.75;cursor:not-allowed}
+.ac-privacy{font-size:.85rem;color:var(--muted);margin:0 0 18px}
+.ac-form .form-note{margin-top:14px}
+@media(max-width:600px){.ac-row,.ac-row.two{grid-template-columns:1fr}}
+
 .nav-links>li>a{white-space:nowrap}
 @media(max-width:1120px){.nav-links,.nav-cta .btn:not(.menu-toggle){display:none}.menu-toggle{display:flex}}
 /* photos:start */

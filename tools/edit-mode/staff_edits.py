@@ -21,7 +21,8 @@ REPO = "springlakesgolf/website"
 # live URL folder -> the only files the Action may change; never scripts, forms, styles,
 # workflows, tools/ or the dining staff page
 PAGES = {"": "index.html", "golf": "golf/index.html", "golf-academy": "golf-academy/index.html",
-         "golf-camps": "golf-camps/index.html", "memberships": "memberships/index.html",
+         "golf-camps": "golf-camps/index.html", "junior-golf": "junior-golf/index.html",
+         "academy": "junior-golf/academy/index.html", "memberships": "memberships/index.html",
          "members": "members/index.html", "events-spring-lakes": "events-spring-lakes/index.html",
          "food-beverage": "food-beverage/index.html", "course-gallery": "course-gallery/index.html",
          "contact-us": "contact-us/index.html"}
