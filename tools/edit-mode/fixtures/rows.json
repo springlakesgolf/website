@@ -19,5 +19,8 @@
   "change": "Change the button colour to green.", "photo": false, "where": ""},
  {"id": "E907", "page": "/memberships/", "section": "Membership", "url": "https://springlakesgolf.github.io/website/memberships/",
   "current": "Tell us a little about how you like to play and our team will be in touch",
-  "change": "Say that Laura from the clubhouse will call them back within two days.", "photo": false, "where": ""}
+  "change": "Say that Laura from the clubhouse will call them back within two days.", "photo": false, "where": ""},
+ {"id": "E908", "page": "/members/", "section": "Photo pick: members:g12", "url": "https://springlakesgolf.github.io/website/members/",
+  "current": "Photo: sl26-teams-clubhouse-m.webp",
+  "change": "Use photo: sl26-walking-bags.webp (photo id walking-bags)\nKeep the bags in frame.", "photo": false, "where": "section#events > div.container > article:nth-of-type(2) > img"}
 ]

@@ -114,7 +114,11 @@ class DryRun(unittest.TestCase):
         for rid in ("E902", "E903", "E904", "E905", "E906", "E907"): self.assertEqual(got[rid]["status"], "Needs Cullen", rid)
         self.assertIn("dash", got["E903"]["note"]); self.assertIn("tags", got["E904"]["note"])
         self.assertIn("photo", got["E905"]["note"]); self.assertIn("page", got["E906"]["note"])
-        # photo and unknown page never reach Claude
+        # photo picker row: straight to Cullen with the slot and photo id, never sent to Claude
+        self.assertEqual(got["E908"]["status"], "Needs Cullen")
+        self.assertEqual(got["E908"]["note"], "Photo pick: in tools/photos/photos.py point slot members:g12 at photo id walking-bags, rebuild, check the crop.")
+        self.assertFalse(any("walking-bags" in str(c) for c in client.calls))
+        # photo, unknown page and photo pick rows never reach Claude
         self.assertEqual(len(client.calls), 5)
         kw = client.calls[0]
         self.assertEqual(kw["model"], "claude-sonnet-5-5")

@@ -53,6 +53,17 @@ Every slot was checked against the heading and copy beside it and against its ow
 - Pro portraits on the Golf Academy page: staff headshots are not in the new library.
 - Junior Golf page (`camp-2027-flyer.jpg`, `member-junior.webp`, `junior-lesson.jpg`): no new junior photos until photo consent is confirmed. The page hero and the home card use a course photo with no people.
 
+## Photo picker (staff edit mode, 2026-11-21)
+In "Suggest an edit" mode, tapping a photo (or the background of a page's top banner) opens a panel of other photos that fit that spot. Picking one and pressing "Use this photo" adds a row to the Edits tab: Section `Photo pick: <slot>`, Current text `Photo: <file there now>`, Requested change `Use photo: sl26-<id>.webp (photo id <id>)` plus any note. The staff-edits Action never sends these to Claude; it marks them Needs Cullen with the slot and photo id.
+- To apply a pick: in `tools/photos/photos.py` point that slot at the photo id (slot ids are `<page or home>:<old file stem>`, the `data-photo` value on the page), rebuild, check the crop at desktop and phone, adjust `--pos` and `--pos-m`, commit, mark the row Done.
+- Where the choices come from: `tools/photos/candidates.py`, run by `tools/build.py`, copies the 800 px file (`sl26-<id>-t.webp`) of every candidate into `photo-candidates/` and writes `photo-candidates/candidates.json`. Each slot draws from one or more of the headings in `manifest.py` (drone, the land, the clubhouse and grounds, members at play); the map is `SLOTS` in `candidates.py`. The photo already in a slot is not offered, top photos skip portrait and near square files, and the banquet room is offered only in the Member's Area.
+- Left out on purpose: every junior spot (the home page Junior Golf card, the Junior Golf page) until photo consent is confirmed.
+- To add more photos from the PC (the full Rich Nixx library is on the PC drives):
+  1. On the PC, add a line for each photo to `tools/photos/manifest.py` under the heading it fits (drone, the land, the clubhouse and grounds, members at play), with alt text that follows the rules below.
+  2. With Spring Lakes Media Drive 1 plugged in, run `python tools/photos/export.py`. It writes the three web sizes into `tools/photos/img/`.
+  3. Commit `manifest.py` and the new files in `tools/photos/img/`, and push.
+  4. On the Mac, pull and run `python3 tools/build.py`. The new photos show up in the picker for every spot that uses their heading.
+
 ## Rules that still apply
 - The standing heron is the only logo. Nothing showing the old flying heron (pin flags, tee markers, signs, cart roofs, the entrance stone emblem) or the 10 Years badge.
 - No junior photos on public pages until consent is confirmed. No food, bar or patio dining photos on public pages.

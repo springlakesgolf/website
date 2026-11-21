@@ -110,6 +110,7 @@ import club_emails
 # images on every build, so a rebuild keeps them. Picks, crops and alt text: tools/photos/photos.py
 sys.path.insert(0, str(OUT/"tools/photos"))
 import photos
+import candidates  # photo picker: the photos that fit each image slot (staff edit mode)
 
 def club_items(mails, week):
     # newest first, with the week at a glance tagged where it falls by date
@@ -513,6 +514,8 @@ def build():
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
     shutil.copy(OUT/"tools/forms/inquiry.js", OUT/"assets/js/inquiry.js")
     if exec_url:
+        # photo picker in the staff edit mode: other photos that fit each image slot (junior slots left out)
+        candidates.write(OUT)
         (OUT/"assets/js/content.js").write_text((OUT/"tools/members/content.js").read_text().replace("__EXEC_URL__", exec_url))
     (OUT/".nojekyll").write_text("")
     (OUT/"robots.txt").write_text("User-agent: *\nDisallow: /\n")
