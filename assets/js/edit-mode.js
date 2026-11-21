@@ -3,6 +3,7 @@
    in this browser and sent with every request, and the Apps Script rejects
    anything without it. Requests land in the "Website Edits" sheet. */
 (function(){
+  var SELF = document.currentScript;
   var EXEC = 'https://script.google.com/macros/s/AKfycbyTjwerucMteyTyt4WPRKKzXWuCIFcmiXeS5amN1iTK9phCn8MmBQYxaWwTmk8IS0dAtQ/exec';
   var NAMES = ['Braeden', 'Laura', 'Cullen'];
   var PICKABLE = 'h1,h2,h3,h4,p,li,img,figure,blockquote,.btn,a.tee-link,label,td,th,.eyebrow,.lead-text,iframe,form';
@@ -20,6 +21,15 @@
   var KEY = store.get('slg-edit-key');
   if (!KEY) return;
 
+  // photo picker: photo-candidates/candidates.json (written by tools/photos/candidates.py) lists,
+  // per image slot (the data-photo value), the other photos that fit it
+  var BASE = SELF && SELF.src ? SELF.src.split(/[?#]/)[0].replace(/assets\/js\/edit-mode\.js$/, '') : '';
+  var PHOTOS = null;
+  if (BASE && window.fetch) fetch(BASE + 'photo-candidates/candidates.json', {cache: 'no-cache'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ PHOTOS = j && typeof j === 'object' ? j : null; })
+    .catch(function(){});
+
   var css = ''
     + '.sle-fab{position:fixed;right:16px;bottom:16px;z-index:10000;font:600 12px/1 Montserrat,sans-serif;letter-spacing:.12em;text-transform:uppercase;'
     + 'background:#323C60;color:#fff;border:0;border-radius:4px;padding:14px 18px;box-shadow:0 6px 22px rgba(38,46,76,.3);cursor:pointer}'
@@ -34,7 +44,7 @@
     + '@media(min-width:700px){.sle-veil{align-items:center}}'
     + '.sle-box{background:#fff;color:#222639;width:100%;max-width:520px;max-height:calc(100vh - 32px);overflow:auto;border-radius:6px;padding:22px;font:400 15px/1.5 Montserrat,sans-serif;box-shadow:0 18px 50px rgba(38,46,76,.35)}'
     + '.sle-box h3{font:600 26px/1.1 Cormorant,Georgia,serif;color:#323C60;margin:0 0 12px}'
-    + '.sle-box label{display:block;font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#323C60;margin:14px 0 6px}'
+    + '.sle-box label,.sle-box .sle-lbl{display:block;font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#323C60;margin:14px 0 6px}'
     + '.sle-box select,.sle-box textarea,.sle-box input[type=file]{width:100%;font:inherit;border:1px solid #e3ded1;border-radius:4px;padding:10px;background:#fff;color:#222639}'
     + '.sle-box textarea{min-height:120px;resize:vertical}'
     + '.sle-quote{background:#f7f5ef;border-left:3px solid #B89A2D;padding:10px 12px;font-size:13px;color:#5b6178;max-height:110px;overflow:auto;white-space:pre-wrap}'
@@ -43,7 +53,18 @@
     + '.sle-send{background:#B89A2D;color:#323C60;border-color:#B89A2D!important}.sle-send[disabled]{opacity:.6;cursor:wait}'
     + '.sle-cancel{background:#fff;color:#323C60}'
     + '.sle-msg{margin-top:12px;font-size:14px}.sle-msg.err{color:#a3261d}.sle-msg.ok{color:#2c6b3f}'
-    + '.sle-hint{font-size:13px;color:#5b6178;margin:4px 0 0}';
+    + '.sle-hint{font-size:13px;color:#5b6178;margin:4px 0 0}'
+    + '.sle-box.sle-wide{max-width:640px}'
+    + '.sle-now{display:flex;gap:12px;align-items:center;font-size:13px;color:#5b6178;overflow-wrap:anywhere}'
+    + '.sle-now img{width:120px;height:80px;object-fit:cover;border-radius:4px;flex:none;background:#f7f5ef}'
+    + '.sle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}'
+    + '.sle-opt{position:relative;display:block;width:100%;aspect-ratio:3/2;padding:0;border:3px solid transparent;border-radius:6px;background:#f7f5ef;cursor:pointer;overflow:hidden}'
+    + '.sle-opt img{width:100%;height:100%;object-fit:cover;display:block}'
+    + '.sle-opt[aria-pressed=true]{border-color:#323C60}'
+    + '.sle-opt[aria-pressed=true]::after{content:"Picked";position:absolute;left:4px;top:4px;background:#323C60;color:#fff;font:600 10px/1 Montserrat,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:5px 7px;border-radius:3px}'
+    + '.sle-box textarea.sle-short{min-height:70px}'
+    + '.sle-other{background:#fff;color:#323C60}'
+    + '.sle-send.sle-wait[disabled]{cursor:not-allowed;opacity:.45}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   var fab = el('button', {className: 'sle-fab', type: 'button'}, 'Suggest an edit');
@@ -56,7 +77,7 @@
     fab.style.display = 'none';
     document.documentElement.classList.add('sle-picking');
     bar = el('div', {className: 'sle-bar'});
-    bar.appendChild(el('span', {}, 'Tap the part of the page you want changed.'));
+    bar.appendChild(el('span', {}, 'Tap the part of the page you want changed.' + (pageHasPicker() ? ' Tap a photo to pick a different one.' : '')));
     var general = el('button', {type: 'button'}, 'General note for this page');
     var cancel = el('button', {type: 'button'}, 'Cancel');
     general.addEventListener('click', function(e){ e.stopPropagation(); stopPicking(); openForm(null); });
@@ -95,7 +116,36 @@
     if (!t) return;
     e.preventDefault(); e.stopPropagation();
     stopPicking();
-    openForm(t);
+    var ph = photoFor(e.target, t);
+    if (ph) openPhoto(ph.img, ph.slot, ph.spot); else openForm(t);
+  }
+  // the photo slot a tap means: a photo itself, a frame around one photo, or the background of a page's top banner
+  function photoFor(node, t){
+    if (!PHOTOS) return null;
+    var img = null;
+    if (t.tagName === 'IMG') img = t;
+    else if (!ownText(node, t)) {
+      for (var n = node; n && n !== t; n = n.parentElement) {
+        if ((n.innerText || '').trim()) break;
+        var imgs = n.querySelectorAll('img[data-photo]');
+        if (imgs.length) { if (imgs.length === 1) img = imgs[0]; break; }
+      }
+      if (!img && t.matches && t.matches('.page-hero,.hero')) img = t.querySelector('img[data-photo]');
+    }
+    var slot = img && img.getAttribute('data-photo');
+    var spot = slot && PHOTOS[slot];
+    return spot && spot.options && spot.options.length ? {img: img, slot: slot, spot: spot} : null;
+  }
+  function ownText(node, stop){
+    for (var n = node; n && n !== stop; n = n.parentElement)
+      for (var c = n.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && c.nodeValue.trim()) return true;
+    return false;
+  }
+  function pageHasPicker(){
+    if (!PHOTOS) return false;
+    var imgs = document.querySelectorAll('img[data-photo]');
+    for (var i = 0; i < imgs.length; i++) { var s = PHOTOS[imgs[i].getAttribute('data-photo')]; if (s && s.options && s.options.length) return true; }
+    return false;
   }
   function onKey(e){ if (e.key === 'Escape'){ stopPicking(); fab.style.display = ''; } }
 
@@ -188,22 +238,112 @@
           photo: img, screen: window.innerWidth + 'x' + window.innerHeight
         });
       }).then(function(r){
-        box.innerHTML = '';
-        box.appendChild(el('h3', {}, 'Sent, thank you'));
-        box.appendChild(el('p', {}, 'Request ' + r.id + ' is in. Cullen will make the change and mark it done.'));
-        var row2 = el('div', {className: 'sle-row'});
-        var more = el('button', {type: 'button', className: 'sle-send'}, 'Suggest another');
-        var done = el('button', {type: 'button', className: 'sle-cancel'}, 'Close');
-        more.addEventListener('click', function(){ close(); startPicking(); });
-        done.addEventListener('click', close);
-        row2.appendChild(done); row2.appendChild(more); box.appendChild(row2);
-        more.focus();
+        sent(box, r, close);
       }).catch(function(err){
         send.disabled = false; cancel.disabled = false; send.textContent = 'Send';
-        msg.className = 'sle-msg err';
-        msg.textContent = err && err.message === 'key'
-          ? 'This edit link is not valid any more. Ask Cullen for a new one.'
-          : 'That did not go through. Check your connection and press Send again.';
+        failed(msg, err);
+      });
+    });
+  }
+
+  function sent(box, r, close){
+    box.innerHTML = '';
+    box.appendChild(el('h3', {}, 'Sent, thank you'));
+    box.appendChild(el('p', {}, 'Request ' + r.id + ' is in. Cullen will make the change and mark it done.'));
+    var row2 = el('div', {className: 'sle-row'});
+    var more = el('button', {type: 'button', className: 'sle-send'}, 'Suggest another');
+    var done = el('button', {type: 'button', className: 'sle-cancel'}, 'Close');
+    more.addEventListener('click', function(){ close(); startPicking(); });
+    done.addEventListener('click', close);
+    row2.appendChild(done); row2.appendChild(more); box.appendChild(row2);
+    more.focus();
+  }
+  function failed(msg, err){
+    msg.className = 'sle-msg err';
+    msg.textContent = err && err.message === 'key'
+      ? 'This edit link is not valid any more. Ask Cullen for a new one.'
+      : 'That did not go through. Check your connection and press Send again.';
+  }
+
+  // photo panel: the spot, the photo there now, the other photos that fit it
+  function openPhoto(img, slot, spot){
+    chosen = img;
+    img.classList.add('sle-chosen');
+    var now = (img.getAttribute('src') || '').split('/').pop();
+    var picked = null;
+    var veil = el('div', {className: 'sle-veil'});
+    var box = el('form', {className: 'sle-box sle-wide'});
+    box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', 'Pick a photo');
+    box.appendChild(el('h3', {}, 'Pick a photo'));
+    box.appendChild(el('div', {className: 'sle-lbl'}, 'Spot'));
+    box.appendChild(el('div', {className: 'sle-quote'}, spot.label || slot));
+    box.appendChild(el('div', {className: 'sle-lbl'}, 'There now'));
+    var cur = el('div', {className: 'sle-now'});
+    cur.appendChild(el('img', {src: img.currentSrc || img.src, alt: ''}));
+    cur.appendChild(el('span', {}, img.getAttribute('alt') || now));
+    box.appendChild(cur);
+    box.appendChild(el('div', {className: 'sle-lbl', id: 'sle-grid-l'}, 'Pick a different photo'));
+    var grid = el('div', {className: 'sle-grid'});
+    grid.setAttribute('role', 'group'); grid.setAttribute('aria-labelledby', 'sle-grid-l');
+    var buttons = [];
+    spot.options.forEach(function(o){
+      var b = el('button', {type: 'button', className: 'sle-opt', title: o.alt});
+      b.setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-label', o.alt);
+      b.appendChild(el('img', {src: BASE + 'photo-candidates/' + o.file, alt: '', loading: 'lazy', decoding: 'async'}));
+      b.addEventListener('click', function(){
+        picked = o;
+        buttons.forEach(function(x){ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        use.disabled = false; use.classList.remove('sle-wait');
+        msg.className = 'sle-msg'; msg.textContent = '';
+      });
+      buttons.push(b); grid.appendChild(b);
+    });
+    box.appendChild(grid);
+    box.appendChild(el('label', {htmlFor: 'sle-name'}, 'Your name'));
+    var who = el('select', {id: 'sle-name', required: true});
+    who.appendChild(el('option', {value: ''}, 'Choose one'));
+    NAMES.forEach(function(n){ who.appendChild(el('option', {value: n}, n)); });
+    who.value = store.get('slg-edit-name') || '';
+    box.appendChild(who);
+    box.appendChild(el('label', {htmlFor: 'sle-note'}, 'Note (optional)'));
+    var note = el('textarea', {id: 'sle-note', className: 'sle-short', placeholder: 'Anything about the crop or why this one.'});
+    box.appendChild(note);
+    var msg = el('div', {className: 'sle-msg', role: 'status'});
+    box.appendChild(msg);
+    var row = el('div', {className: 'sle-row'});
+    var cancel = el('button', {type: 'button', className: 'sle-cancel'}, 'Cancel');
+    var other = el('button', {type: 'button', className: 'sle-other'}, 'Something else');
+    var use = el('button', {type: 'submit', className: 'sle-send sle-wait', disabled: true}, 'Use this photo');
+    row.appendChild(cancel); row.appendChild(other); row.appendChild(use); box.appendChild(row);
+    veil.appendChild(box); document.body.appendChild(veil);
+    if (buttons[0]) buttons[0].focus();
+
+    function shut(){ veil.remove(); document.removeEventListener('keydown', esc, true); }
+    function close(){ shut(); if (chosen) chosen.classList.remove('sle-chosen'); chosen = null; fab.style.display = ''; }
+    function esc(e){ if (e.key === 'Escape' && !busy()) close(); }
+    function busy(){ return use.textContent === 'Sending'; }
+    document.addEventListener('keydown', esc, true);
+    cancel.addEventListener('click', close);
+    veil.addEventListener('click', function(e){ if (e.target === veil && !busy()) close(); });
+    other.addEventListener('click', function(){ shut(); img.classList.remove('sle-chosen'); openForm(img); });
+
+    box.addEventListener('submit', function(e){
+      e.preventDefault();
+      if (!picked || !who.value) { msg.className = 'sle-msg err'; msg.textContent = picked ? 'Please choose your name.' : 'Please tap a photo first.'; return; }
+      store.set('slg-edit-name', who.value);
+      use.disabled = true; cancel.disabled = true; other.disabled = true; use.textContent = 'Sending';
+      msg.className = 'sle-msg'; msg.textContent = '';
+      post({
+        key: KEY, rid: rid(), name: who.value, page: pageName(), url: location.origin + location.pathname,
+        section: 'Photo pick: ' + slot, current: 'Photo: ' + now, where: cssPath(img),
+        change: 'Use photo: sl26-' + picked.id + '.webp (photo id ' + picked.id + ')' + (note.value.trim() ? '\n' + note.value.trim() : ''),
+        photo: null, screen: window.innerWidth + 'x' + window.innerHeight
+      }).then(function(r){
+        sent(box, r, close);
+      }).catch(function(err){
+        use.disabled = false; cancel.disabled = false; other.disabled = false; use.textContent = 'Use this photo';
+        failed(msg, err);
       });
     });
   }

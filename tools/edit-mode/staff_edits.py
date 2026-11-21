@@ -190,6 +190,11 @@ def pr_for(branch, rid, page_file, summary, base):
 
 # ---- one run
 
+def photo_pick_note(row):
+    slot = str(row.get("section", ""))[len("Photo pick"):].lstrip(": ").strip() or "?"
+    m = re.search(r"\(photo id ([\w-]+)\)", str(row.get("change", "")))
+    return f"Photo pick: in tools/photos/photos.py point slot {slot} at photo id {m.group(1) if m else '?'}, rebuild, check the crop."
+
 def page_of(branch):
     m = re.fullmatch(r"staff-edit/E\d+-(.+)", branch)
     return m and m.group(1)
@@ -209,6 +214,9 @@ def run(rows, client, dry):
             if done:
                 slug = page_of(done)
                 results.append(result(row, "PR open", pr_for(done, rid, PAGES.get("" if slug == "home" else slug, "?"), "", base), "", dry)); continue
+            # photo picker rows: a slot and a photo id, applied by hand in tools/photos/photos.py, never sent to Claude
+            if str(row.get("section", "")).startswith("Photo pick"):
+                results.append(result(row, "Needs Cullen", "", photo_pick_note(row), dry)); continue
             slug = page_for(row)
             if row.get("photo"):
                 results.append(result(row, "Needs Cullen", "", "Has a photo; photos are changed by hand.", dry)); continue
