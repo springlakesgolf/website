@@ -60,7 +60,10 @@ class JuniorGolf(unittest.TestCase):
         self.assertIn('id="academy-form"', s)
         self.assertIn("data-live", s)
         self.assertIn('data-open="0"', s)
-        self.assertIn("<fieldset disabled>", s)
+        # player and parent groups each in their own fieldset, both disabled while closed
+        self.assertEqual(s.count("<fieldset disabled>"), 2)
+        self.assertEqual(s.count("<fieldset"), 2)
+        self.assertEqual(s.count("<legend>"), 2)
         self.assertIn("Applications open in February 2027.", s)
         self.assertRegex(s, r'<button class="btn btn-gold" type="submit">Applications open in February</button>')
         for f in FIELDS:
@@ -130,7 +133,7 @@ class AcademyOpen(unittest.TestCase):
             s = page(out, "junior-golf/academy")
             self.assertIn('data-open="1"', s)
             self.assertIn('data-exec="http://127.0.0.1:8756/exec"', s)
-            self.assertIn("<fieldset>", s)
+            self.assertEqual(s.count("<fieldset>"), 2)
             self.assertNotIn("<fieldset disabled>", s)
             self.assertIn(">Send application</button>", s)
             self.assertNotIn("Applications open in February 2027.", s)

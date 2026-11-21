@@ -14,7 +14,7 @@
   function say(msg, bad){ note.style.display = 'block'; note.textContent = msg; note.style.color = bad ? '#a3261d' : ''; }
   function fail(msg, el){ say(msg, true); btn.disabled = false; btn.textContent = label; if (el) el.focus(); }
   function close(msg){
-    var set = f.querySelector('fieldset'); if (set) set.disabled = true;
+    Array.prototype.forEach.call(f.querySelectorAll('fieldset'), function(set){ set.disabled = true; });
     btn.textContent = 'Applications open in February'; say(msg || 'Applications open in February. Please check back then.');
   }
   function whole(v, lo, hi){ return /^\d{1,2}$/.test(v) && Number(v) >= lo && Number(v) <= hi; }

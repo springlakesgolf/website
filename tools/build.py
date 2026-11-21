@@ -541,7 +541,7 @@ def academy_form(url, is_open):
       + field("handicap", "Handicap index, if any", extra=' autocomplete="off"', req=False)
       + '</div>'
       + field("tournaments", "Tournaments played, if any", "textarea", ' placeholder="Event names and years, or leave blank"')
-      + '<legend class="ac-legend2">Parent or guardian</legend>'
+      + f'</fieldset><fieldset{"" if is_open else " disabled"}><legend>Parent or guardian</legend>'
       + field("parent", "Parent or guardian name", extra=' autocomplete="name"')
       + '<div class="ac-row two">'
       + field("email", "Parent email", "email", ' autocomplete="email"')
@@ -559,7 +559,7 @@ JUNIOR_CSS = """
 .ac-form{max-width:640px;margin:0 auto}
 .ac-form fieldset{border:0;padding:0;margin:0;min-width:0}
 .ac-form legend{font-family:var(--serif);font-size:1.5rem;color:var(--navy);margin:0 0 14px;padding:0}
-.ac-form .ac-legend2{display:block;margin-top:14px}
+.ac-form fieldset+fieldset{margin-top:14px}
 .ac-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0 16px}.ac-row.two{grid-template-columns:repeat(2,1fr)}
 .ac-form fieldset[disabled] .field input,.ac-form fieldset[disabled] .field textarea{background:#f4f4f6;cursor:not-allowed}
 .ac-form fieldset[disabled] .btn{opacity:.75;cursor:not-allowed}
