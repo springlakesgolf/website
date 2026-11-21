@@ -178,6 +178,38 @@ class LaunchForms(unittest.TestCase):
         for t in (self.soft_text, self.full_text):
             self.assertNotIn("—", t); self.assertNotIn("–", t)
 
+    def test_house_rules_in_page_copy(self):
+        # inquiry not enquiry; no prices; the only club address on a page is info@ (staff addresses stay internal)
+        for t in (self.soft_text, self.full_text):
+            self.assertIsNone(re.search(r"(?i)enquir", t))
+            self.assertIsNone(re.search(r"\$\s?\d", re.sub(r"<script.*?</script>", "", t, flags=re.S)))
+            self.assertEqual(set(re.findall(r"[\w.+-]+@springlakesgolf\.com", t)) - {"info@springlakesgolf.com"}, set())
+
+    def test_contact_page_lists_departments_not_staff(self):
+        # "our team", not a staff member's name. The academy coach bios are Cullen's open call (Setup-Audit item 17).
+        for out in (self.soft, self.full):
+            page = (out/"contact-us/index.html").read_text()
+            for name in ("Piccione", "Pacas", "Roth", "Barker", "Yake", "McNeill", "Contois", "Woo"):
+                self.assertNotIn(name, page, (out.name, name))
+            self.assertIn("Departments", page)
+
+    def test_pages_workflow_publishes_every_address_and_no_tools(self):
+        # runs the copy step from .github/workflows/pages.yml on the soft build
+        wf = (REPO/".github/workflows/pages.yml").read_text()
+        block = wf[wf.index("        run: |\n          mkdir _site"):wf.index("      - uses: actions/upload-pages-artifact")]
+        script = "\n".join(l[10:] for l in block.splitlines()[1:])
+        for f in ("robots.txt", ".nojekyll"):
+            if not (self.soft/f).exists(): shutil.copy(REPO/f, self.soft/f)
+        r = subprocess.run(["bash", "-ec", script], cwd=self.soft, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        site = self.soft/"_site"
+        try:
+            for slug in ADDRESSES:
+                self.assertTrue((site/slug/"index.html" if slug else site/"index.html").exists(), slug)
+            self.assertFalse((site/"tools").exists())
+        finally:
+            shutil.rmtree(site, ignore_errors=True)
+
 class MemberPieces(unittest.TestCase):
     """Each piece's off form, checked on the parts build.py writes (no full build needed)."""
     def setUp(self):
