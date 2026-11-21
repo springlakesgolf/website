@@ -12,7 +12,8 @@ STANDING = ("heron-mark.png", "heron-mark-reverse.png", "favicon-64.png", "apple
 FLYING = ("heron-gold.png", "heron-navy.png", "heron-flying-icon-64.png", "heron-flying-touch.png")
 # the live addresses that must keep working (README, project-website-relaunch)
 ADDRESSES = ["", "golf", "golf-academy", "golf-camps", "memberships", "members", "events-spring-lakes",
-             "food-beverage", "tournaments", "course-gallery", "contact-us"]
+             "food-beverage", "tournaments", "course-gallery", "contact-us",
+             "junior-golf", "junior-golf/academy"]  # Junior Golf hub and Academy application (2026-11-20)
 
 def build(form):
     out = Path(tempfile.mkdtemp(prefix=f"slg-{form}-"))
@@ -81,6 +82,20 @@ class LaunchForms(unittest.TestCase):
         for out in (self.soft, self.full):
             for slug in ADDRESSES:
                 self.assertTrue((out/slug/"index.html" if slug else out/"index.html").exists(), (out.name, slug))
+
+    def test_members_events_section_has_club_events_and_event_planning(self):
+        # the memarea line joins member_events() (soft launch pieces) and club_events() (events hub)
+        import build as b
+        for out in (self.soft, self.full):
+            page = (out/"members/index.html").read_text()
+            sec = page[page.index('<section id="events"'):]
+            sec = sec[:sec.index("</section>")]
+            self.assertEqual(page.count('id="events-box"'), 1, out.name)
+            self.assertEqual(sec.count('<h2 class="reveal d1">Club Events</h2>'), 1, out.name)
+            self.assertGreater(sec.count('class="evh-item'), 0, out.name)
+            plan = 'id="ev-e"' if b.MEMBER_PIECES["event_inquiry"] else "905-640-3633"
+            self.assertIn("Plan your event with us", sec, out.name)
+            self.assertLess(sec.index('id="events-box"'), sec.index(plan), out.name)
 
     def test_no_dashes(self):
         for t in (self.soft_text, self.full_text):
