@@ -97,6 +97,25 @@ class LaunchForms(unittest.TestCase):
             self.assertIn("Plan your event with us", sec, out.name)
             self.assertLess(sec.index('id="events-box"'), sec.index(plan), out.name)
 
+    def test_league_hub_opens_the_app(self):
+        # every league in the members League hub opens its own page in the club app (Cullen, 2026-11-21)
+        import build as b
+        for out in (self.soft, self.full):
+            page = (out/"members/index.html").read_text()
+            sec = page[page.index('<section id="leagues"'):]
+            sec = sec[:sec.index("</section>")]
+            hrefs = dict((re.sub(r"<[^>]+>", "", t).replace("&amp;", "&"), h)
+                         for h, t in re.findall(r'<li><a href="([^"]+)"[^>]*>(.*?)</a></li>', sec))
+            want = {name: f"{b.APP_URL}/e/{code}" if code else f"{b.APP_URL}/e" for name, code in b.LEAGUES}
+            want["Events"] = f"{b.APP_URL}/app/events"
+            self.assertEqual(hrefs, want, out.name)
+            self.assertIn(f'href="{b.APP_URL}/app"', sec, out.name)
+            self.assertIn(">Open the club app<", sec, out.name)
+            self.assertIn("in the club app", sec, out.name)
+            self.assertNotIn("Golf Genius", sec, out.name)
+        for t in (self.soft_text, self.full_text):
+            self.assertNotIn("golfgenius", t)
+
     def test_no_dashes(self):
         for t in (self.soft_text, self.full_text):
             self.assertNotIn("—", t); self.assertNotIn("–", t)
@@ -148,6 +167,35 @@ class MemberPieces(unittest.TestCase):
 
     def test_launch_setting(self):
         self.assertIn(self.b.LAUNCH, ("soft", "full"))
+
+class LeagueHub(unittest.TestCase):
+    """The League hub settings: the app address and each league's event code (no full build needed)."""
+    def setUp(self):
+        import importlib, build as b
+        self.b = importlib.reload(b)
+
+    def test_app_address_and_codes(self):
+        self.assertTrue(self.b.APP_URL.startswith("https://"))
+        self.assertFalse(self.b.APP_URL.endswith("/"))
+        names = [n for n, _ in self.b.LEAGUES]
+        self.assertEqual(len(names), len(set(names)))
+        for name, code in self.b.LEAGUES:
+            self.assertTrue(code is None or re.fullmatch(r"[A-Z0-9]{6}", code), (name, code))
+
+    def test_a_league_without_a_code_opens_the_code_page(self):
+        self.assertEqual(self.b.league_href(None), self.b.APP_URL + "/e")
+        self.assertEqual(self.b.league_href("WCZ7ZX"), self.b.APP_URL + "/e/WCZ7ZX")
+
+    @unittest.skipUnless(SRC.exists(), "needs the June source folder (Mac only)")
+    def test_a_bad_code_stops_the_build(self):
+        page = (SRC/"members.html").read_text()
+        self.b.LEAGUES = [("Ladies League", "wcz7zx")]
+        with self.assertRaises(AssertionError):
+            self.b.league_hub(page, "members.html")
+        self.b.LEAGUES = [("Ladies League", "WCZ7ZX")]
+        out = self.b.league_hub(page, "members.html")
+        self.assertIn(f'href="{self.b.APP_URL}/e/WCZ7ZX"', out)
+        self.assertNotIn("golfgenius", out)
 
 if __name__ == "__main__":
     unittest.main()

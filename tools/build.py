@@ -24,6 +24,18 @@ MEMBER_PIECES = {
                              # a call-the-clubhouse line.
 }
 
+# League hub on the members page goes straight into the club app, not Golf Genius (Cullen, 2026-11-21).
+# APP_URL is the app's address: change this one line when the app moves to its club address.
+# Each league opens its own page in the app (next round, sign up, who is playing, results) by its event code,
+# shown on the event's Event Portal page in the app. Every season is a new event with a new code, so update the
+# codes here each spring. A league with no code yet (None) opens the app's "Enter your event code" page.
+APP_URL = "https://springlakes-demo.vercel.app"
+LEAGUES = [  # 2027 season
+    ("Ladies League", "WCZ7ZX"),          # Ladies League 2027
+    ("Saturday Men’s League", None),      # not set up in the app yet
+    ("Keenagers", "6WMZRV"),              # Keenagers 2027
+]
+
 SLUG = {  # June file -> live URL folder ('' = home)
     "index.html": "", "golf.html": "golf", "golf-academy.html": "golf-academy",
     "golf-camps.html": "golf-camps", "memberships.html": "memberships",
@@ -723,6 +735,30 @@ def camp_button():
         return f'<a class="btn btn-gold" href="{html.escape(c["waitlist"])}" target="_blank" rel="noopener">Join the 2027 waitlist</a>'
     return '<a class="btn btn-gold" href="../contact-us/">Inquire about camp</a>'
 
+def league_href(code):
+    return f"{APP_URL}/e/{code}" if code else f"{APP_URL}/e"
+
+def league_hub(s, f):
+    # the June list sent every league and the hub button to one Golf Genius club page; each one now opens the app
+    assert APP_URL.startswith("https://") and not APP_URL.endswith("/"), ("APP_URL", APP_URL)
+    for name, code in LEAGUES:
+        assert code is None or re.fullmatch(r"[A-Z0-9]{6}", code), ("LEAGUES", name, code)
+    # the whole row is the tap target on a phone (padding inside the link, same look as the June list)
+    link = ('<li><a href="{}" target="_blank" rel="noopener" style="color:var(--navy);font-weight:600;'
+            'display:block;padding:8px 0;margin:-8px 0">{}</a></li>')
+    items = "".join(link.format(league_href(code), html.escape(name, quote=False)) for name, code in LEAGUES)
+    items += link.format(f"{APP_URL}/app/events", "Events")  # My Events in the app, after the member signs in
+    s, n = re.subn(r'<p style="color:var\(--muted\);font-size:1\.04rem">Sign up for weekly leagues and member events through Golf Genius:</p>'
+                   r'<ul class="reg-list">(?:(?!</ul>).)*?golfhub\.golfgenius\.com.*?</ul>',
+                   lambda m: '<p style="color:var(--muted);font-size:1.04rem">Sign up for weekly leagues, see who is playing '
+                             f'and check results in the club app:</p><ul class="reg-list">{items}</ul>', s, count=1, flags=re.S)
+    assert n == 1, (f, "league list", n)
+    s, n = re.subn(r'<a class="btn btn-navy"([^>]*) href="https://golfhub\.golfgenius\.com/[^"]*"([^>]*)>Open the League Hub</a>',
+                   lambda m: f'<a class="btn btn-navy"{m.group(1)} href="{APP_URL}/app"{m.group(2)}>Open the club app</a>', s, count=1)
+    assert n == 1, (f, "league hub button", n)
+    assert "golfgenius" not in s, (f, "Golf Genius link left")
+    return s
+
 def sub(s, old, new, f):
     assert old in s, (f, old[:60])
     return s.replace(old, new)
@@ -862,6 +898,7 @@ def edit(f, s):
         assert n == 1, (f, "old tee time section")
         s = sub(s, '</section><section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"',
                 '</section>' + lost_found() + '<section id="leagues"><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"', f)
+        s = league_hub(s, f)
         s = s.replace("</body>", '<script src="../assets/js/weather.js" defer></script><script src="../assets/js/content.js" defer></script></body>', 1)
         k = s.find("Member Documents"); i = s.rfind("<section", 0, k); j = s.find("</section>", k) + len("</section>")
         assert k > 0 and i > 0, f
