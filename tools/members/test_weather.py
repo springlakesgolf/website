@@ -59,5 +59,64 @@ class Strip(unittest.TestCase):
         self.assertIn("<b>10&deg;</b>0&deg;", cells[0])
         self.assertIn("Rain &lt;b&gt; <em>40%</em>", cells[2])
 
+# A small stand-in page with the real band layout, to check what weather.js removes when a part fails:
+# section#this-week > .container > [.week-grid > [#mc-col, #side-col > [#mc-pick, #hours-wrap]], #wx-col > #wx-days]
+DOM = r"""
+const src = require('fs').readFileSync(process.argv[1], 'utf8');
+function node(id, cls, kids){
+  const n = {id, cls: new Set(cls ? [cls] : []), children: [], parentNode: null, innerHTML: '', attrs: {},
+    setAttribute(k, v){ this.attrs[k] = v; }, getAttribute(k){ return this.attrs[k]; },
+    removeChild(c){ this.children.splice(this.children.indexOf(c), 1); c.parentNode = null; },
+    classList: {toggle(c, on){ on ? n.cls.add(c) : n.cls.delete(c); }},
+    querySelector(sel){
+      const all = []; (function walk(x){ x.children.forEach(k => { all.push(k); walk(k); }); })(n);
+      return all.find(k => sel.split(',').some(s => s[0] === '#' ? k.id === s.slice(1) : k.cls.has(s.slice(1)))) || null;
+    }};
+  (kids || []).forEach(k => { k.parentNode = n; n.children.push(k); });
+  return n;
+}
+const body = node('body', '', [node('this-week', 'news-band', [node('', 'container', [
+  node('', 'week-grid', [node('mc-col'), node('side-col', 'news-side', [node('mc-pick'), node('hours-wrap')])]),
+  node('wx-col', 'wx-strip', [node('wx-days', 'wx-days')])])])]);
+global.document = {currentScript: null, getElementById: id => id === 'body' ? body : body.querySelector('#' + id)};
+global.window = {};
+const ok = process.argv[2] === 'ok';
+const data = ok ? JSON.parse(process.argv[3]) : null;
+global.fetch = () => Promise.resolve({ok, json: () => Promise.resolve(data)});
+function state(){
+  const g = body.querySelector('.week-grid');
+  return {band: !!document.getElementById('this-week'), strip: !!document.getElementById('wx-col'),
+          side: !!document.getElementById('side-col'), grid: g ? [...g.cls].join(' ') : null};
+}
+function drop(id){ const e = document.getElementById(id); e.parentNode.removeChild(e); window.slgWeekDrop(); return state(); }
+new Function(src)();
+setTimeout(() => {
+  const out = {start: state()};
+  out.noHoursOrEmails = (document.getElementById('mc-pick').parentNode.removeChild(document.getElementById('mc-pick')), drop('hours-wrap'));
+  out.noNews = drop('mc-col');
+  process.stdout.write(JSON.stringify(out));
+}, 50);
+"""
+
+class WhenAPartFails(unittest.TestCase):
+    def run_page(self, forecast):
+        node = shutil.which("node")
+        if not node: self.skipTest("node not installed")
+        return json.loads(subprocess.run([node, "-e", DOM, str(JS), forecast, json.dumps(sample())], capture_output=True, text=True, check=True).stdout)
+
+    def test_forecast_down_leaves_the_news(self):
+        # the strip goes, the news and sidebar stay; then the band goes once nothing in it is left
+        out = self.run_page("down")
+        self.assertEqual(out["start"], {"band": True, "strip": False, "side": True, "grid": "week-grid"})
+        self.assertEqual(out["noHoursOrEmails"], {"band": True, "strip": False, "side": False, "grid": "week-grid one"})
+        self.assertEqual(out["noNews"], {"band": False, "strip": False, "side": False, "grid": None})
+
+    def test_news_down_keeps_the_forecast(self):
+        # with the email and sidebar gone the grid is removed and the band keeps the forecast strip
+        out = self.run_page("ok")
+        self.assertEqual(out["start"]["strip"], True)
+        self.assertEqual(out["noHoursOrEmails"], {"band": True, "strip": True, "side": False, "grid": "week-grid one"})
+        self.assertEqual(out["noNews"], {"band": True, "strip": True, "side": False, "grid": None})
+
 if __name__ == "__main__":
     unittest.main()
