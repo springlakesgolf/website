@@ -64,6 +64,7 @@ In "Suggest an edit" mode, tapping a photo (or the background of a page's top ba
   3. Commit `manifest.py` and the new files in `tools/photos/img/`, and push.
   4. On the Mac, pull and run `python3 tools/build.py`. The new photos show up in the picker for every spot that uses their heading.
 
+## Rules that still apply
 - The standing heron is the only logo. Nothing showing the old flying heron (pin flags, tee markers, signs, cart roofs, the entrance stone emblem) or the 10 Years badge.
 - No junior photos on public pages until consent is confirmed. No food, bar or patio dining photos on public pages.
 - At most three Canada flag pins in the gallery.
