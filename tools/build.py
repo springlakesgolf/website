@@ -426,6 +426,7 @@ def build():
     shutil.copy(OUT/"tools/camps/camp-2027-flyer.jpg", OUT/"assets/img/camp-2027-flyer.jpg")
     shutil.copy(OUT/"tools/camps/2027-Camp-Flyer.pdf", OUT/"assets/docs/2027-Camp-Flyer.pdf")
     shutil.copy(OUT/"tools/camps/junior-lesson.jpg", OUT/"assets/img/junior-lesson.jpg")
+    shutil.copy(OUT/"tools/photos/img/sl26-flag-green-pond-m.webp", OUT/"assets/img/sl26-flag-green-pond-m.webp")  # Junior Golf hub card
     # full form: the new club heron (standing heron in the reeds, Fable kit 2026-11-10, approved by Braeden 2026-11-17)
     # replaces the old flying heron everywhere; the June heron-gold/heron-navy files are skipped above.
     # soft form: the June flying heron stays, with icons made from it; prune() drops whichever file goes unused.
@@ -463,6 +464,10 @@ def build():
         s = photos.apply(slug, s)
         # Golf Camps is now Junior Golf: camps, Operation 36 and the junior academy (E10 option A, Cullen 2026-10-17)
         s = s.replace(">Golf Camps<", ">Junior Golf<")
+        # Junior Golf hub (Braeden, 2026-11-20): the menu, phone menu and footer entry opens /junior-golf/, whose
+        # three cards lead to camps (/golf-camps/, unchanged), Operation 36 and the Junior Academy application
+        s, n = re.subn(r'href="([^"]*)golf-camps/"([^>]*)>Junior Golf', r'href="\1junior-golf/"\2>Junior Golf', s)
+        assert n == 3, (f, "Junior Golf links", n)
         s = restyle(s)
         if not SOFT: s = shop_link(f, s)  # the Shop is not live at the soft launch
         s, n = re.subn(r'<li><a href="[^"]*events-spring-lakes/"[^>]*>Events</a></li>|<a href="[^"]*events-spring-lakes/">Events</a>', "", s)
@@ -483,6 +488,7 @@ def build():
         (OUT/"dining-staff").mkdir(exist_ok=True)
         (OUT/"dining-staff/index.html").write_text(marks(nodash("staff.html")))
         (OUT/"assets/js/dining-staff.js").write_text(nodash("staff.js"))
+    junior_pages()
     # the live /tournaments/ page is leftover template copy, and events are members only (E12): both old
     # addresses keep working and land on the events section of the Member's Area
     for old in ("tournaments", "events-spring-lakes"):
@@ -503,7 +509,7 @@ def build():
     css = OUT/"assets/css/style.css"
     shop_css = "" if SOFT else SHOP_CSS + (SHOP_MENU_CSS if SHOP_PLACEMENT == "menu" else "")
     css.write_text(photos.css(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + SR_CSS
-                              + ("" if SOFT else HERON_CSS) + shop_css))
+                              + ("" if SOFT else HERON_CSS) + JUNIOR_CSS + shop_css))
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
     shutil.copy(OUT/"tools/forms/inquiry.js", OUT/"assets/js/inquiry.js")
     if exec_url:
@@ -513,18 +519,139 @@ def build():
     # the June images the new photos replaced are not shipped (these are this build's own copies)
     photos.prune(OUT)
 
-JUNIOR_PROGRAMS = (
-  '<section><div class="container"><div class="card-grid two">'
-  '<article id="operation-36" class="course-card reveal"><div class="course-art"><img src="../assets/img/member-junior.webp" alt="Two junior golfers walking a fairway at Spring Lakes"></div>'
-  '<div class="course-body"><h3 class="script" style="font-size:1.9rem">Operation 36</h3><p>Our development program for newer junior golfers. '
+LINK_ARROW = ('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+              '<path d="M5 12h14M13 6l6 6-6 6"/></svg>')
+
+# camps page band that points back to the hub (Braeden, 2026-11-20)
+JUNIOR_MORE = (
+  '<section class="jg-more"><div class="container narrow center"><span class="eyebrow reveal">More Junior Golf</span>'
+  '<h2 class="reveal d1">Operation 36 and the Junior Academy</h2>'
+  '<p class="reveal d2">Operation 36 sign-up and Junior Academy applications open in February.</p>'
+  '<div class="reveal d3" style="margin-top:1.4rem"><a class="btn btn-navy" href="../junior-golf/">See all junior golf</a></div>'
+  '</div></section>')
+
+# Junior Golf hub, /junior-golf/ (Braeden, 2026-11-20): one entry, three programs. No prices here (the flyer
+# image shows the camp fee, so it stays on the camps page only). Junior photos: only the two already public.
+JUNIOR_HUB = (
+  '<section class="jg-intro"><div class="container narrow center"><span class="eyebrow reveal">Three Programs</span>'
+  '<h2 class="reveal d1" style="font-size:clamp(2rem,4vw,3rem)">A pathway for young golfers</h2>'
+  '<p class="lead-text reveal d2" style="margin:1rem auto 0">Summer camp, Operation 36 and the junior academy, all taught by our PGA of Canada professionals.</p>'
+  '</div></section><section class="jg-programs"><div class="container"><div class="card-grid jg-cards">'
+  '<article id="junior-camps" class="course-card reveal"><div class="course-art"><img src="../assets/img/sl26-flag-green-pond-m.webp" alt="A Canada flag on a green beside a pond"></div>'
+  '<div class="course-body"><h3 class="script">Junior Camps</h3><p class="jg-when">Ages 6 to 14, July and August</p>'
+  '<p>Four weeks of summer camp, each a full week of skills, games and time on the course with our professionals.</p>'
+  f'<a class="link-arrow" href="../golf-camps/">Camp details {LINK_ARROW}</a></div></article>'
+  '<article id="operation-36" class="course-card reveal d1"><div class="course-art"><img src="../assets/img/member-junior.webp" alt="Two junior golfers walking a fairway at Spring Lakes"></div>'
+  '<div class="course-body"><h3 class="script">Operation 36</h3><p class="jg-when">Sign-up opens in February</p><p>Our development program for newer junior golfers. '
   'Weekly coaching with our professionals, plus nine-hole rounds on the East Course that start 25 yards from the green. '
   'Shoot 36 or better and you move back to the next distance.</p>'
-  '<a class="link-arrow" href="../contact-us/">Inquire about Operation 36 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div></article>'
-  '<article id="junior-academy" class="course-card reveal d1"><div class="course-art"><img src="../assets/img/junior-lesson.jpg" alt="A Spring Lakes professional coaching a junior on the range"></div>'
-  '<div class="course-body"><h3 class="script" style="font-size:1.9rem">Junior Academy</h3><p>Our performance program for committed juniors ready to compete. '
-  'Weekly guided practice, on-course coaching on the East Course, and a path into junior tournaments.</p>'
-  '<a class="link-arrow" href="../contact-us/">Inquire about the academy <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div></article>'
+  f'<a class="link-arrow" href="../contact-us/">Ask about Operation 36 {LINK_ARROW}</a></div></article>'
+  '<article id="junior-academy" class="course-card reveal d2"><div class="course-art"><img src="../assets/img/junior-lesson.jpg" alt="A Spring Lakes professional coaching a junior on the range"></div>'
+  '<div class="course-body"><h3 class="script">Junior Academy</h3><p class="jg-when">Applications open in February</p><p>Our performance program for committed juniors ready to compete. '
+  'Weekly guided practice, on-course coaching on the East Course, and a path into junior tournaments. '
+  'By application, so we can group players by level.</p>'
+  f'<a class="link-arrow" href="academy/">Apply to the academy {LINK_ARROW}</a></div></article>'
   '</div></div></section>')
+
+# Junior Academy application settings: tools/forms/academy.json ({"exec": "", "open": false}) is what ships.
+# A mock build passes SLG_ACADEMY_EXEC and SLG_ACADEMY_OPEN=1. The form only takes entries with both an exec
+# address and open set; the sheet's "Accepting applications" setting can still close it.
+ACADEMY_CFG = OUT/"tools/forms/academy.json"
+
+def academy():
+    cfg = json.loads(ACADEMY_CFG.read_text()) if ACADEMY_CFG.exists() else {}
+    url = os.environ.get("SLG_ACADEMY_EXEC")
+    if not url:
+        url = cfg.get("exec") or ""
+        if url and not url.lower().startswith("https://script.google.com/"):
+            raise SystemExit("tools/forms/academy.json exec must be the live Apps Script https address "
+                             "(use SLG_ACADEMY_EXEC for a mock build)")
+    is_open = os.environ.get("SLG_ACADEMY_OPEN") == "1" if "SLG_ACADEMY_OPEN" in os.environ else bool(cfg.get("open"))
+    return url, bool(url and is_open)
+
+def academy_form(url, is_open):
+    def field(n, label, kind="text", extra="", req=True):
+        inp = (f'<textarea name="{n}" id="ac-{n}"{extra}></textarea>' if kind == "textarea" else
+               f'<input name="{n}" id="ac-{n}" type="{kind}"{extra}{" required" if req else ""}>')
+        return f'<div class="field"><label for="ac-{n}">{label}</label>{inp}</div>'
+    closed = "" if is_open else ('<p class="ac-closed" role="status"><strong>Applications open in February 2027.</strong> '
+                                 'The form below shows what we will ask.</p>')
+    return (
+      '<section class="ac-section"><div class="container narrow"><div class="section-head center">'
+      '<span class="eyebrow reveal">Junior Academy</span><h2 class="reveal d1">Apply to the Junior Academy</h2>'
+      '<p class="reveal d2">The Junior Academy is our performance program for committed juniors ready to compete. '
+      'Players apply so we can group them by level. Tell us about your junior golfer and our team will be in touch.</p></div>'
+      + closed +
+      f'<form class="inquiry-form ac-form" id="academy-form" data-live data-exec="{html.escape(url)}" data-open="{1 if is_open else 0}" novalidate>'
+      '<div class="hp" aria-hidden="true"><label for="ac-w">Website</label><input name="website" id="ac-w" type="text" tabindex="-1" autocomplete="off"></div>'
+      f'<fieldset{"" if is_open else " disabled"}><legend>The player</legend>'
+      + field("player", "Player name", extra=' autocomplete="off"')
+      + '<div class="ac-row">'
+      + field("age", "Age", "number", ' min="5" max="18" step="1" inputmode="numeric"')
+      + field("years", "Years playing", "number", ' min="0" max="17" step="1" inputmode="numeric"')
+      + field("handicap", "Handicap index, if any", extra=' autocomplete="off"', req=False)
+      + '</div>'
+      + field("tournaments", "Tournaments played, if any", "textarea", ' placeholder="Event names and years, or leave blank"')
+      + f'</fieldset><fieldset{"" if is_open else " disabled"}><legend>Parent or guardian</legend>'
+      + field("parent", "Parent or guardian name", extra=' autocomplete="name"')
+      + '<div class="ac-row two">'
+      + field("email", "Parent email", "email", ' autocomplete="email"')
+      + field("phone", "Parent phone", "tel", ' autocomplete="tel"')
+      + '</div><p class="ac-privacy">We use these details only to review this application and to contact you about the Junior Academy.</p>'
+      f'<button class="btn btn-gold" type="submit">{"Send application" if is_open else "Applications open in February"}</button>'
+      '</fieldset><p class="form-note note" style="display:none" role="status"></p></form></div></section>')
+
+JUNIOR_CSS = """
+/* Junior Golf hub and Junior Academy application (Braeden, 2026-11-20) */
+.jg-programs{padding-top:0}
+.jg-cards .course-body h3{font-size:1.9rem}
+.jg-when{font-size:.72rem!important;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)!important;font-weight:600;margin:0 0 .7rem!important}
+.ac-closed{background:#f6f1e3;border-left:3px solid var(--gold);padding:14px 18px;margin:0 auto 28px;color:var(--navy);max-width:640px}
+.ac-form{max-width:640px;margin:0 auto}
+.ac-form fieldset{border:0;padding:0;margin:0;min-width:0}
+.ac-form legend{font-family:var(--serif);font-size:1.5rem;color:var(--navy);margin:0 0 14px;padding:0}
+.ac-form fieldset+fieldset{margin-top:14px}
+.ac-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0 16px}.ac-row.two{grid-template-columns:repeat(2,1fr)}
+.ac-form fieldset[disabled] .field input,.ac-form fieldset[disabled] .field textarea{background:#f4f4f6;cursor:not-allowed}
+.ac-form fieldset[disabled] .btn{opacity:.75;cursor:not-allowed}
+.ac-privacy{font-size:.85rem;color:var(--muted);margin:0 0 18px}
+.ac-form .form-note{margin-top:14px}
+@media(max-width:600px){.ac-row,.ac-row.two{grid-template-columns:1fr}}
+"""
+
+def junior_pages():
+    """/junior-golf/ (hub) and /junior-golf/academy/ (application), both made from the finished camps page:
+    same header, hero photo, footer and private lessons band, with a new title, h1, breadcrumb and main."""
+    base = (OUT/"golf-camps/index.html").read_text()
+    url, is_open = academy()
+    def page(title, desc, eyebrow, h1, crumb, main):
+        s = base
+        s = re.sub(r"<title>[^<]*</title>", f"<title>{title} | Spring Lakes Golf Club</title>", s, count=1)
+        s = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{desc}">', s, count=1)
+        s, n = re.subn(r'(<section class="page-hero".*?<span class="eyebrow"[^>]*>)[^<]*(</span><h1>)[^<]*(</h1><div class="breadcrumb">).*?(</div></div></section>)',
+                       lambda m: m.group(1) + eyebrow + m.group(2) + h1 + m.group(3) + crumb + m.group(4), s, count=1, flags=re.S)
+        assert n == 1, (h1, "hero")
+        i = s.index('<main id="main">') + len('<main id="main">'); j = s.index("</main>")
+        s = s[:i] + main + s[j:]
+        s = sub(s, 'data-photo="golf-camps:g26"', 'data-photo="junior-golf:g26"', h1)
+        return s
+    hub = page("Junior Golf", "Junior golf at Spring Lakes: summer camp for ages 6 to 14, Operation 36 and the Junior Academy, taught by our PGA of Canada professionals.",
+               "Spring Lakes Juniors", "Junior Golf", '<a href="../">Home</a> &nbsp;/&nbsp; Junior Golf', JUNIOR_HUB)
+    # the camps page marks its own menu link as the current page; the hub is the Junior Golf page now
+    ac = page("Junior Academy Application", "Apply to the Spring Lakes Junior Academy, our performance program for committed junior golfers.",
+              "Junior Golf", "Junior Academy", '<a href="../">Home</a> &nbsp;/&nbsp; <a href="../junior-golf/">Junior Golf</a> &nbsp;/&nbsp; Junior Academy',
+              academy_form(url, is_open))
+    ac = ac.replace("</body>", '<script src="../assets/js/academy.js" defer></script></body>', 1)
+    ac = ac.replace('="../', '="../../')  # two folders deep
+    pages = {"junior-golf/index.html": hub, "junior-golf/academy/index.html": ac}
+    for f, s in pages.items():
+        s = staff_edits(f, s)
+        for bad in ("—", "–", "$", "SLGC2026", *NOT_MARKS, "camp-2027-flyer", "Golf Camps",
+                    *((SHOP_URL, "Pro Shop Online") if SOFT else ())):
+            assert bad not in s, (f, bad)
+        (OUT/f).parent.mkdir(parents=True, exist_ok=True)
+        (OUT/f).write_text(s)
+    shutil.copy(OUT/"tools/forms/academy.js", OUT/"assets/js/academy.js")
 
 def camp_button():
     # E6: waitlist form now; in December set "registration_open": true in tools/forms/config.json
@@ -554,7 +681,7 @@ def edit(f, s):
         # E10: the camps card becomes Junior Golf
         s = sub(s, "<p>Junior camps each season, a real pathway for young golfers. 2026 weeks are now sold out.</p>",
                 "<p>Summer camp, Operation 36 and the junior academy, a real pathway for young golfers.</p>", f)
-        s = sub(s, 'href="golf-camps/">Camp Info <svg', 'href="golf-camps/">Junior golf <svg', f)
+        s = sub(s, 'href="golf-camps/">Camp Info <svg', 'href="junior-golf/">Junior golf <svg', f)
         # E1: weddings are no longer offered
         s = sub(s, "From junior pathways to weddings on the moraine,", "From junior pathways to golf days on the moraine,", f)
         s = sub(s, ">Weddings &amp; Events</h3><p>Weddings, corporate days and celebrations, framed by 45 lakes and open sky.</p>",
@@ -618,11 +745,11 @@ def edit(f, s):
                    "Our 2026 camps were a full house. To hear first when 2027 dates and registration open,", s)
         s = s.replace("Join the Waitlist", "Get on the List")
         # E10 option A (Cullen, 2026-10-17): this page is Junior Golf, with camp, Operation 36 and the junior academy
-        s = sub(s, "<h1>Spring Lakes Camps 2026</h1>", "<h1>Junior Golf</h1>", f)
-        s = sub(s, "<title>Golf Camps | Spring Lakes Golf Club</title>", "<title>Junior Golf | Spring Lakes Golf Club</title>", f)
-        s = sub(s, "&nbsp;/&nbsp; Golf Camps</div>", "&nbsp;/&nbsp; Junior Golf</div>", f)
+        s = sub(s, "<h1>Spring Lakes Camps 2026</h1>", "<h1>Junior Camps</h1>", f)
+        s = sub(s, "<title>Golf Camps | Spring Lakes Golf Club</title>", "<title>Junior Camps | Spring Lakes Golf Club</title>", f)
+        s = sub(s, "&nbsp;/&nbsp; Golf Camps</div>", '&nbsp;/&nbsp; <a href="../junior-golf/">Junior Golf</a> &nbsp;/&nbsp; Junior Camps</div>', f)
         s = re.sub(r'<meta name="description" content="[^"]*">',
-                   '<meta name="description" content="Junior golf at Spring Lakes: summer camp for ages 6 to 14, Operation 36 and the junior academy, taught by PGA of Canada professionals.">', s, count=1)
+                   '<meta name="description" content="Spring Lakes summer camp 2027 for golfers aged 6 to 14, taught by our PGA of Canada professionals.">', s, count=1)
         # option A (Cullen, 2026-10-16): the 2027 flyer in place of the old poster, with a sign-up card
         s = sub(s, '<div class="figure-frame" style="aspect-ratio:3/4;max-width:430px"><img src="../assets/img/camp-2026.webp" alt="Spring Lakes Camp 2026 poster">',
                 '<div class="figure-frame" style="aspect-ratio:4/5;max-width:460px"><img src="../assets/img/camp-2027-flyer.jpg" alt="Spring Lakes Summer Camp 2027 flyer: ages 6 to 14, 9 am to 4 pm, four weeks in July and August">', f)
@@ -632,11 +759,8 @@ def edit(f, s):
                        '<a class="btn btn-ghost-navy" href="tel:9056403633">Call 905-640-3633</a></div>'
                        '<a class="camp-pdf" href="../assets/docs/2027-Camp-Flyer.pdf" target="_blank" rel="noopener">Download the flyer (PDF)</a></div>', s, count=1, flags=re.S)
         assert n == 1, (f, "camp gate")
-        s = sub(s, '<main id="main"><section><div class="container split"', '<main id="main"><section class="jg-intro"><div class="container narrow center">'
-                '<span class="eyebrow reveal">Three Programs</span><h2 class="reveal d1" style="font-size:clamp(2rem,4vw,3rem)">A pathway for young golfers</h2>'
-                '<p class="lead-text reveal d2" style="margin:1rem auto 0">Summer camp, Operation 36 and the junior academy, all taught by our PGA of Canada professionals.</p>'
-                '</div></section><section id="camp" style="padding-top:0"><div class="container split"', f)
-        s = sub(s, "</div></div></section></main>", "</div></div></section>" + JUNIOR_PROGRAMS + "</main>", f)
+        s = sub(s, '<main id="main"><section><div class="container split"', '<main id="main"><section id="camp"><div class="container split"', f)
+        s = sub(s, "</div></div></section></main>", "</div></div></section>" + JUNIOR_MORE + "</main>", f)
         s = sub(s, "<h2>Looking for Year-Round Junior Golf?</h2><p>Beyond summer camps, our academy runs junior development programs and a performance pathway all season long.</p>",
                 "<h2>Looking for Private Lessons?</h2><p>Our professionals also teach juniors one on one, booked online through CoachNow.</p>", f)
     if f == "events.html":

@@ -210,8 +210,9 @@
 
   function pageName(){
     var p = location.pathname.replace(/\/index\.html$/, '/').split('/').filter(Boolean);
-    var known = ['golf', 'golf-academy', 'golf-camps', 'memberships', 'members', 'events-spring-lakes', 'food-beverage', 'course-gallery', 'contact-us'];
+    var known = ['golf', 'golf-academy', 'golf-camps', 'junior-golf', 'memberships', 'members', 'events-spring-lakes', 'food-beverage', 'course-gallery', 'contact-us'];
     var last = p.length ? p[p.length - 1] : '';
+    if (last === 'academy' && p[p.length - 2] === 'junior-golf') return '/junior-golf/academy/';
     return known.indexOf(last) >= 0 ? '/' + last + '/' : '/';
   }
   function rid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
