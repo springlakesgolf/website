@@ -33,7 +33,7 @@ Canada's largest 54-hole private club: three distinct 18-hole courses (North, Ea
 
 ## Brand Commitments
 - Colours: Navy #323C60 (primary), Gold #B89A2D (accent), white. Text on gold is navy, never white.
-- Mark: the standing heron in the reeds (Fable kit, approved by Braeden 2026-11-17; files in tools/brand/). The old flying heron is retired. The stacked SPRING LAKES / GOLF CLUB / heron lockup is the norm. The 10 Years badge is retired.
+- Mark: the standing heron in the reeds (Fable kit, approved by Braeden 2026-11-17; files in tools/brand/). The old flying heron is retired, except on the soft launch build (`LAUNCH = "soft"` in tools/build.py), which keeps it until the new logo is released. The stacked SPRING LAKES / GOLF CLUB / heron lockup is the norm. The 10 Years badge is retired.
 - The club name is set in engraved caps (Cinzel), never in a cursive or script font. Headlines are Cormorant and body text is Montserrat.
 - Character (Cullen, 2026-10-16): established and quiet. Old-club confidence, restrained and editorial; the land does the talking.
 - Direction (Cullen, 2026-10-16): the classic private club look. He likes the current site; refine it rather than replace it. Keep the Golf dropdown. Picked 2026-10-16: button style A (square, sentence case, no lift) and the white dropdown panel with normal-capital menu labels. Show options before any further design change. No text fading in on scroll (a quiet entrance on photos is fine).

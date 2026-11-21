@@ -11,6 +11,8 @@ From the review on 2026-10-16 (CullenAI/Knowledge/Website-Review-2026-10-16.md, 
 - [ ] Reservations: Laura's answers in Settings, the real Members list loaded, Email mode Live, confirmations from the club dining address, 2027 calendar events loaded, the PIN lockout reviewed, and /dining-staff/ saved to the restaurant iPad home screen. See tools/dining/README.md.
 
 ## In the build
+- [ ] Soft launch goes live with `LAUNCH = "soft"` in `tools/build.py`. Before DNS moves, check each line in `MEMBER_PIECES` (reservations stay `False` until Laura's settings are real).
+- [ ] Full launch, on the logo release date: set `LAUNCH = "full"`, rebuild, check the Shop link and the standing heron, then push.
 - [ ] Remove PREVIEW_HEAD's `noindex,nofollow` meta and the "Staff preview" pill.
 - [ ] Replace `robots.txt` (`Disallow: /`) with an allow plus a sitemap line, served from the domain root.
 - [ ] Stop injecting `edit-mode.js`, or keep it behind a separate staff-only preview build.
