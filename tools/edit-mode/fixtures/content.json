@@ -1,0 +1,110 @@
+{
+ "ok": true,
+ "hours": [
+  {
+   "members": false,
+   "what": "Pro Shop",
+   "hours": "Test hours",
+   "note": "Mock feed for local checks"
+  }
+ ],
+ "lost": [],
+ "events": [
+  {
+   "name": "Men's Night",
+   "date": "Wednesdays, May 19 to September 1",
+   "course": "",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Ladies League",
+   "date": "Tuesdays, May 11 to September 28",
+   "course": "",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Keenagers",
+   "date": "Thursdays, May 13 to September 30",
+   "course": "",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Spring Lakes Invitational",
+   "date": "Sat, May 29 to Sun, May 30",
+   "course": "All three courses",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Night Golf",
+   "date": "Sat, July 10",
+   "course": "East Course",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Ladies Club Championship",
+   "date": "Sat, July 17 to Sun, July 18",
+   "course": "South Course, then North Course",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Senior and Super Senior Men's Club Championship",
+   "date": "Sat, July 17 to Sun, July 18",
+   "course": "North Course, then East Course",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Men's Member Guest",
+   "date": "Wed, July 28",
+   "course": "East Course",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Men's and Junior Intermediate Club Championship",
+   "date": "Sat, August 7 to Sun, August 8",
+   "course": "East Course",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Ladies Member Guest",
+   "date": "Wed, August 11",
+   "course": "North Course",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Ryder Cup",
+   "date": "Sat, August 14",
+   "course": "East Course",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  },
+  {
+   "name": "Tip & Tuck",
+   "date": "Sat, September 18",
+   "course": "East Course",
+   "status": "Details to come",
+   "link": "",
+   "photo": ""
+  }
+ ]
+}

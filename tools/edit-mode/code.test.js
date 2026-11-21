@@ -96,3 +96,64 @@ test('staff submissions still need the edit key', () => {
   const { post } = load([HEAD], { BOT_SECRET: SECRET, EDIT_KEY: 'k' });
   assert.equal(post({ key: SECRET, rid: 'r1', change: 'x' }).error, 'key');
 });
+
+// Content feed (?feed=content): Club Events from the Events tab, next to Hours and Lost & Found.
+function loadContent(tabs) {
+  const sheets = {};
+  for (const [name, grid] of Object.entries(tabs)) {
+    sheets[name] = { getDataRange: () => ({ getDisplayValues: () => grid.map(r => r.map(String)), getValues: () => grid }) };
+  }
+  const ctx = {
+    SpreadsheetApp: { openById: () => ({ getSheetByName: n => sheets[n] || null, getSpreadsheetTimeZone: () => 'America/Toronto' }) },
+    CacheService: { getScriptCache: () => ({ get: () => null, put() {} }) },
+    ContentService: { MimeType: { JSON: 'json' }, createTextOutput: s => ({ body: s, setMimeType() { return this; } }) },
+    PropertiesService: {}, LockService: {}, Utilities: { formatDate: () => 'Nov 1' }, DriveApp: {}, Logger: { log() {} }
+  };
+  vm.createContext(ctx);
+  vm.runInContext(CODE, ctx);
+  return JSON.parse(ctx.doGet({ parameter: { feed: 'content' } }).body);
+}
+
+const HOURS = [['Who', 'What', 'Hours', 'Note'], ['Everyone', 'Pro Shop', '8 to 5', '']];
+const LOST = [['Found', 'Item', 'Where', 'Photo', 'Status']];
+const EV_HEAD = ['Event', 'Date', 'Course', 'Status', 'Sign-up link', 'Photo (last year)', 'Show', 'Staff notes'];
+
+test('content feed sends Club Events in sheet order, without staff notes', () => {
+  const out = loadContent({ Hours: HOURS, 'Lost & Found': LOST, Events: [EV_HEAD,
+    ['Night Golf', 'Sat, July 10', 'East Course', 'Sign-up open', 'https://example.com/night', 'https://example.com/n.jpg', 'Yes', 'Call the band'],
+    ['Ryder Cup', 'Sat, August 14', '', 'Opens soon', '', '', '', 'Draft'],
+    ['Tip & Tuck', 'Sat, September 18', 'East Course', 'Details to come', '', '', 'Yes', '']] });
+  assert.equal(out.ok, true);
+  assert.equal(out.hours.length, 1);
+  assert.deepEqual(out.events.map(e => e.name), ['Night Golf', 'Ryder Cup', 'Tip & Tuck']);
+  assert.deepEqual(out.events[0], { name: 'Night Golf', date: 'Sat, July 10', course: 'East Course', status: 'Sign-up open',
+    link: 'https://example.com/night', photo: 'https://example.com/n.jpg' });
+  assert.equal(out.events[1].status, 'Opens soon');
+  assert.ok(!JSON.stringify(out).includes('Call the band'));
+  assert.ok(!JSON.stringify(out).includes('Draft'));
+});
+
+test('Club Events: hidden, blank and odd rows are cleaned up', () => {
+  const out = loadContent({ Hours: HOURS, 'Lost & Found': LOST, Events: [EV_HEAD,
+    ['Hidden', 'x', '', 'Sign-up open', '', '', 'No', ''],
+    ['Hidden too', 'x', '', 'Sign-up open', '', '', ' no ', ''],
+    ['', 'Sat, May 1', 'East Course', 'Opens soon', '', '', 'Yes', ''],
+    ['Ladies Club Championship', 'Sat, July 17 – Sun, July 18', 'South Course — North Course', 'Confirmed', 'http://plain.example', 'javascript:alert(1)', 'Yes', ''],
+    ['Quotes', 'x', '', 'Sign-up open', 'https://a.example/"><script>', '', 'Yes', '']] });
+  assert.deepEqual(out.events.map(e => e.name), ['Ladies Club Championship', 'Quotes']);
+  const e = out.events[0];
+  assert.equal(e.date, 'Sat, July 17 to Sun, July 18');
+  assert.equal(e.course, 'South Course to North Course');
+  assert.equal(e.status, 'Details to come');
+  assert.equal(e.link, '');
+  assert.equal(e.photo, '');
+  assert.equal(out.events[1].link, '');
+});
+
+test('Club Events: capped at 60 rows; no Events tab sends an empty list', () => {
+  const grid = [EV_HEAD]; for (let i = 1; i <= 70; i++) grid.push(['Event ' + i, 'Date', '', 'Opens soon', '', '', 'Yes', '']);
+  const out = loadContent({ Hours: HOURS, 'Lost & Found': LOST, Events: grid });
+  assert.equal(out.events.length, 60);
+  assert.equal(out.events[59].name, 'Event 60');
+  assert.deepEqual(loadContent({ Hours: HOURS, 'Lost & Found': LOST }).events, []);
+});

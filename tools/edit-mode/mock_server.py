@@ -4,6 +4,9 @@ Build against it with SLG_EDIT_EXEC=http://127.0.0.1:8744/exec python3 tools/bui
 open http://127.0.0.1:8744/?edit=testkey, and requests print here and go to mock_rows.json.
 It also fakes the staff-edits bot route (secret "testsecret"): "pending" serves fixtures/rows.json
 and "result" writes to mock_results.json (or SLG_MOCK_RESULTS).
+GET /exec?feed=content fakes the content feed (Hours, Lost & Found, Club Events): it serves
+mock_content.json next to this file when there is one (edit it, reload the page, see the change),
+else fixtures/content.json.
 """
 import json, os, sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -13,10 +16,23 @@ ROOT = Path(__file__).resolve().parents[2]
 ROWS = Path(__file__).with_name("mock_rows.json")
 RESULTS = Path(os.environ.get("SLG_MOCK_RESULTS") or Path(__file__).with_name("mock_results.json"))
 FIXTURES = Path(__file__).with_name("fixtures")/"rows.json"
+CONTENT = Path(__file__).with_name("mock_content.json")
+CONTENT_FIXTURE = Path(__file__).with_name("fixtures")/"content.json"
 seen = {}
 
 class H(SimpleHTTPRequestHandler):
     def __init__(self, *a, **k): super().__init__(*a, directory=str(ROOT), **k)
+    def do_GET(self):
+        path, _, query = self.path.partition("?")
+        if path != "/exec": return super().do_GET()
+        if "feed=content" in query.split("&"):
+            out = json.loads((CONTENT if CONTENT.exists() else CONTENT_FIXTURE).read_text())
+        else: out = {"ok": True, "service": "website-edits"}
+        data = json.dumps(out).encode()
+        self.send_response(200); self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*"); self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
+
     def do_POST(self):
         b = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         if "bot" in b: out = self.bot(b)
