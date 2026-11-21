@@ -126,6 +126,23 @@ class MemberPieces(unittest.TestCase):
         import importlib, build as b
         self.b = importlib.reload(b)
 
+    def test_forecast_is_a_strip_under_the_club_news(self):
+        # the 7-day forecast runs along the bottom of the Club news band, outside the sidebar, so the
+        # email and the sidebar fill the width with no empty space under the email (Cullen, 2026-11-21)
+        mails = [{"link": "https://mailchi.mp/x/a", "title": "A", "label": "Nov 20", "date": "2026-11-20"}]
+        band = self.b.this_week(mails, None)
+        side = band[band.index('<aside id="side-col"'):band.index("</aside>")]
+        self.assertNotIn("wx-", side)
+        self.assertEqual(band.count('id="wx-days"'), 1)
+        self.assertIn('</aside></div><div id="wx-col" class="wx-strip"><h3>7-day forecast</h3>', band)
+        self.assertTrue(band.endswith("Environment and Climate Change Canada.</p></div></div></section>"))
+        self.assertIn('<div class="week-grid">', band)
+        self.assertIn('<div class="week-grid one">', self.b.this_week([], None))
+        # days side by side; on a phone the strip scrolls inside itself, never the page
+        self.assertIn(".wx-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))", self.b.WEEK_CSS)
+        phone = self.b.WEEK_CSS[self.b.WEEK_CSS.index("@media(max-width:900px){.week-grid"):]
+        self.assertIn(".wx-days{display:flex;overflow-x:auto", phone[:phone.index("}}")])
+
     def test_event_inquiry_off_leaves_a_phone_line(self):
         self.b.MEMBER_PIECES["event_inquiry"] = False
         html = self.b.member_events()

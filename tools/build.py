@@ -132,7 +132,9 @@ def club_items(mails, week):
 
 def this_week(mails, week):
     # option A (Cullen, 2026-11-01, E11): the latest club email shown right in the page, the recent ones beside it to
-    # switch between, club hours and the forecast under them; weather.js swaps in the hourly-refreshed list
+    # switch between and club hours under them; weather.js swaps in the hourly-refreshed list.
+    # The 7-day forecast runs as a strip along the bottom of the band, days side by side, and the email
+    # stretches to the sidebar's height, so there is no empty space under it (Cullen, 2026-11-21)
     items = club_items(mails, week)
     TAG = '<span class="mc-tag">Week at a glance</span>'
     li = "".join(f'<li><button type="button" data-link="{html.escape(m["link"])}" aria-current="{"true" if i == 0 else "false"}">'
@@ -145,12 +147,12 @@ def this_week(mails, week):
     pick = (f'<div id="mc-pick"><h3>Recent emails</h3><ul id="mc-list" class="mc-list">{li}</ul>'
             f'<a class="mc-all" href="{club_emails.HOME}" target="_blank" rel="noopener">See all club emails</a></div>') if first else ""
     side = (f'<aside id="side-col" class="news-side">{pick}<div id="hours-wrap" hidden><h3>Club hours</h3>'
-            '<div id="hours-box" class="hr-list" data-scope="members" aria-live="polite"></div></div>'
-            '<div id="wx-col"><h3>7-day forecast</h3><div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"></div>'
-            '<p class="wx-src">Forecast for the Markham area. Data Source: Environment and Climate Change Canada.</p></div></aside>')
+            '<div id="hours-box" class="hr-list" data-scope="members" aria-live="polite"></div></div></aside>')
+    wx = ('<div id="wx-col" class="wx-strip"><h3>7-day forecast</h3><div id="wx-days" class="wx-days" aria-busy="true" aria-live="polite"></div>'
+          '<p class="wx-src">Forecast for the Markham area. Data Source: Environment and Climate Change Canada.</p></div>')
     return ('<section id="this-week" class="news-band"><div class="container">'
       '<span class="eyebrow">From the Club</span><h2>Club news</h2>'
-      f'<div class="week-grid">{news}{side}</div></div></section>')
+      f'<div class="week-grid{"" if first else " one"}">{news}{side}</div>{wx}</div></section>')
 
 # tee times first on the members page (E13); the header button jumps here
 TEE_BAND = ('<section id="book" class="tee-band"><div class="container"><div><span class="eyebrow">Tee Times</span><h2>Book a tee time</h2>'
@@ -269,7 +271,7 @@ WEEK_CSS = """
 .news-band{background:#fff;padding:56px 0 48px}
 .news-band h2{font-size:clamp(2rem,4vw,2.8rem);margin:0 0 1.4rem}
 .news-band h3{font-size:1.35rem;margin:0 0 .8rem;color:var(--navy)}
-.week-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:44px;align-items:start}.week-grid.one{grid-template-columns:1fr}.week-grid>*{min-width:0}
+.week-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:44px;align-items:stretch}.week-grid.one{grid-template-columns:1fr}.week-grid>*{min-width:0}
 .mc-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .mc-list li{border-bottom:1px solid var(--line)}
 .mc-list a{display:flex;gap:16px;padding:12px 0;align-items:baseline;color:var(--ink)}
@@ -279,14 +281,22 @@ WEEK_CSS = """
 .mc-all{display:inline-block;margin-top:14px;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);border-bottom:1px solid var(--gold)}
 .news-side{background:var(--cream);padding:24px}
 .news-side:not(:has(>:not([hidden]))){display:none}
-#hours-wrap{margin-bottom:28px}.news-side h3{border-bottom:1px solid rgba(50,60,96,.12);padding-bottom:10px;margin-bottom:0}
-.wx-row{display:grid;grid-template-columns:52px 22px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(50,60,96,.12)}
+#hours-wrap{margin-bottom:28px}.news-side>:last-child{margin-bottom:0}.news-side h3{border-bottom:1px solid rgba(50,60,96,.12);padding-bottom:10px;margin-bottom:0}
+/* 7-day forecast strip along the bottom of the news band (Cullen, 2026-11-21); scrolls sideways inside itself on narrow screens */
+.wx-strip{margin-top:44px;background:var(--cream);padding:24px 24px 18px;min-width:0}
+.wx-strip h3{border-bottom:1px solid rgba(50,60,96,.12);padding-bottom:10px;margin-bottom:0}
+.wx-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-height:148px}
+.wx-day{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px 14px;text-align:center;border-left:1px solid rgba(50,60,96,.12)}
+.wx-day:first-child{border-left:0}
 .wx-name{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
-.wx-ico{width:22px;height:22px;color:var(--navy);display:block}
-.wx-text{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wx-text em{font-style:normal;color:var(--navy)}
-.wx-temp{font-size:.88rem;color:var(--muted);white-space:nowrap}.wx-temp b{color:var(--navy);font-weight:600;margin-right:4px}
-.wx-src{font-size:.72rem;color:var(--muted);margin:10px 0 0}
-@media(max-width:900px){.week-grid{grid-template-columns:1fr;gap:30px}}
+.wx-ico{width:30px;height:30px;color:var(--navy);display:block}
+.wx-temp{font-size:.88rem;color:var(--muted);white-space:nowrap}.wx-temp b{color:var(--navy);font-weight:600;font-size:1.05rem;margin-right:5px}
+.wx-text{font-size:.8rem;line-height:1.4;color:var(--muted)}.wx-text em{font-style:normal;color:var(--navy);white-space:nowrap}
+.wx-src{font-size:.72rem;color:var(--muted);margin:0;padding-top:10px;border-top:1px solid rgba(50,60,96,.12)}
+@media(max-width:900px){.week-grid{grid-template-columns:1fr;gap:30px}
+.wx-strip{margin-top:30px;padding:20px 20px 16px}
+.wx-days{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;margin:0 -20px;padding:0 20px;scroll-padding:0 20px}
+.wx-day{flex:1 0 104px;scroll-snap-align:start}}
 .hr-row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(50,60,96,.12);align-items:baseline}
 .hr-what{font-size:.95rem;font-weight:600;color:var(--navy)}.hr-note{font-size:.78rem;color:var(--muted);margin-top:2px}
 .hr-time{font-size:.9rem;font-weight:600;color:var(--gold);text-align:right;white-space:nowrap}
@@ -305,7 +315,8 @@ WEEK_CSS = """
 .tee-band .container{display:flex;gap:28px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .tee-band h2{font-size:clamp(1.9rem,3.4vw,2.5rem);margin:.25rem 0 .35rem}.tee-band p{margin:0;color:var(--muted);max-width:640px}
 .tee-band p a{color:var(--navy);font-weight:600}.tee-btns{display:flex;gap:12px;flex-wrap:wrap}
-.mc-frame{border:1px solid var(--line);height:640px;background:#fff}.mc-frame iframe{width:100%;height:100%;border:0;display:block}
+#mc-col{display:flex;flex-direction:column}#mc-col .mc-all{align-self:flex-start}
+.mc-frame{border:1px solid var(--line);height:640px;background:#fff;position:relative;flex:1 0 auto}.mc-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 #mc-pick{margin-bottom:28px}#mc-pick .mc-list{border-top:0}
 .mc-list button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-wrap:wrap;gap:2px 16px;width:100%;padding:12px 8px;align-items:baseline}
 .mc-list button:hover .mc-title{color:var(--gold)}.mc-list button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
