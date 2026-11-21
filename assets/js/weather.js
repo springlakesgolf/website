@@ -41,10 +41,11 @@
     });
     box.innerHTML = days.slice(0, 7).map(function(x){
       var k = kind(Number(x.code));
-      return '<div class="wx-row"><span class="wx-name">' + esc(x.label) + '</span>'
+      // one day per cell, side by side in the strip along the bottom of the news band
+      return '<div class="wx-day"><span class="wx-name">' + esc(x.label) + '</span>'
         + '<svg class="wx-ico" viewBox="0 0 24 24" aria-hidden="true" ' + G + '>' + SVG[k] + '</svg>'
-        + '<span class="wx-text" title="' + esc(x.text) + '">' + esc(x.text) + (x.pop ? ' <em>' + esc(x.pop) + '%</em>' : '') + '</span>'
-        + '<span class="wx-temp">' + (x.high != null ? '<b>' + esc(x.high) + '&deg;</b>' : '') + (x.low != null ? esc(x.low) + '&deg;' : '') + '</span></div>';
+        + '<span class="wx-temp">' + (x.high != null ? '<b>' + esc(x.high) + '&deg;</b>' : '') + (x.low != null ? esc(x.low) + '&deg;' : '') + '</span>'
+        + '<span class="wx-text">' + esc(x.text) + (x.pop ? ' <em>' + esc(x.pop) + '%</em>' : '') + '</span></div>';
     }).join('');
     box.setAttribute('aria-busy', 'false');
   }).catch(function(){ drop('wx-col'); });
@@ -84,8 +85,8 @@
       show(keep || btns[0]);
     }).catch(function(){ if (!list.children.length) { drop('mc-col'); drop('mc-pick'); } });
 
-  // a panel that cannot load is removed (news, or the sidebar once hours and forecast are both gone);
-  // the other takes the full width,
+  // a panel that cannot load is removed (news, the sidebar once its emails and hours are both gone,
+  // or the forecast strip); the other column takes the full width,
   // and the band goes away if nothing in it loads
   function drop(id){
     var col = document.getElementById(id);
@@ -95,10 +96,11 @@
   function relayout(){
     var band = document.getElementById('this-week'); if (!band) return;
     var side = document.getElementById('side-col');
-    if (side && !side.querySelector('#mc-pick,#hours-wrap,#wx-col')) side.parentNode.removeChild(side);
+    if (side && !side.querySelector('#mc-pick,#hours-wrap')) side.parentNode.removeChild(side);
     var grid = band.querySelector('.week-grid');
-    if (!grid.children.length) band.parentNode.removeChild(band);
-    else grid.classList.toggle('one', grid.children.length === 1);
+    if (grid && !grid.children.length) { grid.parentNode.removeChild(grid); grid = null; }
+    if (grid) grid.classList.toggle('one', grid.children.length === 1);
+    else if (!document.getElementById('wx-col')) band.parentNode.removeChild(band);
   }
   window.slgWeekDrop = relayout;
 })();

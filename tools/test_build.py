@@ -126,6 +126,32 @@ class MemberPieces(unittest.TestCase):
         import importlib, build as b
         self.b = importlib.reload(b)
 
+    def test_forecast_is_a_strip_under_the_club_news(self):
+        # the 7-day forecast runs along the bottom of the Club news band, outside the sidebar, so the
+        # email and the sidebar fill the width with no empty space under the email (Cullen, 2026-11-21)
+        mails = [{"link": "https://mailchi.mp/x/a", "title": "A", "label": "Nov 20", "date": "2026-11-20"}]
+        band = self.b.this_week(mails, None)
+        side = band[band.index('<aside id="side-col"'):band.index("</aside>")]
+        self.assertNotIn("wx-", side)
+        self.assertEqual(band.count('id="wx-days"'), 1)
+        self.assertIn('</aside></div><div id="wx-col" class="wx-strip"><h3>7-day forecast</h3>', band)
+        self.assertTrue(band.endswith("Environment and Climate Change Canada.</p></div></div></section>"))
+        self.assertIn('<div class="week-grid">', band)
+        self.assertIn('<div class="week-grid one">', self.b.this_week([], None))
+        # days side by side; on a phone the strip scrolls inside itself, never the page
+        self.assertIn(".wx-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))", self.b.WEEK_CSS)
+        phone = self.b.WEEK_CSS[self.b.WEEK_CSS.index("@media(max-width:900px){.week-grid"):]
+        phone = phone[:phone.index("}}")]
+        self.assertIn(".week-grid{grid-template-columns:1fr", phone)
+        self.assertIn(".wx-days{display:flex;overflow-x:auto", phone)
+        # the email stretches to the sidebar's height and never below its 640px floor (500px on a phone)
+        css = self.b.WEEK_CSS
+        self.assertIn(".week-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:44px;align-items:stretch}", css)
+        self.assertIn("#mc-col{display:flex;flex-direction:column}", css)
+        self.assertIn(".mc-frame{border:1px solid var(--line);height:640px;background:#fff;position:relative;flex:1 0 auto}", css)
+        self.assertIn(".mc-frame iframe{position:absolute;inset:0;width:100%;height:100%", css)
+        self.assertIn("@media(max-width:900px){.mc-frame{height:500px}}", css)
+
     def test_event_inquiry_off_leaves_a_phone_line(self):
         self.b.MEMBER_PIECES["event_inquiry"] = False
         html = self.b.member_events()
