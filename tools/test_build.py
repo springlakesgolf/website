@@ -193,6 +193,17 @@ class LaunchForms(unittest.TestCase):
                 self.assertNotIn(name, page, (out.name, name))
             self.assertIn("Departments", page)
 
+    def test_no_staff_names_in_any_page_copy(self):
+        # "our team", not a staff member's name, on every built page. golf-academy is left out only while
+        # its coach cards wait on Cullen (council decision 1, Setup-Audit item 17); drop the skip once he decides.
+        names = re.compile(r"\b(Braeden|Cullen|Rhys|Luke|Laura|Ashley|Piccione|Pacas|Barker|Roth|Yake|McNeill|Contois|Steve Woo)\b")
+        for out in (self.soft, self.full):
+            for p in sorted(out.rglob("*.html")):
+                rel = p.relative_to(out)
+                if rel.parts[0] in ("tools", "golf-academy"): continue
+                copy = re.sub(r"<script.*?</script>|<style.*?</style>|<!--.*?-->", "", p.read_text(errors="ignore"), flags=re.S)
+                self.assertIsNone(names.search(copy), (out.name, str(rel), (names.search(copy) or [None])[0]))
+
     def test_pages_workflow_publishes_every_address_and_no_tools(self):
         # runs the copy step from .github/workflows/pages.yml on the soft build
         wf = (REPO/".github/workflows/pages.yml").read_text()
