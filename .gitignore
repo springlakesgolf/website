@@ -7,3 +7,9 @@ tools/design-options/
 tools/dining/dist/
 tools/dining/config.local.json
 tools/edit-mode/mock_content.json
+
+# clasp link files (script IDs)
+.clasp.json
+
+# local Apps Script and Sheet links, never committed
+tools/edit-mode/config.local.json
