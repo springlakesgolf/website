@@ -25,6 +25,25 @@ or Hidden) and tab **Lost & Found** (items stay up until Status is Claimed or 90
 days pass). `tools/members/content.js` shows them on the contact page (Everyone
 rows only) and the members page. The script caches for a minute.
 
+## Club Events
+
+The same feed also sends `events` from the **Events** tab: Event | Date | Course |
+Status | Sign-up link | Photo (last year) | Show | Staff notes. Rows show in sheet
+order. Status is a dropdown (Sign-up open, Opens soon, Details to come; anything else
+shows as Details to come). The Sign up button appears only when Status is Sign-up open
+and the link starts with https://. Show "No" hides a row. Staff notes never leave the
+sheet. Dashes in the text are sent as " to ". At most 60 rows.
+
+`tools/members/content.js` draws the list in the members events section. The page
+ships with the list baked in from `tools/members/events.json` (same fields), so it
+still shows if the feed is down, and it keeps that list until the script sends
+`events`: the Events tab does nothing live until `Code.gs` is pasted in and deployed
+as a New version (above). Keep `events.json` in step with the tab when you rebuild.
+Local check: `mock_server.py` serves `mock_content.json` (gitignored) if it exists,
+else `fixtures/content.json`; edit it and reload to see a change.
+Tests: `node --test tools/edit-mode/code.test.js tools/members/content.test.js` and
+`python3 -m unittest tools/members/test_events.py` (after a build).
+
 ## Edits done by Claude (W2)
 
 `.github/workflows/staff-edits.yml` runs `staff_edits.py` every 15 minutes (or Actions > Staff edits >

@@ -142,6 +142,44 @@ MEMBER_EVENTS = (
   '<div class="field"><label for="ev-m">Message</label><textarea name="message" id="ev-m"></textarea></div>'
   '<button class="btn btn-gold" type="submit">Send inquiry</button><p class="form-note note" style="display:none"></p></form></div></div></section>')
 
+# Club Events (Braeden, 2026-11-20): every 2027 event in one list at the top of the events section.
+# Baked from tools/members/events.json so the list shows with no script; content.js swaps in the
+# Events tab of the "Spring Lakes Website" sheet once the Apps Script sends it. Same markup as
+# eventsHTML in tools/members/content.js (test_events.py checks they match). No fees: a row says
+# "Details to come" until Braeden's Event Book confirms it.
+EVENTS_SEED = OUT/"tools/members/events.json"
+EVENT_PILL = {"Sign-up open": "evh-open", "Opens soon": "evh-soon", "Details to come": "evh-later"}
+
+def esc(v):
+    return str(v or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+def https(v):
+    v = str(v or "").strip()
+    return v if re.fullmatch(r"https://[^\s\"'<>]+", v) else ""
+
+def events_html(rows):
+    if not rows: return '<li class="evh-empty">The 2027 calendar is on its way.</li>'
+    out = []
+    for x in rows:
+        status = x.get("status") if x.get("status") in EVENT_PILL else "Details to come"
+        link, photo = https(x.get("link")), https(x.get("photo"))
+        out.append(f'<li class="evh-item{" has-photo" if photo else ""}">'
+          + (f'<img class="evh-photo" src="{esc(photo)}" alt="" loading="lazy">' if photo else "")
+          + f'<div class="evh-when">{esc(x.get("date") or "Date to come")}</div>'
+          + f'<div class="evh-main"><h3 class="evh-name">{esc(x.get("name"))}</h3>'
+          + f'<div class="evh-course">{esc(x.get("course") or "Course to come")}</div></div>'
+          + f'<div class="evh-act"><span class="evh-pill {EVENT_PILL[status]}">{esc(status)}</span>'
+          + (f'<a class="btn btn-navy evh-btn" href="{esc(link)}" target="_blank" rel="noopener">Sign up</a>' if status == "Sign-up open" and link else "")
+          + "</div></li>")
+    return "".join(out)
+
+def club_events():
+    rows = [r for r in json.loads(EVENTS_SEED.read_text()) if str(r.get("name") or "").strip() and r.get("show", "Yes") != "No"]
+    return ('<div class="evh"><div class="section-head center"><span class="eyebrow reveal">2027 Season</span>'
+      '<h2 class="reveal d1">Club Events</h2><p class="reveal d2">Every club event in one place. Dates and details are confirmed '
+      'as each event opens, and sign-up links appear here when registration opens.</p></div>'
+      f'<ul id="events-box" class="evh-list" aria-live="polite">{events_html(rows)}</ul></div>')
+
 def lost_found():
     # members report what they lost; reception sees the reports, and no items are listed here (staff edit E8)
     url = forms().get("lost")
@@ -235,6 +273,26 @@ WEEK_CSS = """
 .mc-tag{flex-basis:100%;padding-left:68px;font-size:.66rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .ev-form{max-width:640px;margin:48px auto 0;text-align:center}.ev-form h3{font-size:1.8rem;margin-bottom:.4rem}.ev-form>p{color:var(--muted)}
 .ev-form form{text-align:left;margin-top:20px}
+/* Club Events list at the top of the members events section (Braeden, 2026-11-20) */
+.evh{margin-bottom:84px}.evh .section-head{margin-bottom:34px}
+.evh-list{list-style:none;margin:0 auto;padding:0;max-width:960px;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}
+.evh-item{display:grid;grid-template-columns:210px 1fr auto;gap:8px 24px;align-items:center;padding:18px 24px;border-bottom:1px solid var(--line)}
+.evh-item.has-photo{grid-template-columns:210px 1fr 96px auto}
+.evh-item.has-photo .evh-photo{grid-column:3;grid-row:1}
+.evh-list li:last-child{border-bottom:0}
+.evh-photo{width:96px;height:64px;object-fit:cover;border-radius:2px;display:block}
+.evh-when{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);line-height:1.55}
+.evh-name{font-size:1.45rem;line-height:1.15;margin:0}
+.evh-course{font-size:.86rem;color:var(--muted);margin-top:3px}
+.evh-act{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.evh-pill{display:inline-block;font-size:.66rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:6px 11px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+.evh-open{background:var(--gold);color:var(--navy)}
+.evh-soon{border-color:var(--navy);color:var(--navy)}
+.evh-later{background:var(--cream);border-color:var(--line);color:var(--muted)}
+.evh-btn{font-size:.72rem}
+.evh-empty{padding:22px 24px;text-align:center;color:var(--muted)}
+@media(max-width:720px){.evh{margin-bottom:64px}.evh-item,.evh-item.has-photo{grid-template-columns:1fr;gap:4px;padding:16px 18px}
+.evh-item.has-photo .evh-photo{grid-column:auto;grid-row:auto;width:100%;height:150px;margin-bottom:8px}.evh-act{justify-content:flex-start;margin-top:8px}}
 @media(max-width:900px){.mc-frame{height:500px}}
 /* week at a glance card (E9 option A), on the white news band */
 .wk-feat{display:block;border:1px solid var(--gold);border-left-width:4px;padding:20px 22px;margin-bottom:26px;background:var(--cream)}
@@ -620,7 +678,8 @@ def edit(f, s):
         s = re.sub(r'<script>\(function\(\)\{var fm=document\.getElementById\("memform"\).*?</script>', "", s, flags=re.S)
         s = cut(s, '<div id="memgate"', '<div id="memarea"', '<p class="preview-note">Preview: at launch this page sits behind the '
                 'member password, checked on the server. Member documents (calendar, renewal forms) are added then.</p>', "members")
-        s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">' + TEE_BAND + this_week(MAILS, WEEK) + MEMBER_EVENTS, f)
+        s = sub(s, '<div id="memarea" hidden>', '<div id="memarea">' + TEE_BAND + this_week(MAILS, WEEK)
+                + MEMBER_EVENTS.replace('<div class="container">', '<div class="container">' + club_events(), 1), f)
         s, n = re.subn(r'<section id="book" class="bg-cream">.*?</section>', "", s, count=1, flags=re.S)
         assert n == 1, (f, "old tee time section")
         s = sub(s, '</section><section><div class="container split"><div class="figure-wrap reveal"><div class="figure-frame ratio-54"><img src="../assets/img/member-leagues.webp"',
@@ -632,7 +691,8 @@ def edit(f, s):
         s = re.sub(r'<p class="note"[^>]*>Prefer a paper form\?.*?</p>', "", s, flags=re.S)
         s = re.sub(r'<select([^>]*id="[^"]*")[^>]*>(?:(?!</select>).)*?Junior Intermediate.*?</select>',
                    lambda m: '<input type="text"' + m.group(1) + ' name="rn-cat">', s, count=1, flags=re.S)
-        assert "Junior Intermediate" not in s, f
+        # the old category list is gone (the Club Events list names a Junior Intermediate championship)
+        assert not re.search(r"<option[^>]*>[^<]*Junior Intermediate", s), f
         # match the final 2027 membership forms
         s = sub(s, "<li>Juniors are 17 and under and may only play accompanied by an adult member.</li>",
                 "<li>Junior memberships are for golfers 18 and under and must be linked to an adult membership. Junior tee times start from 11 am and juniors may not use carts, unless approved by management.</li>"

@@ -35,7 +35,7 @@ function setup() {
   Logger.log('BOT_SECRET (GitHub secret EDITS_BOT_SECRET)=' + props.getProperty('BOT_SECRET'));
 }
 
-// Hours and Lost & Found for the site, from the tabs of the same name in this
+// Hours, Lost & Found and Events for the site, from the tabs of the same name in this
 // workbook ("Spring Lakes Website"), which staff edit. Cached a minute so a busy
 // page does not hit the sheet each time.
 var CONTENT_ID = SHEET_ID;
@@ -59,9 +59,39 @@ function content() {
       return { found: r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'MMM d') : String(r[0] || ''),
                item: String(r[1]), where: String(r[2] || ''), photo: /^https:\/\//.test(r[3]) ? String(r[3]) : '' };
     }).reverse();
-  var out = { ok: true, hours: hours, lost: lost };
+  var out = { ok: true, hours: hours, lost: lost, events: events(ss) };
   cache.put('content', JSON.stringify(out), 60);
   return out;
+}
+
+// Club Events for the Member's Area, from the Events tab (Event | Date | Course | Status |
+// Sign-up link | Photo (last year) | Show | Staff notes). Rows stay in sheet order; Show "No"
+// hides a row; Staff notes never leave the sheet. No Events tab yet means an empty list.
+var EVENT_STATUS = ['Sign-up open', 'Opens soon', 'Details to come'];
+var EVENT_CAP = 60;
+
+function events(ss) {
+  var sh = ss.getSheetByName('Events');
+  if (!sh) return [];
+  return sh.getDataRange().getDisplayValues().slice(1)
+    .filter(function (r) { return undash(r[0]) && undash(r[6]).toLowerCase() !== 'no'; })
+    .slice(0, EVENT_CAP)
+    .map(function (r) {
+      var status = undash(r[3]);
+      return { name: undash(r[0]), date: undash(r[1]), course: undash(r[2]),
+               status: EVENT_STATUS.indexOf(status) < 0 ? 'Details to come' : status,
+               link: https(r[4]), photo: https(r[5]) };
+    });
+}
+
+// Member-facing text never shows an em or en dash (U+2013, U+2014): a range reads "July 17 to 18".
+function undash(v) {
+  return String(v == null ? '' : v).replace(/\s*[\u2013\u2014]\s*/g, ' to ').replace(/\s+/g, ' ').trim();
+}
+
+function https(v) {
+  var s = String(v == null ? '' : v).trim();
+  return /^https:\/\/[^\s"'<>]+$/.test(s) ? s : '';
 }
 
 function doPost(e) {
