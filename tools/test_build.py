@@ -116,6 +116,25 @@ class LaunchForms(unittest.TestCase):
         for t in (self.soft_text, self.full_text):
             self.assertNotIn("golfgenius", t)
 
+    def test_published_site_has_no_staff_dining_files(self):
+        # the preview serves what tools/publish.py copies out, not the checkout: tools/dining/staff.html,
+        # staff.js and cancel.html (staff only) stay out, and every public address stays in
+        import publish
+        for out in (self.soft, self.full):
+            self.assertTrue((out/"tools/dining/staff.html").exists())  # in the build checkout ...
+            site = publish.publish(out, Path(tempfile.mkdtemp(prefix="slg-site-")))
+            try:
+                for f in ("tools/dining/staff.html", "tools/dining/staff.js", "tools/dining/cancel.html"):
+                    self.assertFalse((site/f).exists(), (out.name, f))  # ... and not in what is served
+                self.assertFalse((site/"tools").exists(), out.name)
+                self.assertEqual([p for p in site.rglob("*") if p.name in publish.STAFF_ONLY], [], out.name)
+                for slug in ADDRESSES:
+                    self.assertTrue((site/slug/"index.html" if slug else site/"index.html").exists(), (out.name, slug))
+                for f in ("robots.txt", ".nojekyll", "assets/css/style.css", "assets/js/site.js"):
+                    self.assertTrue((site/f).exists(), (out.name, f))
+            finally:
+                shutil.rmtree(site, ignore_errors=True)
+
     def test_no_dashes(self):
         for t in (self.soft_text, self.full_text):
             self.assertNotIn("—", t); self.assertNotIn("–", t)
