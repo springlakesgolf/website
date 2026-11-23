@@ -5,8 +5,14 @@
 (function(){
   var SELF = document.currentScript;
   var EXEC = '__EXEC_URL__';
-  var NAMES = ['Braeden', 'Laura', 'Cullen'];
   var PICKABLE = 'h1,h2,h3,h4,p,li,img,figure,blockquote,.btn,a.tee-link,label,td,th,.eyebrow,.lead-text,iframe,form';
+  // no staff names ship in this file (the repo and the site are public): each person types theirs once
+  // and this browser remembers it
+  function nameField(){
+    var f = el('input', {id: 'sle-name', type: 'text', required: true, maxLength: 40, autocomplete: 'name'});
+    f.value = store.get('slg-edit-name') || '';
+    return f;
+  }
   var store = {
     get: function(k){ try { return localStorage.getItem(k) } catch(e){ return null } },
     set: function(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v) } catch(e){} }
@@ -45,7 +51,7 @@
     + '.sle-box{background:#fff;color:#222639;width:100%;max-width:520px;max-height:calc(100vh - 32px);overflow:auto;border-radius:6px;padding:22px;font:400 15px/1.5 Montserrat,sans-serif;box-shadow:0 18px 50px rgba(38,46,76,.35)}'
     + '.sle-box h3{font:600 26px/1.1 Cormorant,Georgia,serif;color:#323C60;margin:0 0 12px}'
     + '.sle-box label,.sle-box .sle-lbl{display:block;font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#323C60;margin:14px 0 6px}'
-    + '.sle-box select,.sle-box textarea,.sle-box input[type=file]{width:100%;font:inherit;border:1px solid #e3ded1;border-radius:4px;padding:10px;background:#fff;color:#222639}'
+    + '.sle-box select,.sle-box textarea,.sle-box input[type=text],.sle-box input[type=file]{width:100%;font:inherit;border:1px solid #e3ded1;border-radius:4px;padding:10px;background:#fff;color:#222639}'
     + '.sle-box textarea{min-height:120px;resize:vertical}'
     + '.sle-quote{background:#f7f5ef;border-left:3px solid #B89A2D;padding:10px 12px;font-size:13px;color:#5b6178;max-height:110px;overflow:auto;white-space:pre-wrap}'
     + '.sle-row{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}'
@@ -198,10 +204,7 @@
     box.appendChild(el('label', {}, t ? 'You picked' : 'Page'));
     box.appendChild(el('div', {className: 'sle-quote'}, t ? info.current : pageName()));
     box.appendChild(el('label', {htmlFor: 'sle-name'}, 'Your name'));
-    var who = el('select', {id: 'sle-name', required: true});
-    who.appendChild(el('option', {value: ''}, 'Choose one'));
-    NAMES.forEach(function(n){ who.appendChild(el('option', {value: n}, n)); });
-    who.value = store.get('slg-edit-name') || '';
+    var who = nameField();
     box.appendChild(who);
     box.appendChild(el('label', {htmlFor: 'sle-change'}, 'What should change?'));
     var change = el('textarea', {id: 'sle-change', required: true, placeholder: t ? 'Type the new wording, or describe the change.' : 'Describe what you would like changed on this page.'});
@@ -217,7 +220,7 @@
     var send = el('button', {type: 'submit', className: 'sle-send'}, 'Send');
     row.appendChild(cancel); row.appendChild(send); box.appendChild(row);
     veil.appendChild(box); document.body.appendChild(veil);
-    (who.value ? change : who).focus();
+    (who.value.trim() ? change : who).focus();
 
     function close(){ veil.remove(); if (chosen) chosen.classList.remove('sle-chosen'); chosen = null; fab.style.display = ''; document.removeEventListener('keydown', esc, true); }
     function esc(e){ if (e.key === 'Escape' && !send.disabled) close(); }
@@ -227,13 +230,13 @@
 
     box.addEventListener('submit', function(e){
       e.preventDefault();
-      if (!who.value || !change.value.trim()) { msg.className = 'sle-msg err'; msg.textContent = 'Please choose your name and say what should change.'; return; }
-      store.set('slg-edit-name', who.value);
+      if (!who.value.trim() || !change.value.trim()) { msg.className = 'sle-msg err'; msg.textContent = 'Please type your name and say what should change.'; return; }
+      store.set('slg-edit-name', who.value.trim());
       send.disabled = true; cancel.disabled = true; send.textContent = 'Sending';
       msg.className = 'sle-msg'; msg.textContent = '';
       readPhoto(photo.files[0]).then(function(img){
         return post({
-          key: KEY, rid: rid(), name: who.value, page: pageName(), url: location.origin + location.pathname,
+          key: KEY, rid: rid(), name: who.value.trim(), page: pageName(), url: location.origin + location.pathname,
           section: info.section, current: info.current, where: info.where, change: change.value.trim(),
           photo: img, screen: window.innerWidth + 'x' + window.innerHeight
         });
@@ -249,7 +252,7 @@
   function sent(box, r, close){
     box.innerHTML = '';
     box.appendChild(el('h3', {}, 'Sent, thank you'));
-    box.appendChild(el('p', {}, 'Request ' + r.id + ' is in. Cullen will make the change and mark it done.'));
+    box.appendChild(el('p', {}, 'Request ' + r.id + ' is in. Our team will make the change and mark it done.'));
     var row2 = el('div', {className: 'sle-row'});
     var more = el('button', {type: 'button', className: 'sle-send'}, 'Suggest another');
     var done = el('button', {type: 'button', className: 'sle-cancel'}, 'Close');
@@ -261,7 +264,7 @@
   function failed(msg, err){
     msg.className = 'sle-msg err';
     msg.textContent = err && err.message === 'key'
-      ? 'This edit link is not valid any more. Ask Cullen for a new one.'
+      ? 'This edit link is not valid any more. Ask our team for a new one.'
       : 'That did not go through. Check your connection and press Send again.';
   }
 
@@ -301,10 +304,7 @@
     });
     box.appendChild(grid);
     box.appendChild(el('label', {htmlFor: 'sle-name'}, 'Your name'));
-    var who = el('select', {id: 'sle-name', required: true});
-    who.appendChild(el('option', {value: ''}, 'Choose one'));
-    NAMES.forEach(function(n){ who.appendChild(el('option', {value: n}, n)); });
-    who.value = store.get('slg-edit-name') || '';
+    var who = nameField();
     box.appendChild(who);
     box.appendChild(el('label', {htmlFor: 'sle-note'}, 'Note (optional)'));
     var note = el('textarea', {id: 'sle-note', className: 'sle-short', placeholder: 'Anything about the crop or why this one.'});
@@ -330,12 +330,12 @@
 
     box.addEventListener('submit', function(e){
       e.preventDefault();
-      if (!picked || !who.value) { msg.className = 'sle-msg err'; msg.textContent = picked ? 'Please choose your name.' : 'Please tap a photo first.'; return; }
-      store.set('slg-edit-name', who.value);
+      if (!picked || !who.value.trim()) { msg.className = 'sle-msg err'; msg.textContent = picked ? 'Please type your name.' : 'Please tap a photo first.'; return; }
+      store.set('slg-edit-name', who.value.trim());
       use.disabled = true; cancel.disabled = true; other.disabled = true; use.textContent = 'Sending';
       msg.className = 'sle-msg'; msg.textContent = '';
       post({
-        key: KEY, rid: rid(), name: who.value, page: pageName(), url: location.origin + location.pathname,
+        key: KEY, rid: rid(), name: who.value.trim(), page: pageName(), url: location.origin + location.pathname,
         section: 'Photo pick: ' + slot, current: 'Photo: ' + now, where: cssPath(img),
         change: 'Use photo: sl26-' + picked.id + '.webp (photo id ' + picked.id + ')' + (note.value.trim() ? '\n' + note.value.trim() : ''),
         photo: null, screen: window.innerWidth + 'x' + window.innerHeight

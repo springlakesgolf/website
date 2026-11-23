@@ -282,7 +282,7 @@ WEEK_CSS = """
 .news-side{background:var(--cream);padding:24px}
 .news-side:not(:has(>:not([hidden]))){display:none}
 #hours-wrap{margin-bottom:28px}.news-side>:last-child{margin-bottom:0}.news-side h3{border-bottom:1px solid rgba(50,60,96,.12);padding-bottom:10px;margin-bottom:0}
-/* 7-day forecast strip along the bottom of the news band (Cullen, 2026-11-21); scrolls sideways inside itself on narrow screens */
+/* 7-day forecast strip along the bottom of the news band (2026-11-21); scrolls sideways inside itself on narrow screens */
 .wx-strip{margin-top:44px;background:var(--cream);padding:24px 24px 18px;min-width:0}
 .wx-strip h3{border-bottom:1px solid rgba(50,60,96,.12);padding-bottom:10px;margin-bottom:0}
 .wx-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-height:148px}
@@ -324,7 +324,7 @@ WEEK_CSS = """
 .mc-tag{flex-basis:100%;padding-left:68px;font-size:.66rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
 .ev-form{max-width:640px;margin:48px auto 0;text-align:center}.ev-form h3{font-size:1.8rem;margin-bottom:.4rem}.ev-form>p{color:var(--muted)}
 .ev-form form{text-align:left;margin-top:20px}
-/* Club Events list at the top of the members events section (Braeden, 2026-11-20) */
+/* Club Events list at the top of the members events section (2026-11-20) */
 .evh{margin-bottom:84px}.evh .section-head{margin-bottom:34px}
 .evh-list{list-style:none;margin:0 auto;padding:0;max-width:960px;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}
 .evh-item{display:grid;grid-template-columns:210px 1fr auto;gap:8px 24px;align-items:center;padding:18px 24px;border-bottom:1px solid var(--line)}
@@ -686,7 +686,7 @@ def academy_form(url, is_open):
       '</fieldset><p class="form-note note" style="display:none" role="status"></p></form></div></section>')
 
 JUNIOR_CSS = """
-/* Junior Golf hub and Junior Academy application (Braeden, 2026-11-20) */
+/* Junior Golf hub and Junior Academy application (2026-11-20) */
 .jg-programs{padding-top:0}
 .jg-cards .course-body h3{font-size:1.9rem}
 .jg-when{font-size:.72rem!important;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)!important;font-weight:600;margin:0 0 .7rem!important}

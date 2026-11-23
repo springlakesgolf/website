@@ -8,6 +8,8 @@ folder "Website Edit Photos". URLs are in `config.json`; the key is in
 
 - `edit-mode.js`: the button and picker. `tools/build.py` copies it into
   `assets/js/` with the web app URL filled in, on preview builds only.
+  Staff type their own name (remembered in that browser): no staff names go in
+  this file or anything else under `assets/`, since the repo and site are public.
 - `Code.gs`: standalone Apps Script "Website Edits", web app, execute as me,
   access Anyone; rejects requests without the key. To change it: paste into the
   editor, save, Deploy > Manage deployments > edit > New version (URL stays).
