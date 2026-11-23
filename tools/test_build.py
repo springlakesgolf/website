@@ -223,5 +223,18 @@ class LeagueHub(unittest.TestCase):
         self.assertIn(f'href="{self.b.APP_URL}/e/WCZ7ZX"', out)
         self.assertNotIn("golfgenius", out)
 
+class AssetsHaveNoStaffNames(unittest.TestCase):
+    """Public copy says "our team": no staff names in the text of anything under assets/ (comments included).
+    Runs on the committed assets, so rebuild with tools/build.py after changing a source in tools/."""
+    STAFF = re.compile(r"\b(Laura|Piccione|Braeden|Cullen|Pacas|Rhys|Luke|Ashley|Steve|Woo)\b")
+
+    def test_assets_text_has_no_staff_names(self):
+        hits = []
+        for p in sorted((REPO/"assets").rglob("*")):
+            if p.suffix not in {".html", ".css", ".js", ".json", ".svg", ".txt", ".md"}: continue
+            for n, line in enumerate(p.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
+                hits += [f"{p.relative_to(REPO)}:{n}: {m}" for m in self.STAFF.findall(line)]
+        self.assertEqual(hits, [])
+
 if __name__ == "__main__":
     unittest.main()

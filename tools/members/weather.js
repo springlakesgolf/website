@@ -52,7 +52,7 @@
 
   // Club news (option A, E11): the chosen email shows in the frame and the recent ones sit beside it.
   // The page ships with the list from the last build, then this swaps in the hourly-refreshed file so
-  // new campaigns show up right away; Braeden's week at a glance is tagged where it falls by date (E9).
+  // new campaigns show up right away; the pro shop's week at a glance is tagged where it falls by date (E9).
   var list = document.getElementById('mc-list'), frame = document.getElementById('mc-frame'), open = document.getElementById('mc-open');
   var picked = false;
   function show(btn){
