@@ -167,6 +167,7 @@
       var m = {member: "We couldn't match that member number and name. Reservations are for members and their guests.",
                full: 'That time just filled up. Please pick another time.', closed: 'That day just closed for booking. Please pick another day.',
                time: 'Please pick one of the listed times.',
+               already: 'You already have a reservation that day. To change it, cancel it from your confirmation email or call the clubhouse at ' + state.phone + '.',
                email: 'Please check the email address.', phone: 'Please check the phone number.', name: 'Please enter your full name.',
                big: 'For larger parties, please call the clubhouse at ' + state.phone + '.'}[r.error] || 'Something went wrong. Please try again.';
       say(m, true);

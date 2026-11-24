@@ -63,7 +63,7 @@ var TABS = {
 };
 var DEFAULTS = [['Guests per half hour', 20], ['Days ahead', 30], ['Same-day cutoff (minutes)', 120], ['Largest online party', 8],
   ['Staff PIN', ''], ['Clubhouse phone', '905-640-3633'], ['Cancel page', 'https://springlakesgolf.github.io/website/food-beverage/cancel/'],
-  ['Email mode', 'Test'], ['Test email', 'cullen@springlakesgolf.com'], ['Reply-to', 'laurap@springlakesgolf.com'],
+  ['Email mode', 'Test'], ['Test email', ''], ['Reply-to', ''],
   ['Sunday', '17:00-20:30'], ['Monday', 'Closed'], ['Tuesday', '17:00-20:30'], ['Wednesday', '17:00-20:30'],
   ['Thursday', '17:00-20:30'], ['Friday', '17:00-20:30'], ['Saturday', '17:00-20:30']];
 var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -209,6 +209,12 @@ function doPost(e) {
     // book() hands back the confirmation row in _mail. It is sent after the lock is released
     // and never goes into the reply or the replay cache.
     if (out && out._mail) { mailRow = out._mail; delete out._mail; }
+    if (mailRow) {
+      var hk = 'mailcount:' + Utilities.formatDate(new Date(), 'America/Toronto', 'yyyyMMddHH');
+      var sentThisHour = Number(cacheGet(cache, hk) || 0);
+      if (sentThisHour >= 20) { console.warn('confirmation cap reached, ' + mailRow.id + ' not emailed'); mailRow = null; }
+      else cachePut(cache, hk, String(sentThisHour + 1), 3700);
+    }
     if (key) cachePut(cache, key, JSON.stringify(out), 21600);
     return json(out);
   } catch (err) {
@@ -245,6 +251,13 @@ function book(b, s) {
   // The member check comes last, right before the write, so a wrong number cannot be used to
   // learn which days or times are open, and the answers above reveal nothing about members.
   if (!DiningRules.isMember(members(), b.member, b.name)) return {ok: false, rid: b.rid, error: 'member'};
+  // One online booking per member per day: a known number cannot fill the room or mail many addresses.
+  var who = DiningRules.fold(b.member);
+  var dup = bookings().some(function (x) {
+    return x.source === 'Website' && x.date === b.date && (x.status === 'Booked' || x.status === 'Seated') &&
+      DiningRules.fold(String(x.member).replace(/^'/, '')) === who;
+  });
+  if (dup) return {ok: false, rid: b.rid, error: 'already'};
   var id = nextId('R'), token = Utilities.getUuid().replace(/-/g, '');
   var row = {id: id, date: b.date, time: b.time, guests: Number(b.guests), name: C(b.name, 80), greet: String(b.name).trim(), email: String(b.email).trim(), token: token};
   tab('Bookings').appendRow([id, b.date, b.time, row.guests, row.name, C(b.member, 20), C(b.email, 120), C(b.phone, 30),

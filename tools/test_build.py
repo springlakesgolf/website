@@ -178,6 +178,44 @@ class LaunchForms(unittest.TestCase):
         for t in (self.soft_text, self.full_text):
             self.assertNotIn("—", t); self.assertNotIn("–", t)
 
+    def test_house_rules_in_page_copy(self):
+        # inquiry not enquiry; no prices; the only club address on a page is info@ (staff addresses stay internal)
+        for t in (self.soft_text, self.full_text):
+            self.assertIsNone(re.search(r"(?i)enquir", t))
+            self.assertIsNone(re.search(r"\$\s?\d", re.sub(r"<script.*?</script>", "", t, flags=re.S)))
+            self.assertEqual(set(re.findall(r"[\w.+-]+@springlakesgolf\.com", t)) - {"info@springlakesgolf.com"}, set())
+
+    def test_contact_page_lists_departments_not_staff(self):
+        # "our team", not a staff member's name. The academy coach bios are Cullen's open call (Setup-Audit item 17).
+        for out in (self.soft, self.full):
+            page = (out/"contact-us/index.html").read_text()
+            for name in ("Piccione", "Pacas", "Roth", "Barker", "Yake", "McNeill", "Contois", "Woo"):
+                self.assertNotIn(name, page, (out.name, name))
+            self.assertIn("Departments", page)
+
+    def test_no_staff_names_in_any_page_copy(self):
+        # "our team", not a staff member's name, on every built page. golf-academy is left out only while
+        # its coach cards wait on Cullen (council decision 1, Setup-Audit item 17); drop the skip once he decides.
+        names = re.compile(r"\b(Braeden|Cullen|Rhys|Luke|Laura|Ashley|Piccione|Pacas|Barker|Roth|Yake|McNeill|Contois|Steve Woo)\b")
+        for out in (self.soft, self.full):
+            for p in sorted(out.rglob("*.html")):
+                rel = p.relative_to(out)
+                if rel.parts[0] in ("tools", "golf-academy"): continue
+                copy = re.sub(r"<script.*?</script>|<style.*?</style>|<!--.*?-->", "", p.read_text(errors="ignore"), flags=re.S)
+                self.assertIsNone(names.search(copy), (out.name, str(rel), (names.search(copy) or [None])[0]))
+
+    def test_pages_workflow_publishes_every_address_and_no_tools(self):
+        # the Pages workflow runs tools/publish.py; every live address goes out and tools/ never does
+        self.assertIn("python3 tools/publish.py _site", (REPO/".github/workflows/pages.yml").read_text())
+        import publish
+        site = publish.publish(self.soft, Path(tempfile.mkdtemp(prefix="slg-site-")))
+        try:
+            for slug in ADDRESSES:
+                self.assertTrue((site/slug/"index.html" if slug else site/"index.html").exists(), slug)
+            self.assertFalse((site/"tools").exists())
+        finally:
+            shutil.rmtree(site, ignore_errors=True)
+
 class MemberPieces(unittest.TestCase):
     """Each piece's off form, checked on the parts build.py writes (no full build needed)."""
     def setUp(self):

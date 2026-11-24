@@ -3,7 +3,7 @@
 Members book from the Dining page. Staff run the day from /dining-staff/ on the restaurant iPad.
 The spec and plan are in CullenAI/Knowledge (Restaurant-Reservations-Spec-2026-10-16.md and -Plan-).
 
-- **Sheet:** "Restaurant Bookings" in cullenpacas@gmail.com, private. Its ID and the script link
+- **Sheet:** "Restaurant Bookings", owned by the Google account that runs the script, private. Its ID and the script link
   live in `config.local.json`, which is gitignored and never committed, because the repo is public.
   `config.json` holds only the public web app address.
   - Laura changes the hours, limits, Staff PIN (6 or more digits) and Email mode in Settings.
@@ -22,6 +22,8 @@ The spec and plan are in CullenAI/Knowledge (Restaurant-Reservations-Spec-2026-1
   - Laura answers her questions.
   - Load the real Members list.
   - Set Email mode to Live.
+  - Check Settings > Test email and Reply-to are filled in. They have no defaults in the code (the repo is public), so a new sheet starts with them blank.
+  - Online limits: one website booking per member number per day (a second gets "You already have a reservation that day"), and at most 20 confirmation emails an hour; past that the booking still saves but no email goes out, so that member cancels by phone.
   - Send confirmations from a club dining address. That means moving the script to that account and redeploying, which changes the web address in config.json.
   - Load the 2027 calendar events.
   - Save /dining-staff/ to the iPad home screen.
