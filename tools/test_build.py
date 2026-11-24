@@ -68,6 +68,18 @@ class LaunchForms(unittest.TestCase):
         self.assertFalse((self.soft/"food-beverage/cancel").exists())
         self.assertNotIn("dining.js", (self.soft/"food-beverage/index.html").read_text())
 
+    def test_no_restaurant_menu_or_hours_in_public(self):
+        # review 2026-10-16 item 4: dining is for members and guests, so no menu, prices or hours on public pages
+        for out in (self.soft, self.full):
+            dining = (out/"food-beverage/index.html").read_text()
+            for bad in ("Restaurant-Menu", "Wine-List", "11am", 'class="hours"', "doc-links"):
+                self.assertNotIn(bad, dining, bad)
+            self.assertIn("social membership", dining)
+            for f in ("Restaurant-Menu.pdf", "Wine-List.pdf"):
+                self.assertFalse((out/"assets/docs"/f).exists(), f)
+        for f in ("Restaurant-Menu.pdf", "Wine-List.pdf", "camp-2026.webp"):
+            self.assertEqual(refs(self.soft_text, f), [], f)
+
     def test_full_has_shop_and_standing_heron(self):
         home = (self.full/"index.html").read_text()
         self.assertIn(self.shop, home)
