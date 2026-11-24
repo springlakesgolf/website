@@ -45,7 +45,9 @@ SLUG = {  # June file -> live URL folder ('' = home)
 }
 # member-only or pricing documents never go on a public preview
 PRIVATE_DOCS = {"2026-JI-Renewal.pdf", "2026-Junior-Renewal.pdf",
-                "2026-Member-Calendar.pdf", "2026-Renewal-Form.pdf"}
+                "2026-Member-Calendar.pdf", "2026-Renewal-Form.pdf",
+                # review 2026-10-16 item 4: menu prices advertise the restaurant; they go to /members/ behind the password at launch
+                "Restaurant-Menu.pdf", "Wine-List.pdf"}
 # winter lessons are no longer offered (Braeden, 2026-10-16, E4/E5)
 RETIRED_DOCS = {"Winter-Lessons-Rhys.pdf", "Winter-Programming-Braeden.pdf"}
 
@@ -842,8 +844,12 @@ def edit(f, s):
         assert n == 1, (f, "social perk")
         s = cut(s, '<section><div class="container narrow"><div class="section-head center"><span class="eyebrow reveal">Inquire', "</main>", "", f)
         assert "Ask about social membership" not in s, f
+        # review 2026-10-16 item 4: no restaurant hours or menu PDFs on a public page (dining is for members and guests)
+        reserve = ('<div id="reserve" class="rv"><p class="rv-note">To reserve a table, call the clubhouse at 905-640-3633.</p></div>'
+                   if dining_exec() else "")
+        s = cut(s, '<div class="hours">', '</div></div></section>', reserve, f)
+        assert "Restaurant-Menu" not in s and "Wine-List" not in s and "11am" not in s, f
     if f == "dining.html" and dining_exec():
-        s = sub(s, '<div class="hours">', '<div id="reserve" class="rv"><p class="rv-note">To reserve a table, call the clubhouse at 905-640-3633.</p></div><div class="hours">', f)
         s = s.replace("</body>", '<script src="../assets/js/dining-rules.js" defer></script>'
                       '<script src="../assets/js/dining-api.js" defer></script>'
                       '<script src="../assets/js/dining.js" defer></script></body>', 1)
