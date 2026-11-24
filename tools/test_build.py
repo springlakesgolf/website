@@ -150,6 +150,31 @@ class LaunchForms(unittest.TestCase):
             finally:
                 shutil.rmtree(site, ignore_errors=True)
 
+    def test_every_page_has_a_link_preview_card(self):
+        # og:title, og:description and an absolute https og:image on every built page, so a shared link shows a
+        # card; the image file is in the build. Only the two old-address redirect pages go without.
+        import build as b
+        redirects = {"tournaments", "events-spring-lakes"}
+        for out in (self.soft, self.full):
+            pages = [p for p in sorted(out.glob("**/index.html")) if p.relative_to(out).parts[0] != "tools"]
+            self.assertGreaterEqual(len(pages), len(ADDRESSES), out.name)
+            for p in pages:
+                rel = p.relative_to(out).parent.as_posix()
+                s = p.read_text()
+                if rel in redirects:
+                    self.assertIn('http-equiv="refresh"', s, rel); continue
+                title = re.search(r"<title>([^<]+)</title>", s).group(1)
+                desc = re.search(r'<meta name="description" content="([^"]+)">', s).group(1)
+                for prop in ("og:title", "og:description", "og:image"):
+                    self.assertEqual(len(re.findall(rf'<meta property="{prop}" content="[^"]+">', s)), 1, (out.name, rel, prop))
+                head = s[:s.index("</head>")]
+                self.assertIn(f'<meta property="og:title" content="{title}">', head, (out.name, rel))
+                self.assertIn(f'<meta property="og:description" content="{desc}">', head, (out.name, rel))
+                img = re.search(r'<meta property="og:image" content="([^"]+)">', head).group(1)
+                self.assertRegex(img, r"^https://[^\s\"'<>]+\.(jpg|jpeg|png)$", (out.name, rel))
+                self.assertTrue(img.startswith(b.SITE_URL + "/"), (out.name, rel, img))
+                self.assertTrue((out/img[len(b.SITE_URL) + 1:]).exists(), (out.name, rel, img))
+
     def test_no_dashes(self):
         for t in (self.soft_text, self.full_text):
             self.assertNotIn("—", t); self.assertNotIn("–", t)
