@@ -28,7 +28,10 @@ MEMBER_PIECES = {
 # a photo. Facebook, iMessage and the rest need absolute https addresses, so SITE_URL is where this build is
 # served: the GitHub Pages staff preview now. At launch change this one line to "https://springlakesgolf.com".
 SITE_URL = "https://springlakesgolf.github.io/website"
-OG_IMAGE = "assets/img/hero-aerial.jpg"  # the home page aerial, 2000 x 1126 JPG (every app reads JPG; not all read WebP)
+OG_IMAGE = "assets/img/hero-aerial.jpg"
+# Link cards travel further than the page, so a page whose own description reads like an advert gets a neutral
+# card line here (dining is for members and their guests, not advertised to the public).
+OG_DESCRIPTION = {"food-beverage": "The Spring Lakes clubhouse is for members and their guests. Social membership is by inquiry."}  # the home page aerial, 2000 x 1126 JPG (every app reads JPG; not all read WebP)
 
 # League hub on the members page goes straight into the club app, not Golf Genius (Cullen, 2026-11-21).
 # APP_URL is the app's address: change this one line when the app moves to its club address.
@@ -587,6 +590,8 @@ def build():
         (OUT/old).mkdir(exist_ok=True)
         (OUT/old/"index.html").write_text(
             '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">'
+            '<title>Member Events | Spring Lakes Golf Club</title>'
+            '<meta name="description" content="Club events at Spring Lakes are for members. Find them in the Member’s Area.">'
             '<meta http-equiv="refresh" content="0; url=../members/#events">'
             '<link rel="canonical" href="../members/"><a href="../members/#events">Member events</a>')
     # preview forms send nothing; they get wired to the inquiry sheet at launch
@@ -616,8 +621,8 @@ def build():
 
 def og_tags():
     """og:title, og:description and an absolute https og:image (plus og:url, og:type, og:site_name and the
-    large Twitter card) on every built page, from the page's own <title> and description. The old-address
-    redirect pages (/tournaments/, /events-spring-lakes/) are skipped: they forward to the Member's Area."""
+    large Twitter card) on every built page, from the page's own <title> and description (OG_DESCRIPTION
+    overrides the card line), the old-address redirect pages included."""
     assert re.fullmatch(r"https://[^\s\"'<>]+[^/]", SITE_URL), ("SITE_URL", SITE_URL)
     assert (OUT/OG_IMAGE).exists(), ("OG_IMAGE", OG_IMAGE)
     image = f"{SITE_URL}/{OG_IMAGE}"
@@ -625,14 +630,13 @@ def og_tags():
         rel = f.relative_to(OUT)
         if rel.parts[0] in {"tools", "_site"} or rel.parts[0].startswith("."): continue
         s = f.read_text()
-        if 'http-equiv="refresh"' in s: continue
         assert 'property="og:' not in s, (str(rel), "og tags already there")
         title = re.search(r"<title>([^<]*)</title>", s); desc = re.search(r'<meta name="description" content="([^"]*)">', s)
         assert title and desc, (str(rel), "title and description")
         attr = lambda v: html.escape(html.unescape(v).strip(), quote=True)
         url = f"{SITE_URL}/{rel.parent.as_posix()}/" if rel.parent.parts else f"{SITE_URL}/"
         tags = (f'<meta property="og:type" content="website"><meta property="og:site_name" content="Spring Lakes Golf Club">'
-                f'<meta property="og:title" content="{attr(title.group(1))}"><meta property="og:description" content="{attr(desc.group(1))}">'
+                f'<meta property="og:title" content="{attr(title.group(1))}"><meta property="og:description" content="{attr(OG_DESCRIPTION.get(rel.parent.as_posix(), desc.group(1)))}">'
                 f'<meta property="og:url" content="{url}"><meta property="og:image" content="{image}">'
                 f'<meta property="og:image:alt" content="Spring Lakes from the air in autumn, with the island green, ponds and fairways">'
                 f'<meta name="twitter:card" content="summary_large_image">')
