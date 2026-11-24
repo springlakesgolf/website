@@ -2,7 +2,7 @@
 The checkout itself is not touched. Needs the June source folder, so it runs on the Mac.
 Run: python3 -m unittest tools/test_build.py
 """
-import os, re, shutil, subprocess, sys, tempfile, unittest
+import html, os, re, shutil, subprocess, sys, tempfile, unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -149,6 +149,30 @@ class LaunchForms(unittest.TestCase):
                     self.assertTrue((site/f).exists(), (out.name, f))
             finally:
                 shutil.rmtree(site, ignore_errors=True)
+
+    def test_every_page_has_a_link_preview_card(self):
+        # og:title, og:description and an absolute https og:image on every built page, so a shared link shows a
+        # card; the image file is in the build. The old-address redirect pages carry one too.
+        import build as b
+        self.assertIn("food-beverage", b.OG_DESCRIPTION)
+        for out in (self.soft, self.full):
+            pages = [p for p in sorted(out.glob("**/index.html")) if p.relative_to(out).parts[0] != "tools"]
+            self.assertGreaterEqual(len(pages), len(ADDRESSES), out.name)
+            for p in pages:
+                rel = p.relative_to(out).parent.as_posix()
+                s = p.read_text()
+                title = re.search(r"<title>([^<]+)</title>", s).group(1)
+                desc = re.search(r'<meta name="description" content="([^"]+)">', s).group(1)
+                for prop in ("og:title", "og:description", "og:image"):
+                    self.assertEqual(len(re.findall(rf'<meta property="{prop}" content="[^"]+">', s)), 1, (out.name, rel, prop))
+                head = s[:s.index("</head>")] if "</head>" in s else s  # the redirect stubs have no head tags
+                self.assertIn(f'<meta property="og:title" content="{title}">', head, (out.name, rel))
+                card = html.escape(b.OG_DESCRIPTION[rel], quote=True) if rel in b.OG_DESCRIPTION else desc
+                self.assertIn(f'<meta property="og:description" content="{card}">', head, (out.name, rel))
+                img = re.search(r'<meta property="og:image" content="([^"]+)">', head).group(1)
+                self.assertRegex(img, r"^https://[^\s\"'<>]+\.(jpg|jpeg|png)$", (out.name, rel))
+                self.assertTrue(img.startswith(b.SITE_URL + "/"), (out.name, rel, img))
+                self.assertTrue((out/img[len(b.SITE_URL) + 1:]).exists(), (out.name, rel, img))
 
     def test_no_dashes(self):
         for t in (self.soft_text, self.full_text):
