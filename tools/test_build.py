@@ -205,15 +205,10 @@ class LaunchForms(unittest.TestCase):
                 self.assertIsNone(names.search(copy), (out.name, str(rel), (names.search(copy) or [None])[0]))
 
     def test_pages_workflow_publishes_every_address_and_no_tools(self):
-        # runs the copy step from .github/workflows/pages.yml on the soft build
-        wf = (REPO/".github/workflows/pages.yml").read_text()
-        block = wf[wf.index("        run: |\n          mkdir _site"):wf.index("      - uses: actions/upload-pages-artifact")]
-        script = "\n".join(l[10:] for l in block.splitlines()[1:])
-        for f in ("robots.txt", ".nojekyll"):
-            if not (self.soft/f).exists(): shutil.copy(REPO/f, self.soft/f)
-        r = subprocess.run(["bash", "-ec", script], cwd=self.soft, capture_output=True, text=True)
-        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        site = self.soft/"_site"
+        # the Pages workflow runs tools/publish.py; every live address goes out and tools/ never does
+        self.assertIn("python3 tools/publish.py _site", (REPO/".github/workflows/pages.yml").read_text())
+        import publish
+        site = publish.publish(self.soft, Path(tempfile.mkdtemp(prefix="slg-site-")))
         try:
             for slug in ADDRESSES:
                 self.assertTrue((site/slug/"index.html" if slug else site/"index.html").exists(), slug)

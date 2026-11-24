@@ -902,9 +902,7 @@ def edit(f, s):
                       '<script src="../assets/js/dining-api.js" defer></script>'
                       '<script src="../assets/js/dining.js" defer></script></body>', 1)
     if f == "dining.html":
-        # review 2026-10-16 item 4: no public restaurant hours, menu or wine list; they go to /members/ at launch
-        s, n = re.subn(r'<div class="hours">.*?</div></div></div>', "", s, count=1, flags=re.S); assert n == 1, (f, "hours strip")
-        s, n = re.subn(r'<div class="doc-links">.*?</div>', "", s, count=1, flags=re.S); assert n == 1, (f, "menu links")
+        # hours, menu and wine list come off above (review 2026-10-16 item 4)
         # review item 17: dining is for members and their guests
         s = sub(s, "Dining is reserved for members.", "Dining is for members and their guests.", f)
     if f == "golf-camps.html":
