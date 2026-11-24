@@ -108,6 +108,9 @@ class LaunchForms(unittest.TestCase):
             plan = 'id="ev-e"' if b.MEMBER_PIECES["event_inquiry"] else "905-640-3633"
             self.assertIn("Plan your event with us", sec, out.name)
             self.assertLess(sec.index('id="events-box"'), sec.index(plan), out.name)
+            if b.MEMBER_PIECES["event_inquiry"]:
+                form = sec[sec.index('<form class="inquiry-form"'):sec.index("</form>")]
+                self.assertIn('name="website"', form, out.name)
 
     def test_league_hub_opens_the_app(self):
         # every league in the members League hub opens its own page in the club app (Cullen, 2026-11-21)
@@ -191,6 +194,15 @@ class MemberPieces(unittest.TestCase):
         self.b.MEMBER_PIECES["event_inquiry"] = True
         self.assertIn("<form", self.b.member_events())
         self.assertNotIn("<!--", self.b.member_events())
+
+    def test_event_inquiry_form_has_the_hidden_website_field(self):
+        # same honeypot as the membership and academy forms: hidden off screen, skipped by tab and autofill
+        self.b.MEMBER_PIECES["event_inquiry"] = True
+        html = self.b.member_events()
+        form = html[html.index('<form class="inquiry-form"'):html.index("</form>")]
+        self.assertIn('name="website"', form)
+        self.assertIn('<div class="hp" aria-hidden="true"><label for="ev-w">Website</label><input name="website" id="ev-w" type="text" tabindex="-1" autocomplete="off"></div>', form)
+        self.assertLess(form.index('name="website"'), form.index('id="ev-n"'))
 
     def test_reservations_off_builds_no_panel(self):
         self.b.MEMBER_PIECES["reservations"] = False
