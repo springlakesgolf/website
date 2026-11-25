@@ -70,7 +70,12 @@
     + '.sle-opt[aria-pressed=true]::after{content:"Picked";position:absolute;left:4px;top:4px;background:#323C60;color:#fff;font:600 10px/1 Montserrat,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:5px 7px;border-radius:3px}'
     + '.sle-box textarea.sle-short{min-height:70px}'
     + '.sle-other{background:#fff;color:#323C60}'
-    + '.sle-send.sle-wait[disabled]{cursor:not-allowed;opacity:.45}';
+    + '.sle-send.sle-wait[disabled]{cursor:not-allowed;opacity:.45}'
+    + '.sle-ghead{grid-column:1/-1;font:600 11px/1.3 Montserrat,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5b6178;margin:10px 0 0}'
+    + '.sle-ghead:first-child{margin-top:0}'
+    + '.sle-badkey{position:fixed;left:16px;right:16px;bottom:16px;z-index:10000;max-width:420px;margin-left:auto;background:#fff;color:#323C60;'
+    + 'border-left:4px solid #a3261d;border-radius:4px;box-shadow:0 6px 22px rgba(38,46,76,.3);font:500 14px/1.45 Montserrat,sans-serif;padding:14px 16px}'
+    + '.sle-badkey strong{display:block;margin-bottom:4px}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   var fab = el('button', {className: 'sle-fab', type: 'button'}, 'Suggest an edit');
@@ -78,6 +83,22 @@
   var bar = null, hovered = null, chosen = null;
 
   fab.addEventListener('click', startPicking);
+
+  // Check the key as soon as the page opens, so a wrong or old link says so right away
+  // instead of after someone types a whole change. The script answers "missing" (and adds
+  // no row) for a good key with nothing to send, and "key" for a bad one.
+  if (window.fetch && /^https?:/.test(EXEC)) fetch(EXEC, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({key: KEY, rid: 'check-' + rid()})})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if (j && j.error === 'key') badKey(); })
+    .catch(function(){});
+  function badKey(){
+    store.set('slg-edit-key', null);
+    fab.remove();
+    var note = el('div', {className: 'sle-badkey', role: 'alert'});
+    note.appendChild(el('strong', {}, 'This edit link is not valid.'));
+    note.appendChild(el('span', {}, 'Open the newest edit link from your email, or ask our team for a new one.'));
+    document.body.appendChild(note);
+  }
 
   function startPicking(){
     fab.style.display = 'none';
@@ -264,7 +285,7 @@
   function failed(msg, err){
     msg.className = 'sle-msg err';
     msg.textContent = err && err.message === 'key'
-      ? 'This edit link is not valid any more. Ask our team for a new one.'
+      ? 'This edit link is not valid. Open the newest edit link from your email, or ask our team for a new one.'
       : 'That did not go through. Check your connection and press Send again.';
   }
 
@@ -288,8 +309,13 @@
     box.appendChild(el('div', {className: 'sle-lbl', id: 'sle-grid-l'}, 'Pick a different photo'));
     var grid = el('div', {className: 'sle-grid'});
     grid.setAttribute('role', 'group'); grid.setAttribute('aria-labelledby', 'sle-grid-l');
-    var buttons = [];
+    var buttons = [], lastGroup = null;
+    var GROUPS = {drone: 'From the air', land: 'The course', clubhouse: 'The clubhouse and grounds', play: 'Members at play'};
     spot.options.forEach(function(o){
+      if (o.group && o.group !== lastGroup && GROUPS[o.group]) {
+        lastGroup = o.group;
+        grid.appendChild(el('div', {className: 'sle-ghead'}, GROUPS[o.group]));
+      }
       var b = el('button', {type: 'button', className: 'sle-opt', title: o.alt});
       b.setAttribute('aria-pressed', 'false');
       b.setAttribute('aria-label', o.alt);

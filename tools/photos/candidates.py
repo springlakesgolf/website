@@ -8,6 +8,8 @@ tools/build.py calls write() after the page loop. It copies the 800 px file of e
 Slot ids are photos.py's "<page or home>:<old file stem>", the data-photo value on the built pages.
 Groups come from the comment headings in manifest.py (drone, the land, the clubhouse and grounds,
 members at play), so a photo added to manifest.py under a heading becomes a candidate on its own.
+library.py adds about 158 more picker-only photos (thumbnails only, with their own group), offered
+after the manifest photos. Each option carries its group so the picker can show headings.
 Junior slots are left out until photo consent is confirmed.
 """
 import json, re, shutil, sys
@@ -17,6 +19,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import photos
 from manifest import PHOTOS, name
+import library
 
 OUT_DIR = "photo-candidates"
 HEADINGS = {"drone": "drone", "the land": "land", "the clubhouse and grounds": "clubhouse", "members at play": "play"}
@@ -43,7 +46,7 @@ SLOTS = {
 }
 # junior photos wait on the consent check: no picker on these
 JUNIOR = {"home:g26", "golf-camps:g26"}
-MEMBERS_ONLY = {"banquet-room"}   # members area pages only
+MEMBERS_ONLY = {"banquet-room"} | library.MEMBERS_ONLY   # members area pages only
 HERO_MIN_RATIO = 1.25             # top photos are wide: portrait and near square files are left out
 
 def groups():
@@ -57,7 +60,12 @@ def groups():
         m = re.match(r'\s*"([\w-]+)"\s*:\s*\(', line)
         if m and m.group(1) in PHOTOS and group:
             out[m.group(1)] = group
+    for pid, (_, _, _, g) in library.LIBRARY.items():
+        out.setdefault(pid, g)
     return out
+
+def alt(pid):
+    return PHOTOS[pid][2] if pid in PHOTOS else library.alt(pid)
 
 def junior(slot):
     return slot in JUNIOR or slot.startswith("junior-golf:")
@@ -83,7 +91,7 @@ def options(slot, now, hero):
                 continue
             if hero and ratio(pid) < HERO_MIN_RATIO:
                 continue
-            out.append({"id": pid, "file": name(pid, "t"), "alt": PHOTOS[pid][2]})
+            out.append({"id": pid, "file": name(pid, "t"), "alt": alt(pid), "group": g})
     return out
 
 def candidates():

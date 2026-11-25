@@ -4,6 +4,9 @@
     python tools/photos/export.py --force    export everything again
     python tools/photos/export.py id [id..]  export just those ids again
 
+Photos in library.py (picker only) get just the 800 px thumbnail. Move a picked one into
+manifest.py first, then export its id to get all three sizes.
+
 Needs the drive (E:/Spring Lakes Photos) and Pillow. The exported files are committed, so a
 rebuild never needs the drive.
 """
@@ -11,12 +14,14 @@ import io, sys
 from pathlib import Path
 from PIL import Image, ImageOps, ImageFile, ImageCms
 from manifest import PHOTOS, name
+from library import LIBRARY
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 Image.MAX_IMAGE_PIXELS = None
 DRIVE = Path("E:/Spring Lakes Photos/01 By Event")
 IMG = Path(__file__).resolve().parent / "img"
 SIZES = {"": (2000, 400), "m": (1200, 190), "t": (800, 100)}  # long edge px, max KB
+LIB_SIZES = {"t": (800, 70)}  # picker only thumbnails
 
 def index():
     idx = {}
@@ -37,7 +42,8 @@ def srgb(im):
     return im.convert("RGB")
 
 def export(pid, idx):
-    stem, crop, _ = PHOTOS[pid]
+    stem, crop = (PHOTOS[pid] if pid in PHOTOS else LIBRARY[pid])[:2]
+    sizes = SIZES if pid in PHOTOS else LIB_SIZES
     if "|" in stem:  # "event folder words|stem" when two events share a file number
         hint, stem = stem.split("|")
         src = next(f for f in DRIVE.rglob(stem + ".jpg") if hint in str(f))
@@ -47,7 +53,7 @@ def export(pid, idx):
     if crop:
         w, h = im.size
         im = im.crop((int(crop[0]*w), int(crop[1]*h), int(crop[2]*w), int(crop[3]*h)))
-    for size, (edge, kb) in SIZES.items():
+    for size, (edge, kb) in sizes.items():
         t = im.copy(); t.thumbnail((edge, edge), Image.LANCZOS)
         for q in range(84, 30, -4):
             buf = io.BytesIO(); t.save(buf, "WEBP", quality=q, method=6)
@@ -62,3 +68,7 @@ if __name__ == "__main__":
     for pid in (args or PHOTOS):
         if args or "--force" in sys.argv or not (IMG / name(pid)).exists():
             export(pid, idx)
+    if not args:
+        for pid in LIBRARY:
+            if pid not in PHOTOS and ("--force" in sys.argv or not (IMG / name(pid, "t")).exists()):
+                export(pid, idx)

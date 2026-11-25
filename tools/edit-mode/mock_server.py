@@ -37,6 +37,7 @@ class H(SimpleHTTPRequestHandler):
         b = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         if "bot" in b: out = self.bot(b)
         elif b.get("key") != "testkey": out = {"ok": False, "error": "key"}
+        elif not b.get("rid") or not b.get("change"): out = {"ok": False, "error": "missing"}  # as Code.gs: no row
         elif b["rid"] in seen: out = seen[b["rid"]]
         else:
             rows = json.loads(ROWS.read_text()) if ROWS.exists() else []
