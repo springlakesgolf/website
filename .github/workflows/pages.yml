@@ -10,15 +10,22 @@ on:
 permissions: { contents: read, pages: write, id-token: write }
 concurrency: { group: pages, cancel-in-progress: false }
 jobs:
-  deploy:
+  # build and deploy are separate jobs (GitHub's Pages starter layout): from 2026-11-24 deploy-pages
+  # stopped finding an artifact uploaded earlier in the same job ("No artifacts named github-pages")
+  build:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: { name: github-pages, url: "${{ steps.deployment.outputs.page_url }}" }
     steps:
       - uses: actions/checkout@v4
       - name: Copy public files only
         run: python3 tools/publish.py _site
       - uses: actions/upload-pages-artifact@v3
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: { name: github-pages, url: "${{ steps.deployment.outputs.page_url }}" }
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
