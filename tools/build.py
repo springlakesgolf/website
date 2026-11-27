@@ -219,7 +219,7 @@ def events_html(rows):
         status = x.get("status") if x.get("status") in EVENT_PILL else "Details to come"
         link, photo = https(x.get("link")), https(x.get("photo"))
         out.append(f'<li class="evh-item{" has-photo" if photo else ""}">'
-          + (f'<img class="evh-photo" src="{esc(photo)}" alt="" width="96" height="64" loading="lazy">' if photo else "")  # the .evh-photo box: the photo is on another site, so its file cannot be measured
+          + (f'<img class="evh-photo" src="{esc(photo)}" alt="" loading="lazy">' if photo else "")
           + f'<div class="evh-when">{esc(x.get("date") or "Date to come")}</div>'
           + f'<div class="evh-main"><h3 class="evh-name">{esc(x.get("name"))}</h3>'
           + f'<div class="evh-course">{esc(x.get("course") or "Course to come")}</div></div>'
@@ -657,8 +657,13 @@ def img_dimensions():
             tag = m.group(0)
             if re.search(r'\swidth="\d+"', tag) and re.search(r'\sheight="\d+"', tag): return tag
             src = re.search(r'\ssrc="([^"]+)"', tag)
-            assert src and not re.match(r"[a-z]+:|//", src.group(1)), (str(rel), "img without a local file", tag)
+            assert src, (str(rel), "img without a src", tag)
             assert not re.search(r"\s(?:width|height)=", tag), (str(rel), "img with only one of width and height", tag)
+            if re.match(r"[a-z]+:|//", src.group(1)):
+                # an event photo lives on another site, so its file cannot be measured: it gets its .evh-photo box
+                # (events_html stays word for word what tools/members/content.js draws, so the numbers go on here)
+                assert 'class="evh-photo"' in tag, (str(rel), "img without a local file", tag)
+                return f'{tag[:src.end()]} width="{EVH_PHOTO[0]}" height="{EVH_PHOTO[1]}"{tag[src.end():]}'
             pic = (f.parent/html.unescape(src.group(1)).split("?")[0]).resolve()
             assert pic.is_file(), (str(rel), "img file missing", src.group(1))
             w, h = img_size(pic)
@@ -670,6 +675,7 @@ def img_dimensions():
 
 # With width and height on the tag, an image whose rule sets only one side would take the other from the tag
 # and stretch. height:auto is the base; the two logo rules that set only a height get width:auto.
+EVH_PHOTO = (96, 64)  # .evh-photo{width:96px;height:64px} in the events hub style rules
 IMG_CSS = "img{height:auto}.footer .f-lock .heron,.cx img{width:auto}\n"
 
 def og_tags():
