@@ -461,6 +461,7 @@ section{padding:clamp(60px,8vw,108px) 0}
 .ac-privacy{font-size:.85rem;color:var(--muted);margin:0 0 18px}
 .ac-form .form-note{margin-top:14px}
 @media(max-width:600px){.ac-row,.ac-row.two{grid-template-columns:1fr}}
+img{height:auto}.footer .f-lock .heron,.cx img{width:auto}
 /* photos:start */
 /* 2026 photos: crop positions (set per image in tools/photos/photos.py), course gallery and photo viewer */
 img[data-photo],.hero-bg img[data-photo],.page-hero .ph-bg img[data-photo]{object-position:var(--pos,center)}
