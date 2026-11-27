@@ -131,15 +131,17 @@ class LaunchForms(unittest.TestCase):
                 self.assertTrue(0 < w < 10000 and 0 < h < 10000, (p.name, w, h))
 
     def test_an_event_photo_from_another_site_gets_its_box_size(self):
-        # its file is not ours to measure, so the tag gets the .evh-photo box; events_html itself is unchanged
-        # (tools/members/test_events.py holds it word for word to content.js)
+        # its file is not ours to measure, so the tag gets the .evh-photo box. events_html and content.js both
+        # write it (tools/members/test_events.py holds them word for word); the final pass covers any other tag
         import build as b
         self.assertIn(".evh-photo{width:96px;height:64px;", (self.soft/"assets/css/style.css").read_text())
         self.assertEqual(b.EVH_PHOTO, (96, 64))
         out, tmp = b.OUT, Path(tempfile.mkdtemp(prefix="slg-img-"))
         try:
             b.OUT = tmp
-            (tmp/"index.html").write_text(b.events_html([{"name": "Club Day", "photo": "https://example.com/a.jpg"}]))
+            drawn = b.events_html([{"name": "Club Day", "photo": "https://example.com/a.jpg"}])
+            self.assertIn('src="https://example.com/a.jpg" width="96" height="64" alt=""', drawn)
+            (tmp/"index.html").write_text(drawn.replace(' width="96" height="64"', ""))   # a tag with no size yet
             b.img_dimensions()
             self.assertIn('<img class="evh-photo" src="https://example.com/a.jpg" width="96" height="64" alt="" loading="lazy">',
                           (tmp/"index.html").read_text())

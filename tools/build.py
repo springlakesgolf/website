@@ -219,7 +219,7 @@ def events_html(rows):
         status = x.get("status") if x.get("status") in EVENT_PILL else "Details to come"
         link, photo = https(x.get("link")), https(x.get("photo"))
         out.append(f'<li class="evh-item{" has-photo" if photo else ""}">'
-          + (f'<img class="evh-photo" src="{esc(photo)}" alt="" loading="lazy">' if photo else "")
+          + (f'<img class="evh-photo" src="{esc(photo)}" width="{EVH_PHOTO[0]}" height="{EVH_PHOTO[1]}" alt="" loading="lazy">' if photo else "")
           + f'<div class="evh-when">{esc(x.get("date") or "Date to come")}</div>'
           + f'<div class="evh-main"><h3 class="evh-name">{esc(x.get("name"))}</h3>'
           + f'<div class="evh-course">{esc(x.get("course") or "Course to come")}</div></div>'
@@ -664,7 +664,7 @@ def img_dimensions():
             assert not re.search(r"\s(?:width|height)=", tag), (str(rel), "img with only one of width and height", tag)
             if re.match(r"[a-z]+:|//", src.group(1)):
                 # an event photo lives on another site, so its file cannot be measured: it gets its .evh-photo box
-                # (events_html stays word for word what tools/members/content.js draws, so the numbers go on here)
+                # (events_html and tools/members/content.js write the same numbers; this covers any other tag)
                 assert 'class="evh-photo"' in tag, (str(rel), "img without a local file", tag)
                 return f'{tag[:src.end()]} width="{EVH_PHOTO[0]}" height="{EVH_PHOTO[1]}"{tag[src.end():]}'
             pic = (f.parent/html.unescape(src.group(1)).split("?")[0]).resolve()
