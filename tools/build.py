@@ -1,5 +1,5 @@
 """Turn the June 2026 redesign into a review build with the live site's URLs."""
-import html, json, os, re, shutil, sys
+import html, json, os, re, shutil, struct, sys
 from pathlib import Path
 
 SRC = Path.home()/"Downloads/Marketing & Promotions/springlakes-site"
@@ -607,7 +607,7 @@ def build():
     css = OUT/"assets/css/style.css"
     shop_css = "" if SOFT else SHOP_CSS + (SHOP_MENU_CSS if SHOP_PLACEMENT == "menu" else "")
     css.write_text(photos.css(css.read_text() + "\n.btn.menu-toggle{padding:8px;gap:0}.menu-toggle svg{flex-shrink:0}\n.hp{position:absolute;left:-9999px}\n" + WEEK_CSS + NAV_CSS + SR_CSS
-                              + ("" if SOFT else HERON_CSS) + JUNIOR_CSS + shop_css))
+                              + ("" if SOFT else HERON_CSS) + JUNIOR_CSS + IMG_CSS + shop_css))
     shutil.copy(OUT/"tools/members/weather.js", OUT/"assets/js/weather.js")
     shutil.copy(OUT/"tools/forms/inquiry.js", OUT/"assets/js/inquiry.js")
     if exec_url:
@@ -619,6 +619,64 @@ def build():
     (OUT/"robots.txt").write_text("User-agent: *\nDisallow: /\n")
     # the June images the new photos replaced are not shipped (these are this build's own copies)
     photos.prune(OUT)
+    img_dimensions()
+
+def img_size(p):
+    """Width and height in pixels of a PNG, JPEG or WebP file, read from its header (no extra library)."""
+    b = Path(p).read_bytes()
+    if b[:8] == b"\x89PNG\r\n\x1a\n":
+        return struct.unpack(">II", b[16:24])
+    if b[:4] == b"RIFF" and b[8:12] == b"WEBP":
+        kind = b[12:16]
+        if kind == b"VP8X": return 1 + int.from_bytes(b[24:27], "little"), 1 + int.from_bytes(b[27:30], "little")
+        if kind == b"VP8L":
+            n = int.from_bytes(b[21:25], "little")
+            return (n & 0x3FFF) + 1, ((n >> 14) & 0x3FFF) + 1
+        if kind == b"VP8 ": return int.from_bytes(b[26:28], "little") & 0x3FFF, int.from_bytes(b[28:30], "little") & 0x3FFF
+    if b[:2] == b"\xff\xd8":
+        i = 2
+        while i + 9 < len(b):
+            if b[i] != 0xFF: i += 1; continue
+            m = b[i + 1]
+            if m == 0xFF: i += 1; continue
+            if m in (0x01, *range(0xD0, 0xDA)): i += 2; continue
+            if 0xC0 <= m <= 0xCF and m not in (0xC4, 0xC8, 0xCC):
+                h, w = struct.unpack(">HH", b[i + 5:i + 9])
+                return w, h
+            i += 2 + int.from_bytes(b[i + 2:i + 4], "big")
+    raise AssertionError(("image size not readable", str(p)))
+
+def img_dimensions():
+    """width and height on every <img> in the built pages, read from the image file itself, so the browser
+    holds the photo's space before it loads and the page does not jump. A tag that already has both is left
+    alone. IMG_CSS keeps each image the size its style sheet rule gives it."""
+    for f in sorted(OUT.glob("**/*.html")):
+        rel = f.relative_to(OUT)
+        if rel.parts[0] in {"tools", "_site"} or rel.parts[0].startswith("."): continue
+        def one(m):
+            tag = m.group(0)
+            if re.search(r'\swidth="\d+"', tag) and re.search(r'\sheight="\d+"', tag): return tag
+            src = re.search(r'\ssrc="([^"]+)"', tag)
+            assert src, (str(rel), "img without a src", tag)
+            assert not re.search(r"\s(?:width|height)=", tag), (str(rel), "img with only one of width and height", tag)
+            if re.match(r"[a-z]+:|//", src.group(1)):
+                # an event photo lives on another site, so its file cannot be measured: it gets its .evh-photo box
+                # (events_html stays word for word what tools/members/content.js draws, so the numbers go on here)
+                assert 'class="evh-photo"' in tag, (str(rel), "img without a local file", tag)
+                return f'{tag[:src.end()]} width="{EVH_PHOTO[0]}" height="{EVH_PHOTO[1]}"{tag[src.end():]}'
+            pic = (f.parent/html.unescape(src.group(1)).split("?")[0]).resolve()
+            assert pic.is_file(), (str(rel), "img file missing", src.group(1))
+            w, h = img_size(pic)
+            assert w > 0 and h > 0, (str(rel), src.group(1), w, h)
+            return f'{tag[:src.end()]} width="{w}" height="{h}"{tag[src.end():]}'
+        s = f.read_text()
+        t = re.sub(r"<img\b[^>]*>", one, s)
+        if t != s: f.write_text(t)
+
+# With width and height on the tag, an image whose rule sets only one side would take the other from the tag
+# and stretch. height:auto is the base; the two logo rules that set only a height get width:auto.
+EVH_PHOTO = (96, 64)  # .evh-photo{width:96px;height:64px} in the events hub style rules
+IMG_CSS = "img{height:auto}.footer .f-lock .heron,.cx img{width:auto}\n"
 
 def og_tags():
     """og:title, og:description and an absolute https og:image (plus og:url, og:type, og:site_name and the
