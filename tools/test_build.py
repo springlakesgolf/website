@@ -191,7 +191,7 @@ class LaunchForms(unittest.TestCase):
             self.assertIn('<h1 class="hero-title reveal in d1">Spring Lakes</h1>', home, out.name)
             self.assertNotIn('<div class="hero-title', home, out.name)
             css = (out/"assets/css/style.css").read_text()
-            self.assertIn(".hero h1.hero-title{", css, out.name)
+            self.assertEqual(css.count(".hero h1.hero-title{"), 1, out.name)  # one copy, from HERO_H1_CSS
             self.assertIn("color:var(--gold-soft)", css[css.index(".hero h1.hero-title{"):].split("}")[0], out.name)
 
     def test_no_dashes(self):
