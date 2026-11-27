@@ -15,7 +15,7 @@
       var status = PILL[x.status] ? x.status : 'Details to come';
       var link = https(x.link), photo = https(x.photo);
       return '<li class="evh-item' + (photo ? ' has-photo' : '') + '">'
-        + (photo ? '<img class="evh-photo" src="' + esc(photo) + '" alt="" loading="lazy">' : '')
+        + (photo ? '<img class="evh-photo" src="' + esc(photo) + '" width="96" height="64" alt="" loading="lazy">' : '')
         + '<div class="evh-when">' + esc(x.date || 'Date to come') + '</div>'
         + '<div class="evh-main"><h3 class="evh-name">' + esc(x.name) + '</h3>'
         + '<div class="evh-course">' + esc(x.course || 'Course to come') + '</div></div>'

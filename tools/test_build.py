@@ -95,6 +95,62 @@ class LaunchForms(unittest.TestCase):
             for slug in ADDRESSES:
                 self.assertTrue((out/slug/"index.html" if slug else out/"index.html").exists(), (out.name, slug))
 
+    def test_every_built_img_has_width_and_height(self):
+        # the browser holds each photo's space before it loads, so the page does not jump (2026-11-27)
+        import build as b
+        for out in (self.soft, self.full):
+            seen = 0
+            for page in sorted(out.rglob("*.html")):
+                rel = page.relative_to(out)
+                if rel.parts[0] == "tools": continue
+                for tag in re.findall(r"<img\b[^>]*>", page.read_text()):
+                    seen += 1
+                    w, h = re.search(r'\swidth="(\d+)"', tag), re.search(r'\sheight="(\d+)"', tag)
+                    self.assertTrue(w and h, (out.name, str(rel), tag))
+                    src = re.search(r'\ssrc="([^"]+)"', tag).group(1)
+                    pic = page.parent/html.unescape(src)
+                    self.assertTrue(pic.is_file(), (out.name, str(rel), src))
+                    # the numbers are the file's own shape (a wrong shape would reserve the wrong space)
+                    fw, fh = b.img_size(pic)
+                    self.assertAlmostEqual(int(w.group(1))/int(h.group(1)), fw/fh, delta=0.02, msg=(out.name, str(rel), src))
+            self.assertGreater(seen, 50, out.name)
+            css = (out/"assets/css/style.css").read_text()
+            # with both numbers on the tag, these rules keep a one-sided style rule from stretching the image
+            self.assertIn("img{height:auto}", css, out.name)
+            self.assertIn(".footer .f-lock .heron,.cx img{width:auto}", css, out.name)
+
+    def test_img_size_reads_png_jpeg_and_webp(self):
+        import build as b
+        img = self.soft/"assets/img"
+        self.assertEqual(b.img_size(img/"hero-aerial.jpg"), (2000, 1126))  # OG_IMAGE, see tools/build.py
+        kinds = {p.suffix.lower() for p in img.iterdir() if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}}
+        self.assertTrue({".png", ".jpg", ".webp"} <= kinds, kinds)  # all three kinds are in the build, so all three readers run
+        for p in sorted(img.iterdir()):
+            if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+                w, h = b.img_size(p)
+                self.assertTrue(0 < w < 10000 and 0 < h < 10000, (p.name, w, h))
+
+    def test_an_event_photo_from_another_site_gets_its_box_size(self):
+        # its file is not ours to measure, so the tag gets the .evh-photo box. events_html and content.js both
+        # write it (tools/members/test_events.py holds them word for word); the final pass covers any other tag
+        import build as b
+        self.assertIn(".evh-photo{width:96px;height:64px;", (self.soft/"assets/css/style.css").read_text())
+        self.assertEqual(b.EVH_PHOTO, (96, 64))
+        out, tmp = b.OUT, Path(tempfile.mkdtemp(prefix="slg-img-"))
+        try:
+            b.OUT = tmp
+            drawn = b.events_html([{"name": "Club Day", "photo": "https://example.com/a.jpg"}])
+            self.assertIn('src="https://example.com/a.jpg" width="96" height="64" alt=""', drawn)
+            (tmp/"index.html").write_text(drawn.replace(' width="96" height="64"', ""))   # a tag with no size yet
+            b.img_dimensions()
+            self.assertIn('<img class="evh-photo" src="https://example.com/a.jpg" width="96" height="64" alt="" loading="lazy">',
+                          (tmp/"index.html").read_text())
+            (tmp/"index.html").write_text('<img src="https://example.com/a.jpg" alt="">')
+            with self.assertRaises(AssertionError): b.img_dimensions()  # any other outside image stops the build
+        finally:
+            b.OUT = out
+            shutil.rmtree(tmp, ignore_errors=True)
+
     def test_members_events_section_has_club_events_and_event_planning(self):
         # the memarea line joins member_events() (soft launch pieces) and club_events() (events hub)
         import build as b
@@ -173,6 +229,26 @@ class LaunchForms(unittest.TestCase):
                 self.assertRegex(img, r"^https://[^\s\"'<>]+\.(jpg|jpeg|png)$", (out.name, rel))
                 self.assertTrue(img.startswith(b.SITE_URL + "/"), (out.name, rel, img))
                 self.assertTrue((out/img[len(b.SITE_URL) + 1:]).exists(), (out.name, rel, img))
+
+    def test_every_content_page_has_one_h1(self):
+        # one page heading per content page for screen readers and search; the home hero title is it, kept in its
+        # June look. The two old-address redirect stubs have no heading by design.
+        stubs = {"tournaments", "events-spring-lakes"}
+        for out in (self.soft, self.full):
+            pages = [p for p in sorted(out.glob("**/index.html")) if p.relative_to(out).parts[0] != "tools"]
+            seen = set()
+            for p in pages:
+                rel = p.relative_to(out).parent.as_posix()
+                n = len(re.findall(r"<h1[\s>]", p.read_text()))
+                self.assertEqual(n, 0 if rel in stubs else 1, (out.name, rel))
+                seen.add("" if rel == "." else rel)
+            self.assertTrue(set(ADDRESSES) - stubs <= seen, (out.name, set(ADDRESSES) - stubs - seen))
+            home = (out/"index.html").read_text()
+            self.assertIn('<h1 class="hero-title reveal in d1">Spring Lakes</h1>', home, out.name)
+            self.assertNotIn('<div class="hero-title', home, out.name)
+            css = (out/"assets/css/style.css").read_text()
+            self.assertEqual(css.count(".hero h1.hero-title{"), 1, out.name)  # one copy, from HERO_H1_CSS
+            self.assertIn("color:var(--gold-soft)", css[css.index(".hero h1.hero-title{"):].split("}")[0], out.name)
 
     def test_no_dashes(self):
         for t in (self.soft_text, self.full_text):

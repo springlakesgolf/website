@@ -27,7 +27,7 @@ test('blank course and date read "to come"; photo only from https', () => {
   assert.match(h, /evh-course">Course to come</);
   assert.match(h, /evh-when">Date to come</);
   assert.doesNotMatch(h, /<img/);
-  assert.match(eventsHTML([row({ photo: 'https://example.com/a.jpg' })]), /evh-item has-photo"><img class="evh-photo" src="https:\/\/example\.com\/a\.jpg" alt="" loading="lazy">/);
+  assert.match(eventsHTML([row({ photo: 'https://example.com/a.jpg' })]), /evh-item has-photo"><img class="evh-photo" src="https:\/\/example\.com\/a\.jpg" width="96" height="64" alt="" loading="lazy">/);
   assert.doesNotMatch(eventsHTML([row({ photo: 'data:image/png;base64,xx' })]), /<img/);
 });
 

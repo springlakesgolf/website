@@ -15,7 +15,12 @@
 
   function show(n) {
     i = (n + links.length) % links.length;
-    var alt = links[i].querySelector('img').alt;
+    var tile = links[i].querySelector('img'), alt = tile.alt;
+    // The tile's width and height give the photo's shape, so the viewer holds its space while the full photo loads.
+    ['width', 'height'].forEach(function (k) {
+      var v = tile.getAttribute(k);
+      if (v) img.setAttribute(k, v); else img.removeAttribute(k);
+    });
     img.src = links[i].href; img.alt = alt;
     cap.textContent = alt; num.textContent = (i + 1) + ' of ' + links.length;
     new Image().src = links[(i + 1) % links.length].href;
