@@ -174,6 +174,26 @@ class LaunchForms(unittest.TestCase):
                 self.assertTrue(img.startswith(b.SITE_URL + "/"), (out.name, rel, img))
                 self.assertTrue((out/img[len(b.SITE_URL) + 1:]).exists(), (out.name, rel, img))
 
+    def test_every_content_page_has_one_h1(self):
+        # one page heading per content page for screen readers and search; the home hero title is it, kept in its
+        # June look. The two old-address redirect stubs have no heading by design.
+        stubs = {"tournaments", "events-spring-lakes"}
+        for out in (self.soft, self.full):
+            pages = [p for p in sorted(out.glob("**/index.html")) if p.relative_to(out).parts[0] != "tools"]
+            seen = set()
+            for p in pages:
+                rel = p.relative_to(out).parent.as_posix()
+                n = len(re.findall(r"<h1[\s>]", p.read_text()))
+                self.assertEqual(n, 0 if rel in stubs else 1, (out.name, rel))
+                seen.add("" if rel == "." else rel)
+            self.assertTrue(set(ADDRESSES) - stubs <= seen, (out.name, set(ADDRESSES) - stubs - seen))
+            home = (out/"index.html").read_text()
+            self.assertIn('<h1 class="hero-title reveal in d1">Spring Lakes</h1>', home, out.name)
+            self.assertNotIn('<div class="hero-title', home, out.name)
+            css = (out/"assets/css/style.css").read_text()
+            self.assertIn(".hero h1.hero-title{", css, out.name)
+            self.assertIn("color:var(--gold-soft)", css[css.index(".hero h1.hero-title{"):].split("}")[0], out.name)
+
     def test_no_dashes(self):
         for t in (self.soft_text, self.full_text):
             self.assertNotIn("—", t); self.assertNotIn("–", t)
